@@ -2,11 +2,14 @@
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
+const ledgeWidth = 300, ledgeHeight = 32;
+
 function preload() {
 
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
+    game.load.image('lava', 'assets/lava.jpg');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
 
 }
@@ -15,6 +18,8 @@ var player;
 var chars = [];
 var platforms;
 var cursors;
+var lava;
+var ledges = [];
 
 var stars;
 var score = 0;
@@ -49,7 +54,7 @@ class Char {
 
 function schedRandInputs(chr) {
     let allClear = true;
-    for (key of ['left','right']) {
+    for (var key of ['left','right']) {
         if (chr.inputs[key].isDown) {
             chr.inputs[key].isDown = false;
             allClear = false;
@@ -61,13 +66,36 @@ function schedRandInputs(chr) {
     setTimeout(() => schedRandInputs(chr), getRandomInt(1000, 3000));
 }
 
+const ledgeSpacing = 200;
+function addLedges(x) {
+    while (true) {
+        if (ledges.length > 0 && ledges[ledges.length - 1].y + platforms.y - ledgeSpacing < -ledgeHeight)
+            break;
+        const xSpace = (game.world.width - ledgeWidth);
+        const x = getRandomInt(0, xSpace / 2) + (ledges.length % 2 ? xSpace / 2 : 0);
+        const y = ledges.length == 0 ?
+            game.world.height - ledgeSpacing : ledges[ledges.length - 1].y - ledgeSpacing;
+        const ledge = platforms.create(x, y, 'ground');
+        ledge.scale.setTo(.75,1);
+        ledge.body.immovable = true;
+        ledges.push(ledge);
+    }
+}
+
 function create() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
+    game.world.setBounds(0,0,800,2400);
+
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
+
+    lava = game.add.sprite(0, game.world.height - 64, 'lava');
+    lava.enableBody = true;
+    game.physics.arcade.enable(lava);
+    lava.body.immovable = true;
 
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = game.add.group();
@@ -76,26 +104,22 @@ function create() {
     platforms.enableBody = true;
 
     // Here we create the ground.
-    var ground = platforms.create(0, game.world.height - 64, 'ground');
+    //var ground = platforms.create(0, game.world.height - 64, 'ground');
 
-    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    ground.scale.setTo(2, 2);
+    ////  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    //ground.scale.setTo(2, 2);
 
-    //  This stops it from falling away when you jump on it
-    ground.body.immovable = true;
+    ////  This stops it from falling away when you jump on it
+    //ground.body.immovable = true;
 
     //  Now let's create two ledges
-    var ledge = platforms.create(400, 400, 'ground');
-    ledge.body.immovable = true;
-
-    ledge = platforms.create(-150, 250, 'ground');
-    ledge.body.immovable = true;
+    addLedges();
 
     for (var i = 0; i < 10; i++) {
 
         // The player and its settings
         //let player = game.add.sprite(32, game.world.height - 150, 'dude');
-        let player = game.add.sprite(getRandomInt(0, game.world.width), getRandomInt(0, game.world.height - 128), 'dude');
+        let player = game.add.sprite(getRandomInt(0, game.world.width), getRandomInt(0, game.world.height - 200), 'dude');
 
         //  We need to enable physics on the player
         game.physics.arcade.enable(player);
@@ -117,6 +141,7 @@ function create() {
     }
 
     player = chars[0].sprite;
+    game.camera.follow(player, Phaser.Camera.FOLLOW_PLATFORMER);
 
     //  Finally some stars to collect
     stars = game.add.group();
@@ -142,7 +167,7 @@ function create() {
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
-    
+
 }
 
 const accel = 3;
@@ -150,9 +175,11 @@ const accel = 3;
 function update() {
 
     function bounce (player, platform) {
-        if (player.y + player.height <= platform.y) {
+        if (player == charSprites[0])
+            console.log(player.y, player.height, player.y + player.height, platform.world.y);
+        if (player.y + player.height <= platform.world.y) {
             console.log('above');
-            player.body.velocity.y = -300;
+            player.body.velocity.y = -350;
         //} else if (platform.y + platform.height <= player.y) {
         //    console.log('below');
         //    player.body.velocity.y = -player.body.velocity.y;
@@ -169,15 +196,25 @@ function update() {
         }
     }
 
-    charSprites = chars.map(x => x.sprite);
+    function die(player, lava) {
+        player.kill();
+    }
+
+    const charSprites = chars.map(x => x.sprite);
 
     //  Collide the player and the stars with the platforms
     game.physics.arcade.collide(charSprites, platforms, bounce);
     game.physics.arcade.collide(stars, platforms);
     game.physics.arcade.collide(charSprites, charSprites, bounce2);
+    game.physics.arcade.collide(charSprites, lava, die);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.arcade.overlap(charSprites, stars, collectStar, null, this);
+
+    //console.log(charSprites.map(s => s.body.velocity.y));
+    for (let s of charSprites) {
+        s.body.velocity.y = clamp(s.body.velocity.y, 500);
+    }
 
     chars[0].inputs.left.isDown = cursors.left.isDown;
     chars[0].inputs.right.isDown = cursors.right.isDown;
@@ -187,7 +224,14 @@ function update() {
     for (let chr of chars) {
         feedInputs(chr);
     }
+    platforms.y += .2;
 
+    addLedges();
+
+}
+
+function clamp(x, bound) {
+    return Math.min(Math.abs(x), bound) * Math.sign(x);
 }
 
 function feedInputs(chr) {
