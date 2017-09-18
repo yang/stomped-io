@@ -5,7 +5,8 @@
   "author": "Yang Zhang <yaaang@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "phaser": "^2.6.2"
+    "phaser": "^2.6.2",
+    "planck-js": "^0.1.34"
   },
   "devDependencies": {
     "webpack": "^3.5.6"

@@ -1491,6 +1491,10 @@ pify@^2.0.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/pify/-/pify-2.3.0.tgz#ed141a6ac043a849ea588498e7dca8b15330e90c"
 
+planck-js@^0.1.34:
+  version "0.1.34"
+  resolved "https://registry.yarnpkg.com/planck-js/-/planck-js-0.1.34.tgz#3c73793a82baece9dbfaf44c40e0d0c13f104da5"
+
 preserve@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
