@@ -5,10 +5,11 @@ window.p2 = require('phaser/build/custom/p2');
 window.Phaser = require('phaser/build/custom/phaser-split');
 
 import * as Pl from 'planck-js';
+import * as Sio from 'socket.io-client';
 
 const ratio = 24;
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var game;
 
 const ledgeWidth = 300, ledgeHeight = 32;
 
@@ -30,6 +31,7 @@ var lava;
 var ledges = [];
 const gravity = -10;
 var world = Pl.World(Pl.Vec2(0, gravity));
+var socket;
 
 var stars;
 var score = 0;
@@ -311,3 +313,20 @@ function feedInputs(chr) {
     }
 
 }
+
+function main() {
+    socket = Sio('http://localhost:3000');
+    socket.on('connect', () => {
+        console.log('connect')
+
+        socket.emit('join', {name: getRandomInt(0,100)});
+
+        socket.on('joined', (data) => {
+            game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+        });
+
+        socket.on('disconnect', () => console.log('disconnect'));
+    });
+}
+
+main();
