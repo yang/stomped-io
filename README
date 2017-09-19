@@ -2,3 +2,16 @@ Dev Notes
 =========
 
 - May want to consider using simpler [AABB-only physics engine](https://gist.github.com/BonsaiDen/6144232).
+
+Multiplayer Engines
+-------------------
+
+- IGE: only supports interpolation; odd conventions
+- Colyseus: focused on administrivia
+- Timeline: simple micro library for interpolation
+- Lance:
+  - requires heavy framework buy-in, I foresee fighting against it
+  - extrapolation is over *everything*, not selective player-affected things
+
+Ultimately, just going with home-rolled (maybe with some assistance from
+TImeline), but Lance seems like the most promising if things get hairy quickly.
