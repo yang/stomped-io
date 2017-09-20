@@ -6,6 +6,10 @@ export const ratio = 24;
 const gravity = -10;
 export const world = Pl.World(Pl.Vec2(0, gravity));
 
+export function clearArray(xs) {
+  xs.splice(0, xs.length);
+}
+
 export class InputState {
   isDown = false;
 }
@@ -72,9 +76,9 @@ export class Lava extends Ent {
 }
 
 export class Player extends Ent {
-  inputState = new InputState();
   width = 32;
   height = 48;
+  inputs = new Inputs();
   constructor(public name: string, public x: number, public y: number) {super();}
 }
 
@@ -88,6 +92,10 @@ export class Ledge extends Ent {
 }
 
 export class Event extends Serializable {}
+
+export class InputEvent extends Event {
+  constructor(public inputs: Inputs) { super(); }
+}
 
 export class AddEnt extends Event {
   constructor(public ent: Ent) { super(); }

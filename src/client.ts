@@ -7,7 +7,7 @@ const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split'
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
-import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt} from './common';
+import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt, InputEvent, clearArray} from './common';
 import * as _ from 'lodash';
 
 var game;
@@ -30,6 +30,9 @@ var stars;
 var score = 0;
 var scoreText;
 
+var socket;
+var me: Player;
+
 const players: Player[] = [];
 const ledges: Ledge[] = [];
 
@@ -37,32 +40,13 @@ const timeline: Bcast[] = [];
 
 (<any>window).dbg = {platforms, cursors, lava, world, players, ledges};
 
-class InputState {
-  isDown: boolean;
-  constructor() {
-    this.isDown = false;
-  }
-}
-
-class Inputs {
-  left: InputState;
-  down: InputState;
-  right: InputState;
-  up: InputState;
-  constructor() {
-    this.left = new InputState();
-    this.down = new InputState();
-    this.right = new InputState();
-    this.up = new InputState();
-  }
-}
-
 function destroy(sprite) {
   world.destroyBody(sprite.bod);
   sprite.kill();
 }
 
 const entToSprite = new Map();
+const events: Event[] = [];
 
 function create(initSnap) {
 
@@ -83,8 +67,9 @@ function create(initSnap) {
     addEnt(ent);
   }
 
-  const me = entToSprite.get(players[players.length - 1]);
-  game.camera.follow(me, Phaser.Camera.FOLLOW_PLATFORMER);
+  me = players[players.length - 1]
+  const meSprite = entToSprite.get(me);
+  game.camera.follow(meSprite, Phaser.Camera.FOLLOW_PLATFORMER);
 
 //  //  Finally some stars to collect
 //  stars = game.add.group();
@@ -103,10 +88,26 @@ function create(initSnap) {
 
   //  Our controls.
   cursors = game.input.keyboard.createCursorKeys();
+  for (let keyName of ['left', 'down', 'right', 'up']) {
+    const key = cursors[keyName];
+    key.onDown.add(() => events.push(trace(new InputEvent(updateInputs()))));
+    key.onUp.add(() => events.push(new InputEvent(updateInputs())));
+  }
 
 }
 
-const accel = .1;
+function trace(x) {
+  console.log(x);
+  return x;
+}
+
+function updateInputs() {
+  me.inputs.left.isDown = cursors.left.isDown;
+  me.inputs.right.isDown = cursors.right.isDown;
+  me.inputs.down.isDown = cursors.down.isDown;
+  me.inputs.up.isDown = cursors.up.isDown;
+  return me.inputs;
+}
 
 let lastTime = null;
 const dt = 1 / 60.;
@@ -137,6 +138,8 @@ function addPlayer(player) {
   if (!players.find((p) => p.id == player.id)) {
     players.push(player);
     const sprite = game.add.sprite(player.x, player.y, 'dude');
+    sprite.animations.add('left', [0, 1, 2, 3], 10, true);
+    sprite.animations.add('right', [5, 6, 7, 8], 10, true);
     entToSprite.set(player, sprite);
   }
 }
@@ -151,7 +154,6 @@ function addLedge(ledge) {
 }
 
 function tryRemove(id: number, ents: Ent[]) {
-  //const [ent] = _(ents).remove((p) => p.id == id).concat([null]);
   const i = _(ents).findIndex((p) => p.id == id);
   if (i >= 0) {
     const ent = ents[i];
@@ -165,6 +167,15 @@ function update() {
 
   if (lastTime == null) lastTime = performance.now() / 1000;
   const currTime = performance.now();
+
+  if (events.length > 0) {
+    socket.emit('input', {
+      time: currTime,
+      events: events.map((e) => e.ser())
+    });
+    clearArray(events);
+  }
+
   const targetTime = currTime + delta - timeBuffer;
   const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
   if (nextBcastIdx <= 0) return;
@@ -189,8 +200,10 @@ function update() {
   }
   for (let ent of getEnts()) {
     const [a,b] = [aMap.get(ent.id), bMap.get(ent.id)];
-    ent.x = lerp(a.x, b.x, alpha);
-    ent.y = lerp(a.y, b.y, alpha);
+    if (a && b) {
+      ent.x = lerp(a.x, b.x, alpha);
+      ent.y = lerp(a.y, b.y, alpha);
+    }
   }
 
   //while (currTime - lastTime >= dt) {
@@ -212,6 +225,7 @@ function update() {
   //}
 
   for (let player of players) {
+    feedInputs(player);
     updatePos(player);
   }
 
@@ -235,44 +249,22 @@ function clamp(x, bound) {
   return Math.min(Math.abs(x), bound) * Math.sign(x);
 }
 
-function feedInputs(chr) {
-
-  let inputs = chr.inputs;
-  let player = chr.sprite;
-
-  if (inputs.left.isDown)
-    {
-      //  Move to the left
-      player.bod.getLinearVelocity().x = Math.max(player.bod.getLinearVelocity().x - accel, -5);
-
-      player.animations.play('left');
-    }
-    else if (inputs.right.isDown)
-      {
-        //  Move to the right
-        player.bod.getLinearVelocity().x = Math.min(player.bod.getLinearVelocity().x + accel, 5);
-
-        player.animations.play('right');
-      }
-      else
-        {
-          ////  Reset the players velocity (movement)
-          if (player.bod.getLinearVelocity().x < 0) {
-            player.bod.getLinearVelocity().x = Math.min(0, player.bod.getLinearVelocity().x + accel);
-          } else {
-            player.bod.getLinearVelocity().x = Math.max(0, player.bod.getLinearVelocity().x - accel);
-          }
-
-          //  Stand still
-          player.animations.stop();
-
-          player.frame = 4;
-        }
-
+function feedInputs(player) {
+  const inputs = player.inputs;
+  const sprite = entToSprite.get(player);
+  if (inputs.left.isDown) {
+    sprite.animations.play('left');
+  } else if (inputs.right.isDown) {
+    sprite.animations.play('right');
+  } else {
+    //  Stand still
+    sprite.animations.stop();
+    sprite.frame = 4;
+  }
 }
 
 function main() {
-  const socket = Sio('http://localhost:3000');
+  socket = Sio('http://localhost:3000');
   socket.on('connect', () => {
     console.log('connect')
 

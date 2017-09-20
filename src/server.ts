@@ -3,14 +3,9 @@ export {};
 import * as Sio from 'socket.io';
 import * as Common from './common';
 import * as Pl from 'planck-js';
-import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, RemEnt, Event} from './common';
+import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, RemEnt, Event, InputEvent, clearArray} from './common';
 
 const io = Sio();
-
-class InputEvent {
-  tick: number;
-  keys: any;
-}
 
 const events: Event[] = [];
 const players = [];
@@ -47,7 +42,31 @@ function updatePos(ent) {
   ent.y = ratio * -ent.bod.getPosition().y - ent.height / 2;
 }
 
+const accel = .1;
+
+function feedInputs(player) {
+
+  const inputs = player.inputs;
+
+  if (inputs.left.isDown) {
+    //  Move to the left
+    player.bod.getLinearVelocity().x = Math.max(player.bod.getLinearVelocity().x - accel, -5);
+  } else if (inputs.right.isDown) {
+    //  Move to the right
+    player.bod.getLinearVelocity().x = Math.min(player.bod.getLinearVelocity().x + accel, 5);
+  } else {
+    ////  Reset the players velocity (movement)
+    if (player.bod.getLinearVelocity().x < 0) {
+      player.bod.getLinearVelocity().x = Math.min(0, player.bod.getLinearVelocity().x + accel);
+    } else {
+      player.bod.getLinearVelocity().x = Math.max(0, player.bod.getLinearVelocity().x - accel);
+    }
+  }
+
+}
+
 function update() {
+  for (let player of players) feedInputs(player);
   Common.update();
   addLedges();
   tick += 1;
@@ -57,10 +76,6 @@ const playerToSocket = new Map();
 
 function getEnts() {
   return players.concat(ledges);
-}
-
-function clearArray(xs) {
-  xs.splice(0, xs.length);
 }
 
 function bcast() {
@@ -208,17 +223,19 @@ function makePlayer(name) {
 io.on('connection', (socket: SocketIO.Socket) => {
   console.log('client connected');
 
-  socket.on('join', (player) => {
-    console.log(`player ${player.name} joined`);
+  socket.on('join', (playerData) => {
+    const player = makePlayer(playerData.name);
+    playerToSocket.set(player, socket);
 
-    playerToSocket.set(makePlayer(player.name), socket);
+    console.log(`player ${player.name} joined`);
 
     // TODO create player-joined event
 
     socket.emit('joined', initSnap());
 
-    socket.on('input', (input: InputEvent) => {
-      console.log(`player ${player.name} sent input for t=${input.tick}: ${input.keys}`);
+    socket.on('input', (data) => {
+      console.log(`player ${player.name} sent input for t=${data.time}`);
+      player.inputs = data.events[data.events.length - 1].inputs;
     });
 
     socket.on('disconnect', () => {
