@@ -83,14 +83,14 @@ export class Ledge extends Ent {
 }
 
 export interface Event {}
-//
-//export class AddObj extends Event {
-//  constructor(public obj: Ent) {}
-//}
-//
-//export class RemObj extends Event {
-//  constructor(public id: number) {}
-//}
+
+export class AddEnt implements Event {
+  constructor(public ent: Ent) {}
+}
+
+export class RemEnt implements Event {
+  constructor(public id: number) {}
+}
 
 export function addBody(ent, type, fixtureOpts = {}) {
   ent.bod = world.createBody({

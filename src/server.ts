@@ -3,7 +3,7 @@ export {};
 import * as Sio from 'socket.io';
 import * as Common from './common';
 import * as Pl from 'planck-js';
-import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast} from './common';
+import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, Event} from './common';
 
 const io = Sio();
 
@@ -12,7 +12,7 @@ class InputEvent {
   keys: any;
 }
 
-const events = [];
+const events: Event[] = [];
 const players = [];
 const ledges = [];
 const game = {
@@ -58,6 +58,10 @@ function getEnts() {
   return players.concat(ledges);
 }
 
+function clearArray(xs) {
+  xs.splice(0, xs.length);
+}
+
 function bcast() {
   for (let ent of getEnts()) {
     updatePos(ent);
@@ -79,6 +83,7 @@ function bcast() {
         socket.emit('bcast', snapshot);
       }
     }
+    clearArray(events);
     //lastBcastTime = currTime;
   //}
   bcastNum += 1;
@@ -97,7 +102,7 @@ function addLedges() {
     addBody(ledge, 'kinematic');
     ledge.bod.setLinearVelocity(Pl.Vec2(0, -2));
     ledges.push(ledge);
-    //events.push(new AddObj());
+    events.push(new AddEnt(ledge));
   }
 }
 
