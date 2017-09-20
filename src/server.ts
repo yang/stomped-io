@@ -23,7 +23,8 @@ const game = {
 };
 
 let lastBcastTime = null;
-const bcastPeriod = 1 / 20;
+const bcastPeriod = 1 / 10;
+let tick = 0, bcastNum = 0;
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
@@ -33,7 +34,9 @@ function getRandomInt(min, max) {
 
 function initSnap() {
   return {
-    tick: 0,
+    time: Date.now(),
+    tick: tick,
+    bcastNum: bcastNum,
     players: players.map((p) => p.ser()),
     ledges: ledges.map((p) => p.ser())
   }
@@ -46,6 +49,7 @@ function updatePos(gameObj) {
 
 function update() {
   Common.update();
+  tick += 1;
 }
 
 const playerToSocket = new Map();
@@ -58,6 +62,9 @@ function bcast() {
   //if (currTime - lastBcastTime >= bcastPeriod) {
     // snapshot world
     const snapshot = {
+      time: Date.now(),
+      tick: tick,
+      bcastNum: bcastNum,
       events: events,
       players: players.map((p) => p.ser())
     };
@@ -70,6 +77,7 @@ function bcast() {
     }
     //lastBcastTime = currTime;
   //}
+  bcastNum += 1;
 }
 
 const ledgeSpacing = 200;

@@ -16,6 +16,14 @@ export class Inputs {
   up = new InputState();
 }
 
+export class Bcast {
+  time: number;
+  tick: number;
+  bcastNum: number;
+  events: Event[];
+  players: Player[];
+}
+
 var omit = function(obj, key) {
     var newObj = {};
 
@@ -28,11 +36,21 @@ var omit = function(obj, key) {
     return newObj;
 };
 
+function* genIds() {
+  let i = 0;
+  while (true) {
+    yield i;
+    i += 1;
+  }
+}
+const ids = genIds();
+
 export class GameObj {
   width: number;
   height: number;
   x: number;
   y: number;
+  id = ids.next().value;
   ser() {
     return omit(this, 'bod');
   }
@@ -60,7 +78,7 @@ export class Ledge extends GameObj {
   constructor(public x: number, public y: number) {super();}
 }
 
-//export interface Event {}
+export interface Event {}
 //
 //export class AddObj extends Event {
 //  constructor(public obj: GameObj) {}

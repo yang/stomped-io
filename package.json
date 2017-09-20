@@ -5,6 +5,7 @@
   "author": "Yang Zhang <yaaang@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/lodash": "^4.14.74",
     "lodash": "^4.17.4",
     "phaser": "^2.6.2",
     "planck-js": "^0.1.34",

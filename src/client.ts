@@ -7,7 +7,7 @@ const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split'
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
-import {world, ratio, addBody} from './common';
+import {Player, world, ratio, addBody, Bcast} from './common';
 import * as _ from 'lodash';
 
 var game;
@@ -30,7 +30,9 @@ var stars;
 var score = 0;
 var scoreText;
 
-let players, ledges;
+let players: Player[], ledges;
+
+const timeline: Bcast[] = [];
 
 (<any>window).dbg = {platforms, cursors, lava, world, players, ledges};
 
@@ -113,10 +115,32 @@ const accel = .1;
 let lastTime = null;
 const dt = 1 / 60.;
 
+const timeBuffer = 200;
+let delta = null;
+
+function lerp(a,b,alpha) {
+  return a + alpha * (b - a);
+}
+
 function update() {
 
   if (lastTime == null) lastTime = performance.now() / 1000;
-  const currTime = performance.now() / 1000;
+  const currTime = performance.now();
+  const targetTime = currTime + delta - timeBuffer;
+  const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
+  if (nextBcastIdx <= 0) return;
+  const nextBcast = timeline[nextBcastIdx];
+  const prevBcast = timeline[nextBcastIdx - 1];
+  const alpha = (targetTime - prevBcast.time) / (nextBcast.time - prevBcast.time);
+
+  const aMap = new Map(prevBcast.players.map<[number, Player]>((p) => [p.id, p]));
+  const bMap = new Map(nextBcast.players.map<[number, Player]>((p) => [p.id, p]));
+  for (let player of players) {
+    const [a,b] = [aMap.get(player.id), bMap.get(player.id)];
+    player.x = lerp(a.x, b.x, alpha);
+    player.y = lerp(a.y, b.y, alpha);
+  }
+  
 
   function die(player, lava) {
     player.kill();
@@ -215,12 +239,11 @@ function main() {
       });
 
       ({players, ledges} = initSnap);
+      timeline.push(initSnap);
+      delta = initSnap.time - performance.now();
 
       socket.on('bcast', (bcast) => {
-        for (let [a,b] of _.zip(players, bcast.players)) {
-          a.x = b.x;
-          a.y = b.y;
-        }
+        timeline.push(bcast);
       });
     });
 
