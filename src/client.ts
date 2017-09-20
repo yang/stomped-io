@@ -1,6 +1,6 @@
-window.PIXI = require('phaser/build/custom/pixi');
-window.p2 = require('phaser/build/custom/p2');
-window.Phaser = require('phaser/build/custom/phaser-split');
+(<any>global).PIXI = require('phaser/build/custom/pixi');
+(<any>global).p2 = require('phaser/build/custom/p2');
+const Phaser = (<any>global).Phaser = require('phaser/build/custom/phaser-split');
 
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
@@ -40,15 +40,20 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
 
-window.dbg = {player, chars, platforms, cursors, lava, ledges, gravity, world, stars, score};
+(<any>global).dbg = {player, chars, platforms, cursors, lava, ledges, gravity, world, stars, score};
 
 class InputState {
+  isDown: boolean;
   constructor() {
     this.isDown = false;
   }
 }
 
 class Inputs {
+  left: InputState;
+  down: InputState;
+  right: InputState;
+  up: InputState;
   constructor() {
     this.left = new InputState();
     this.down = new InputState();
@@ -58,6 +63,8 @@ class Inputs {
 }
 
 class Char {
+  sprite: Pl.Sprite;
+  inputs: Inputs;
   constructor(sprite) {
     this.sprite = sprite;
     this.inputs = new Inputs();
@@ -95,7 +102,7 @@ function addBody(sprite, type, fixtureOpts = {}) {
 }
 
 const ledgeSpacing = 200;
-function addLedges(x) {
+function addLedges() {
   while (true) {
     if (ledges.length > 0 && ledges[ledges.length - 1].y - ledgeSpacing < -ledgeHeight)
       break;
