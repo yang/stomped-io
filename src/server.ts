@@ -1,23 +1,31 @@
 export {};
 
-const Sio = require('socket.io');
+import * as Sio from 'socket.io';
 
 const io = Sio();
-console.log(io.xxx.xxx);
 
-io.on('connection', (socket) => {
+interface Player {
+  name: string;
+}
+
+interface Input {
+  time: number;
+  keys: any;
+}
+
+io.on('connection', (socket: SocketIO.Socket) => {
   console.log('client connected');
 
-  socket.on('join', (player) => {
+  socket.on('join', (player: Player) => {
     console.log(`player ${player.name} joined`);
 
     socket.emit('joined', {world: 'blah'});
 
-    socket.on('input', (input) => {
+    socket.on('input', (input: Input) => {
       console.log(`player ${player.name} sent input for t=${input.time}: ${input.keys}`);
     });
 
-    socket.on('disconnect', (data) => {
+    socket.on('disconnect', () => {
       console.log(`player ${player.name} disconnected`);
     });
   });
