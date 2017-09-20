@@ -7,7 +7,7 @@ const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split'
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
-import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt} from './common';
+import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt} from './common';
 import * as _ from 'lodash';
 
 var game;
@@ -150,6 +150,17 @@ function addLedge(ledge) {
   }
 }
 
+function tryRemove(id: number, ents: Ent[]) {
+  //const [ent] = _(ents).remove((p) => p.id == id).concat([null]);
+  const i = _(ents).findIndex((p) => p.id == id);
+  if (i >= 0) {
+    const ent = ents[i];
+    ents.splice(i, 1);
+    entToSprite.get(ent).kill();
+    entToSprite.delete(ent);
+  }
+}
+
 function update() {
 
   if (lastTime == null) lastTime = performance.now() / 1000;
@@ -170,6 +181,9 @@ function update() {
         addEnt(ent);
         break;
       case 'RemEnt':
+        const id = (<RemEnt>ev).id;
+        tryRemove(id, players);
+        tryRemove(id, ledges);
         break;
     }
   }
@@ -177,10 +191,6 @@ function update() {
     const [a,b] = [aMap.get(ent.id), bMap.get(ent.id)];
     ent.x = lerp(a.x, b.x, alpha);
     ent.y = lerp(a.y, b.y, alpha);
-  }
-
-  function die(player, lava) {
-    player.kill();
   }
 
   //while (currTime - lastTime >= dt) {

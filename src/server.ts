@@ -3,7 +3,7 @@ export {};
 import * as Sio from 'socket.io';
 import * as Common from './common';
 import * as Pl from 'planck-js';
-import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, Event} from './common';
+import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, RemEnt, Event} from './common';
 
 const io = Sio();
 
@@ -183,8 +183,15 @@ function create() {
 
 }
 
-function destroy(sprite) {
-  world.destroyBody(sprite.bod);
+function destroy(ent) {
+  world.destroyBody(ent.bod);
+  //if (ent instanceof Player) {
+  //  players.remove(ent);
+  //}
+  //if (ent instanceof Ledge) {
+  //  ledges.remove(ent);
+  //}
+  events.push(new RemEnt(ent.id));
 }
 
 function makePlayer(name) {
