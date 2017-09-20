@@ -1,6 +1,8 @@
-(<any>global).PIXI = require('phaser/build/custom/pixi');
-(<any>global).p2 = require('phaser/build/custom/p2');
-const Phaser = (<any>global).Phaser = require('phaser/build/custom/phaser-split');
+export {};
+
+(<any>window).PIXI = require('phaser/build/custom/pixi');
+(<any>window).p2 = require('phaser/build/custom/p2');
+const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split');
 
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
@@ -40,7 +42,7 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
 
-(<any>global).dbg = {player, chars, platforms, cursors, lava, ledges, gravity, world, stars, score};
+(<any>window).dbg = {player, chars, platforms, cursors, lava, ledges, gravity, world, stars, score};
 
 class InputState {
   isDown: boolean;

@@ -1,6 +1,9 @@
+export {};
+
 const Sio = require('socket.io');
 
 const io = Sio();
+console.log(io.xxx.xxx);
 
 io.on('connection', (socket) => {
   console.log('client connected');
