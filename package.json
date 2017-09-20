@@ -5,6 +5,7 @@
   "author": "Yang Zhang <yaaang@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "lodash": "^4.17.4",
     "phaser": "^2.6.2",
     "planck-js": "^0.1.34",
     "socket.io": "^2.0.3",

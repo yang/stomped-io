@@ -3,7 +3,7 @@ export {};
 import * as Sio from 'socket.io';
 import * as Common from './common';
 import * as Pl from 'planck-js';
-import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth} from './common';
+import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod} from './common';
 
 const io = Sio();
 
@@ -12,6 +12,7 @@ class InputEvent {
   keys: any;
 }
 
+const events = [];
 const players = [];
 const ledges = [];
 const game = {
@@ -38,23 +39,38 @@ function initSnap() {
   }
 }
 
-//function update() {
-//  Common.update();
-//
-//  if (lastBcastTime == null) lastBcastTime = Date.now() / 1000;
-//  if (currTime - lastBcastTime >= bcastPeriod) {
-//    // snapshot world
-//    const snapshot = {
-//      players: players.map((p) => p.name),
-//      events: events
-//    };
-//    // broadcast
-//    for (let player of players) {
-//      player.socket.emit('', {});
-//    }
-//    lastBcastTime = currTime;
-//  }
-//}
+function updatePos(gameObj) {
+  gameObj.x = ratio * gameObj.bod.getPosition().x - gameObj.width / 2;
+  gameObj.y = ratio * -gameObj.bod.getPosition().y - gameObj.height / 2;
+}
+
+function update() {
+  Common.update();
+}
+
+const playerToSocket = new Map();
+
+function bcast() {
+  for (let player of players) {
+    updatePos(player);
+  }
+  //if (lastBcastTime == null) lastBcastTime = Date.now() / 1000;
+  //if (currTime - lastBcastTime >= bcastPeriod) {
+    // snapshot world
+    const snapshot = {
+      events: events,
+      players: players.map((p) => p.ser())
+    };
+    // broadcast
+    for (let player of players) {
+      const socket = playerToSocket.get(player);
+      if (socket) {
+        socket.emit('bcast', snapshot);
+      }
+    }
+    //lastBcastTime = currTime;
+  //}
+}
 
 const ledgeSpacing = 200;
 function addLedges() {
@@ -69,6 +85,7 @@ function addLedges() {
     addBody(ledge, 'kinematic');
     ledge.bod.setLinearVelocity(Pl.Vec2(0, -2));
     ledges.push(ledge);
+    //events.push(new AddObj());
   }
 }
 
@@ -97,6 +114,9 @@ function create() {
     //schedRandInputs(player);
   }
 
+  setInterval(bcast, bcastPeriod * 1000);
+  setInterval(update, updatePeriod * 1000);
+
   world.on('end-contact', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
     const fB = contact.getFixtureB(), bB = fB.getBody();
@@ -104,7 +124,7 @@ function create() {
       if (players.includes(bA.getUserData())) {
         // only clear of each other in the next tick
         setTimeout(() => {
-          console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
+          //console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
           if (fA.getAABB(0).lowerBound.y >= fB.getAABB(0).upperBound.y) {
             bA.getLinearVelocity().y = 12;
           }
@@ -166,7 +186,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
   socket.on('join', (player) => {
     console.log(`player ${player.name} joined`);
 
-    makePlayer(player.name);
+    playerToSocket.set(makePlayer(player.name), socket);
 
     // TODO create player-joined event
 
@@ -182,5 +202,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
   });
 
 });
+
+create();
 
 io.listen(3000);

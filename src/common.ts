@@ -60,6 +60,16 @@ export class Ledge extends GameObj {
   constructor(public x: number, public y: number) {super();}
 }
 
+//export interface Event {}
+//
+//export class AddObj extends Event {
+//  constructor(public obj: GameObj) {}
+//}
+//
+//export class RemObj extends Event {
+//  constructor(public id: number) {}
+//}
+
 export function addBody(gameObj, type, fixtureOpts = {}) {
   gameObj.bod = world.createBody({
     type: type,
@@ -78,6 +88,7 @@ export function addBody(gameObj, type, fixtureOpts = {}) {
 
 let lastTime = null;
 const dt = 1 / 60.;
+export const updatePeriod = dt;
 
 export function update() {
   const currTime = Date.now() / 1000;

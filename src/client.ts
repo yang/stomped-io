@@ -8,6 +8,7 @@ import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
 import {world, ratio, addBody} from './common';
+import * as _ from 'lodash';
 
 var game;
 
@@ -29,7 +30,9 @@ var stars;
 var score = 0;
 var scoreText;
 
-(<any>window).dbg = {platforms, cursors, lava, world};
+let players, ledges;
+
+(<any>window).dbg = {platforms, cursors, lava, world, players, ledges};
 
 class InputState {
   isDown: boolean;
@@ -137,8 +140,12 @@ function update() {
     //updatePos(chr);
   //}
 
-  for (let platform of platforms.children) {
-    updatePos(platform);
+  for (let player of players) {
+    updatePos(player);
+  }
+
+  for (let ledge of ledges) {
+    updatePos(ledge);
   }
 
   //for (let star of stars.children) {
@@ -147,9 +154,10 @@ function update() {
 
 }
 
-function updatePos(sprite) {
-  sprite.x = ratio * sprite.bod.getPosition().x - sprite.width / 2;
-  sprite.y = ratio * -sprite.bod.getPosition().y - sprite.height / 2;
+function updatePos(gameObj) {
+  const sprite = gameObjToSprite.get(gameObj);
+  sprite.x = gameObj.x;
+  sprite.y = gameObj.y;
 }
 
 function clamp(x, bound) {
@@ -199,11 +207,20 @@ function main() {
 
     socket.emit('join', {name: 'z'});
 
-    socket.on('joined', (data) => {
+    socket.on('joined', (initSnap) => {
       game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
         preload: preload,
-        create: () => create(data),
+        create: () => create(initSnap),
         update: update
+      });
+
+      ({players, ledges} = initSnap);
+
+      socket.on('bcast', (bcast) => {
+        for (let [a,b] of _.zip(players, bcast.players)) {
+          a.x = b.x;
+          a.y = b.y;
+        }
       });
     });
 
