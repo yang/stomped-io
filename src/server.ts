@@ -122,19 +122,19 @@ function addLedges() {
   }
 }
 
-//function schedRandInputs(chr) {
-//  let allClear = true;
-//  for (var key of ['left','right']) {
-//    if (chr.inputs[key].isDown) {
-//      chr.inputs[key].isDown = false;
-//      allClear = false;
-//    }
-//  }
-//  if (allClear) {
-//    chr.inputs[['left','right'][getRandomInt(0,2) % 2]].isDown = true;
-//  }
-//  setTimeout(() => schedRandInputs(chr), getRandomInt(1000, 3000));
-//}
+function schedRandInputs(player) {
+  let allClear = true;
+  for (var key of ['left','right']) {
+    if (player.inputs[key].isDown) {
+      player.inputs[key].isDown = false;
+      allClear = false;
+    }
+  }
+  if (allClear) {
+    player.inputs[['left','right'][getRandomInt(0,2) % 2]].isDown = true;
+  }
+  setTimeout(() => schedRandInputs(player), getRandomInt(1000, 3000));
+}
 
 function create() {
   const lava = new Lava(0, game.world.height - 64);
@@ -144,7 +144,7 @@ function create() {
 
   for (let i = 0; i < 10; i++) {
     const player = makePlayer(`bot${i}`);
-    //schedRandInputs(player);
+    schedRandInputs(player);
   }
 
   setInterval(bcast, bcastPeriod * 1000);
