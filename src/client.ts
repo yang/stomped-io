@@ -7,7 +7,7 @@ const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split'
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
-import {Player, Ledge, world, ratio, addBody, Bcast, Ent} from './common';
+import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt} from './common';
 import * as _ from 'lodash';
 
 var game;
@@ -64,7 +64,7 @@ function destroy(sprite) {
 
 const entToSprite = new Map();
 
-function create() {
+function create(initSnap) {
 
   game.world.setBounds(0,0,800,2400);
 
@@ -77,15 +77,10 @@ function create() {
 
   //  The platforms group contains the ground and the 2 ledges we can jump on
   platforms = game.add.group();
-  for (let ledge of ledges) {
-    const platform = platforms.create(ledge.x, ledge.y, 'ground');
-    platform.scale.setTo(.75, 1);
-    entToSprite.set(ledge, platform);
-  }
 
-  for (let player of players) {
-    const sprite = game.add.sprite(player.x, player.y, 'dude');
-    entToSprite.set(player, sprite);
+  const {ents} = initSnap;
+  for (let ent of ents) {
+    addEnt(ent);
   }
 
   const me = entToSprite.get(players[players.length - 1]);
@@ -127,6 +122,34 @@ function getEnts() {
   return (<Ent[]>players).concat(ledges);
 }
 
+function addEnt(ent) {
+  switch (ent.type) {
+    case 'Player':
+      addPlayer(<Player>ent);
+      break;
+    case 'Ledge':
+      addLedge(<Ledge>ent);
+      break;
+  }
+}
+
+function addPlayer(player) {
+  if (!players.find((p) => p.id == player.id)) {
+    players.push(player);
+    const sprite = game.add.sprite(player.x, player.y, 'dude');
+    entToSprite.set(player, sprite);
+  }
+}
+
+function addLedge(ledge) {
+  if (!ledges.find((p) => p.id == ledge.id)) {
+    ledges.push(ledge);
+    const platform = platforms.create(ledge.x, ledge.y, 'ground');
+    platform.scale.setTo(.75, 1);
+    entToSprite.set(ledge, platform);
+  }
+}
+
 function update() {
 
   if (lastTime == null) lastTime = performance.now() / 1000;
@@ -140,6 +163,16 @@ function update() {
 
   const aMap = new Map(prevBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
   const bMap = new Map(nextBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
+  for (let ev of prevBcast.events) {
+    switch (ev.type) {
+      case 'AddEnt':
+        const ent: Ent = (<AddEnt>ev).ent;
+        addEnt(ent);
+        break;
+      case 'RemEnt':
+        break;
+    }
+  }
   for (let ent of getEnts()) {
     const [a,b] = [aMap.get(ent.id), bMap.get(ent.id)];
     ent.x = lerp(a.x, b.x, alpha);
@@ -236,23 +269,9 @@ function main() {
     socket.emit('join', {name: 'z'});
 
     socket.on('joined', (initSnap) => {
-      const {ents} = initSnap;
-      for (let ent of ents) {
-        switch (ent.type) {
-          case 'Player':
-            players.push(<Player> ent);
-            break;
-          case 'Ledge':
-            ledges.push(<Ledge> ent);
-            break;
-          default:
-            throw new Error();
-        }
-      }
-
       game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
         preload: preload,
-        create: create,
+        create: () => create(initSnap),
         update: update
       });
 

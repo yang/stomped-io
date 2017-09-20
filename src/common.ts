@@ -1,4 +1,5 @@
 import * as Pl from 'planck-js';
+import * as _ from 'lodash';
 
 export const ratio = 24;
 
@@ -45,18 +46,22 @@ function* genIds() {
 }
 const ids = genIds();
 
-export class Ent {
-  width: number;
-  height: number;
-  x: number;
-  y: number;
+export class Serializable {
   type: string;
   constructor() {
     this.type = this.constructor.name;
   }
+  ser(): this { return this; }
+}
+
+export class Ent extends Serializable {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
   id = ids.next().value;
-  ser() {
-    return omit(this, 'bod');
+  ser(): this {
+    return <this>omit(this, 'bod');
   }
 }
 
@@ -82,14 +87,21 @@ export class Ledge extends Ent {
   constructor(public x: number, public y: number) {super();}
 }
 
-export interface Event {}
+export class Event extends Serializable {}
 
-export class AddEnt implements Event {
-  constructor(public ent: Ent) {}
+export class AddEnt extends Event {
+  constructor(public ent: Ent) { super(); }
+  ser(): this {
+    return _(this)
+      .chain()
+      .clone()
+      .extend({ent: this.ent.ser()})
+      .value();
+  }
 }
 
-export class RemEnt implements Event {
-  constructor(public id: number) {}
+export class RemEnt extends Event {
+  constructor(public id: number) { super(); }
 }
 
 export function addBody(ent, type, fixtureOpts = {}) {

@@ -49,6 +49,7 @@ function updatePos(ent) {
 
 function update() {
   Common.update();
+  addLedges();
   tick += 1;
 }
 
@@ -102,7 +103,7 @@ function addLedges() {
     addBody(ledge, 'kinematic');
     ledge.bod.setLinearVelocity(Pl.Vec2(0, -2));
     ledges.push(ledge);
-    events.push(new AddEnt(ledge));
+    events.push(new AddEnt(ledge).ser());
   }
 }
 
