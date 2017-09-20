@@ -3,7 +3,7 @@ export {};
 import * as Sio from 'socket.io';
 import * as Common from './common';
 import * as Pl from 'planck-js';
-import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod} from './common';
+import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast} from './common';
 
 const io = Sio();
 
@@ -33,12 +33,12 @@ function getRandomInt(min, max) {
 }
 
 function initSnap() {
-  return {
+  return <Bcast>{
     time: Date.now(),
     tick: tick,
     bcastNum: bcastNum,
-    players: players.map((p) => p.ser()),
-    ledges: ledges.map((p) => p.ser())
+    events: [],
+    ents: getEnts().map((p) => p.ser())
   }
 }
 
@@ -54,20 +54,24 @@ function update() {
 
 const playerToSocket = new Map();
 
+function getEnts() {
+  return players.concat(ledges);
+}
+
 function bcast() {
-  for (let player of players) {
-    updatePos(player);
+  for (let ent of getEnts()) {
+    updatePos(ent);
   }
   //if (lastBcastTime == null) lastBcastTime = Date.now() / 1000;
   //if (currTime - lastBcastTime >= bcastPeriod) {
     // snapshot world
-    const snapshot = {
+    const snapshot: Bcast = ({
       time: Date.now(),
       tick: tick,
       bcastNum: bcastNum,
       events: events,
-      players: players.map((p) => p.ser())
-    };
+      ents: getEnts().map((p) => p.ser())
+    });
     // broadcast
     for (let player of players) {
       const socket = playerToSocket.get(player);

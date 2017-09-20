@@ -16,12 +16,12 @@ export class Inputs {
   up = new InputState();
 }
 
-export class Bcast {
+export interface Bcast {
   time: number;
   tick: number;
   bcastNum: number;
   events: Event[];
-  players: Player[];
+  ents: Ent[];
 }
 
 var omit = function(obj, key) {
@@ -50,6 +50,10 @@ export class Ent {
   height: number;
   x: number;
   y: number;
+  type: string;
+  constructor() {
+    this.type = this.constructor.name;
+  }
   id = ids.next().value;
   ser() {
     return omit(this, 'bod');
