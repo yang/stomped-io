@@ -61,7 +61,7 @@ function destroy(sprite) {
   sprite.kill();
 }
 
-const gameObjToSprite = new Map();
+const entToSprite = new Map();
 
 function create({ledges, players}) {
 
@@ -79,15 +79,15 @@ function create({ledges, players}) {
   for (let ledge of ledges) {
     const platform = platforms.create(ledge.x, ledge.y, 'ground');
     platform.scale.setTo(.75, 1);
-    gameObjToSprite.set(ledge, platform);
+    entToSprite.set(ledge, platform);
   }
 
   for (let player of players) {
     const sprite = game.add.sprite(player.x, player.y, 'dude');
-    gameObjToSprite.set(player, sprite);
+    entToSprite.set(player, sprite);
   }
 
-  const me = gameObjToSprite.get(players[players.length - 1]);
+  const me = entToSprite.get(players[players.length - 1]);
   game.camera.follow(me, Phaser.Camera.FOLLOW_PLATFORMER);
 
 //  //  Finally some stars to collect
@@ -178,10 +178,10 @@ function update() {
 
 }
 
-function updatePos(gameObj) {
-  const sprite = gameObjToSprite.get(gameObj);
-  sprite.x = gameObj.x;
-  sprite.y = gameObj.y;
+function updatePos(ent) {
+  const sprite = entToSprite.get(ent);
+  sprite.x = ent.x;
+  sprite.y = ent.y;
 }
 
 function clamp(x, bound) {

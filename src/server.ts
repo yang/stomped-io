@@ -42,9 +42,9 @@ function initSnap() {
   }
 }
 
-function updatePos(gameObj) {
-  gameObj.x = ratio * gameObj.bod.getPosition().x - gameObj.width / 2;
-  gameObj.y = ratio * -gameObj.bod.getPosition().y - gameObj.height / 2;
+function updatePos(ent) {
+  ent.x = ratio * ent.bod.getPosition().x - ent.width / 2;
+  ent.y = ratio * -ent.bod.getPosition().y - ent.height / 2;
 }
 
 function update() {

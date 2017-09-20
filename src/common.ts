@@ -45,7 +45,7 @@ function* genIds() {
 }
 const ids = genIds();
 
-export class GameObj {
+export class Ent {
   width: number;
   height: number;
   x: number;
@@ -56,13 +56,13 @@ export class GameObj {
   }
 }
 
-export class Lava extends GameObj {
+export class Lava extends Ent {
   width = 800;
   height = 64;
   constructor(public x: number, public y: number) {super();}
 }
 
-export class Player extends GameObj {
+export class Player extends Ent {
   inputState = new InputState();
   width = 32;
   height = 48;
@@ -71,7 +71,7 @@ export class Player extends GameObj {
 
 export const ledgeWidth = 300, ledgeHeight = 32;
 
-export class Ledge extends GameObj {
+export class Ledge extends Ent {
   bod: Pl.Body;
   width = ledgeWidth;
   height = ledgeHeight;
@@ -81,27 +81,27 @@ export class Ledge extends GameObj {
 export interface Event {}
 //
 //export class AddObj extends Event {
-//  constructor(public obj: GameObj) {}
+//  constructor(public obj: Ent) {}
 //}
 //
 //export class RemObj extends Event {
 //  constructor(public id: number) {}
 //}
 
-export function addBody(gameObj, type, fixtureOpts = {}) {
-  gameObj.bod = world.createBody({
+export function addBody(ent, type, fixtureOpts = {}) {
+  ent.bod = world.createBody({
     type: type,
     fixedRotation: true,
-    position: Pl.Vec2((gameObj.x + gameObj.width / 2) / ratio, -(gameObj.y + gameObj.height / 2) / ratio),
-    userData: gameObj
+    position: Pl.Vec2((ent.x + ent.width / 2) / ratio, -(ent.y + ent.height / 2) / ratio),
+    userData: ent
   });
-  gameObj.bod.createFixture(Object.assign({
-    shape: Pl.Box(gameObj.width / 2 / ratio, gameObj.height / 2 / ratio),
+  ent.bod.createFixture(Object.assign({
+    shape: Pl.Box(ent.width / 2 / ratio, ent.height / 2 / ratio),
     density: 1,
     restitution: 1,
     friction: 0
   }, fixtureOpts));
-  return gameObj.bod;
+  return ent.bod;
 }
 
 let lastTime = null;
