@@ -10,7 +10,7 @@ io.on('connection', (socket) => {
 
     socket.emit('joined', {world: 'blah'});
 
-    socket.on('input', (data) => {
+    socket.on('input', (input) => {
       console.log(`player ${player.name} sent input for t=${input.time}: ${input.keys}`);
     });
 
