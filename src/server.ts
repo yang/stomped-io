@@ -217,6 +217,7 @@ function makePlayer(name) {
   );
   addBody(player, 'dynamic');
   players.push(player);
+  events.push(new AddEnt(player).ser());
   return player;
 }
 
