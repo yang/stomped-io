@@ -7,7 +7,7 @@ const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split'
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
-import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt, InputEvent, clearArray} from './common';
+import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt, InputEvent, clearArray, Vec2, gravity, accel, updatePeriod} from './common';
 import * as _ from 'lodash';
 
 var game;
@@ -48,9 +48,14 @@ function destroy(sprite) {
 const entToSprite = new Map();
 const events: Event[] = [];
 
+let gfx;
+
 function create(initSnap) {
 
   game.world.setBounds(0,0,800,2400);
+
+  gfx = game.add.graphics(0,0);
+  gfx.lineStyle(1,0x0088FF,1);
 
   //  A simple background for our game
   game.add.sprite(0, 0, 'sky');
@@ -203,6 +208,8 @@ function update() {
     if (a && b) {
       ent.x = lerp(a.x, b.x, alpha);
       ent.y = lerp(a.y, b.y, alpha);
+      ent.vel.x = lerp(a.vel.x, b.vel.x, alpha);
+      ent.vel.y = lerp(a.vel.y, b.vel.y, alpha);
     }
   }
 
@@ -236,6 +243,24 @@ function update() {
   //for (let star of stars.children) {
     //updatePos(star);
   //}
+
+  gfx.clear();
+  gfx.lineStyle(1,0x0088FF,1);
+  gfx.moveTo(me.x, me.y);
+  const dt = 1/10;
+  let x = me.x, y = me.y;
+  let vx = me.vel.x, vy = me.vel.y;
+  for (let i = 0; i < 20; i++) {
+    //const currAccel = me.inputs.left.isDown * 
+    x += vx * dt;
+    y += vy * dt;
+    vx += clamp(
+        (me.inputs.left.isDown ? -1 : me.inputs.right.isDown ? 1 : 0) * ratio * accel / updatePeriod * dt,
+        ratio * 5
+    );
+    vy += -gravity * ratio * dt;
+    gfx.lineTo(x, y);
+  }
 
 }
 

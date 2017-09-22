@@ -2,8 +2,9 @@ import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 
 export const ratio = 24;
+export const accel = 0.1;
 
-const gravity = -10;
+export const gravity = -10;
 export const world = Pl.World(Pl.Vec2(0, gravity));
 
 export function clearArray(xs) {
@@ -58,11 +59,16 @@ export class Serializable {
   ser(): this { return this; }
 }
 
+export class Vec2 {
+  constructor(public x = 0, public y = 0) {}
+}
+
 export class Ent extends Serializable {
   width: number;
   height: number;
   x: number;
   y: number;
+  vel = new Vec2(0,0);
   id = ids.next().value;
   ser(): this {
     return <this>omit(this, 'bod');

@@ -3,7 +3,7 @@ export {};
 import * as Sio from 'socket.io';
 import * as Common from './common';
 import * as Pl from 'planck-js';
-import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, RemEnt, Event, InputEvent, clearArray} from './common';
+import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, RemEnt, Event, InputEvent, clearArray, Vec2, accel} from './common';
 
 const io = Sio();
 
@@ -37,12 +37,12 @@ function initSnap() {
   }
 }
 
-function updatePos(ent) {
+function updateEntPhys(ent) {
   ent.x = ratio * ent.bod.getPosition().x - ent.width / 2;
   ent.y = ratio * -ent.bod.getPosition().y - ent.height / 2;
+  ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
+  ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;
 }
-
-const accel = .1;
 
 function feedInputs(player) {
 
@@ -80,7 +80,7 @@ function getEnts() {
 
 function bcast() {
   for (let ent of getEnts()) {
-    updatePos(ent);
+    updateEntPhys(ent);
   }
   //if (lastBcastTime == null) lastBcastTime = Date.now() / 1000;
   //if (currTime - lastBcastTime >= bcastPeriod) {
