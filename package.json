@@ -15,17 +15,35 @@
     "ts-node-dev": "^1.0.0-pre.4"
   },
   "devDependencies": {
+    "@types/jest": "^21.1.0",
     "@types/node": "^8.0.28",
     "@types/socket.io": "^1.4.30",
     "@types/socket.io-client": "^1.4.30",
     "awesome-typescript-loader": "^3.2.3",
+    "jest": "^21.1.0",
     "source-map-loader": "^0.2.1",
+    "ts-jest": "^21.0.1",
     "typescript": "^2.5.2",
     "webpack": "^3.5.6"
   },
   "scripts": {
     "build": "webpack",
     "watch": "webpack --progress --colors --watch",
-    "server": "ts-node-dev src/server.ts"
+    "server": "ts-node-dev src/server.ts",
+    "test": "jest",
+    "watch-test": "jest --watch"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ]
   }
 }
