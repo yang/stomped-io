@@ -249,6 +249,12 @@ function update() {
 
   gfx.clear();
   gfx.lineStyle(1,0x0088FF,1);
+  if (game.input.activePointer.isDown) {
+    target = new Vec2(game.input.worldX, game.input.worldY);
+  }
+  if (target) {
+    gfx.drawCircle(target.x, target.y, 100);
+  }
   gfx.moveTo(me.x, me.y);
   const dt = 1/10;
   const horizon = 4;
@@ -258,6 +264,7 @@ function update() {
   }
 
 }
+let target: Vec2;
 
 function plVelFromEnt(ent) {
   return Pl.Vec2(ent.vel.x / ratio, -ent.vel.y / ratio);
