@@ -250,21 +250,10 @@ function update() {
   gfx.clear();
   gfx.lineStyle(1,0x0088FF,1);
   gfx.moveTo(me.x, me.y);
-  const dt = 1/60;
-  //let x = me.x, y = me.y;
-  //let vx = me.vel.x, vy = me.vel.y;
-  const horizon = 2;
+  const dt = 1/10;
+  const horizon = 4;
   for (let i = 0; i < horizon / dt; i++) {
     Common.update(players, dt);
-    //if (simpleSim) {
-    //  x += vx * dt;
-    //  y += vy * dt;
-    //  vx += clamp(
-    //      (me.inputs.left.isDown ? -1 : me.inputs.right.isDown ? 1 : 0) * ratio * accel / updatePeriod * dt,
-    //      ratio * 5
-    //  );
-    //  vy += -gravity * ratio * dt;
-    //}
     gfx.lineTo(...entPosFromPl(me).toTuple());
   }
 

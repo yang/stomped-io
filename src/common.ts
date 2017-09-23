@@ -149,7 +149,7 @@ export function addBody(ent, type, fixtureOpts = {}) {
 }
 
 let lastTime = null;
-const dt = 1 / 60.;
+const dt = 1 / 10.;
 export const updatePeriod = dt;
 
 function feedInputs(player) {
@@ -158,16 +158,16 @@ function feedInputs(player) {
 
   if (inputs.left.isDown) {
     //  Move to the left
-    player.bod.getLinearVelocity().x = Math.max(player.bod.getLinearVelocity().x - accel, -5);
+    player.bod.getLinearVelocity().x = Math.max(player.bod.getLinearVelocity().x - accel / dt, -5);
   } else if (inputs.right.isDown) {
     //  Move to the right
-    player.bod.getLinearVelocity().x = Math.min(player.bod.getLinearVelocity().x + accel, 5);
+    player.bod.getLinearVelocity().x = Math.min(player.bod.getLinearVelocity().x + accel / dt, 5);
   } else {
     ////  Reset the players velocity (movement)
     if (player.bod.getLinearVelocity().x < 0) {
-      player.bod.getLinearVelocity().x = Math.min(0, player.bod.getLinearVelocity().x + accel);
+      player.bod.getLinearVelocity().x = Math.min(0, player.bod.getLinearVelocity().x + accel / dt);
     } else {
-      player.bod.getLinearVelocity().x = Math.max(0, player.bod.getLinearVelocity().x - accel);
+      player.bod.getLinearVelocity().x = Math.max(0, player.bod.getLinearVelocity().x - accel / dt);
     }
   }
 
