@@ -61,6 +61,16 @@ export class Serializable {
 
 export class Vec2 {
   constructor(public x = 0, public y = 0) {}
+  toTuple(): [number, number] {
+    return [this.x, this.y];
+  }
+}
+
+export function entPosFromPl(ent) {
+  return new Vec2(
+      ratio * ent.bod.getPosition().x - ent.width / 2,
+      ratio * -ent.bod.getPosition().y - ent.height / 2
+  );
 }
 
 export class Ent extends Serializable {
@@ -70,6 +80,7 @@ export class Ent extends Serializable {
   y: number;
   vel = new Vec2(0,0);
   id = ids.next().value;
+  bod?: Pl.Body;
   ser(): this {
     return <this>omit(this, 'bod');
   }
@@ -91,7 +102,6 @@ export class Player extends Ent {
 export const ledgeWidth = 300, ledgeHeight = 32;
 
 export class Ledge extends Ent {
-  bod: Pl.Body;
   width = ledgeWidth;
   height = ledgeHeight;
   constructor(public x: number, public y: number) {super();}
@@ -118,11 +128,15 @@ export class RemEnt extends Event {
   constructor(public id: number) { super(); }
 }
 
+export function plPosFromEnt(ent) {
+  return Pl.Vec2((ent.x + ent.width / 2) / ratio, -(ent.y + ent.height / 2) / ratio);
+}
+
 export function addBody(ent, type, fixtureOpts = {}) {
   ent.bod = world.createBody({
     type: type,
     fixedRotation: true,
-    position: Pl.Vec2((ent.x + ent.width / 2) / ratio, -(ent.y + ent.height / 2) / ratio),
+    position: plPosFromEnt(ent),
     userData: ent
   });
   ent.bod.createFixture(Object.assign({
@@ -138,10 +152,35 @@ let lastTime = null;
 const dt = 1 / 60.;
 export const updatePeriod = dt;
 
-export function update() {
+function feedInputs(player) {
+
+  const inputs = player.inputs;
+
+  if (inputs.left.isDown) {
+    //  Move to the left
+    player.bod.getLinearVelocity().x = Math.max(player.bod.getLinearVelocity().x - accel, -5);
+  } else if (inputs.right.isDown) {
+    //  Move to the right
+    player.bod.getLinearVelocity().x = Math.min(player.bod.getLinearVelocity().x + accel, 5);
+  } else {
+    ////  Reset the players velocity (movement)
+    if (player.bod.getLinearVelocity().x < 0) {
+      player.bod.getLinearVelocity().x = Math.min(0, player.bod.getLinearVelocity().x + accel);
+    } else {
+      player.bod.getLinearVelocity().x = Math.max(0, player.bod.getLinearVelocity().x - accel);
+    }
+  }
+
+}
+
+export function update(players, _dt = dt) {
+  // TODO we're feeding inputs every physics tick here, but we send inputs to
+  // clients bucketed into the bcasts, which are less frequent.
+  for (let player of players) feedInputs(player);
+
   const currTime = Date.now() / 1000;
 
   if (lastTime == null) lastTime = Date.now() / 1000;
 
-  world.step(dt);
+  world.step(_dt);
 }

@@ -7,7 +7,7 @@ const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split'
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
-import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt, InputEvent, clearArray, Vec2, gravity, accel, updatePeriod} from './common';
+import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt, InputEvent, clearArray, Vec2, gravity, accel, updatePeriod, plPosFromEnt, entPosFromPl} from './common';
 import * as _ from 'lodash';
 
 var game;
@@ -146,6 +146,7 @@ function addPlayer(player) {
     sprite.animations.add('left', [0, 1, 2, 3], 10, true);
     sprite.animations.add('right', [5, 6, 7, 8], 10, true);
     entToSprite.set(player, sprite);
+    addBody(player, 'dynamic');
   }
 }
 
@@ -155,6 +156,7 @@ function addLedge(ledge) {
     const platform = platforms.create(ledge.x, ledge.y, 'ground');
     platform.scale.setTo(.75, 1);
     entToSprite.set(ledge, platform);
+    addBody(ledge, 'kinematic');
   }
 }
 
@@ -206,6 +208,7 @@ function update() {
   for (let ent of getEnts()) {
     const [a,b] = [aMap.get(ent.id), bMap.get(ent.id)];
     if (a && b) {
+      if (ent instanceof Player && a instanceof Player) ent.inputs = a.inputs;
       ent.x = lerp(a.x, b.x, alpha);
       ent.y = lerp(a.y, b.y, alpha);
       ent.vel.x = lerp(a.vel.x, b.vel.x, alpha);
@@ -247,27 +250,36 @@ function update() {
   gfx.clear();
   gfx.lineStyle(1,0x0088FF,1);
   gfx.moveTo(me.x, me.y);
-  const dt = 1/10;
-  let x = me.x, y = me.y;
-  let vx = me.vel.x, vy = me.vel.y;
-  for (let i = 0; i < 20; i++) {
-    //const currAccel = me.inputs.left.isDown * 
-    x += vx * dt;
-    y += vy * dt;
-    vx += clamp(
-        (me.inputs.left.isDown ? -1 : me.inputs.right.isDown ? 1 : 0) * ratio * accel / updatePeriod * dt,
-        ratio * 5
-    );
-    vy += -gravity * ratio * dt;
-    gfx.lineTo(x, y);
+  const dt = 1/60;
+  //let x = me.x, y = me.y;
+  //let vx = me.vel.x, vy = me.vel.y;
+  const horizon = 2;
+  for (let i = 0; i < horizon / dt; i++) {
+    Common.update(players, dt);
+    //if (simpleSim) {
+    //  x += vx * dt;
+    //  y += vy * dt;
+    //  vx += clamp(
+    //      (me.inputs.left.isDown ? -1 : me.inputs.right.isDown ? 1 : 0) * ratio * accel / updatePeriod * dt,
+    //      ratio * 5
+    //  );
+    //  vy += -gravity * ratio * dt;
+    //}
+    gfx.lineTo(...entPosFromPl(me).toTuple());
   }
 
+}
+
+function plVelFromEnt(ent) {
+  return Pl.Vec2(ent.vel.x / ratio, -ent.vel.y / ratio);
 }
 
 function updatePos(ent) {
   const sprite = entToSprite.get(ent);
   sprite.x = ent.x;
   sprite.y = ent.y;
+  ent.bod.setPosition(plPosFromEnt(ent));
+  ent.bod.setLinearVelocity(plVelFromEnt(ent));
 }
 
 function clamp(x, bound) {

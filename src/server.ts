@@ -3,7 +3,7 @@ export {};
 import * as Sio from 'socket.io';
 import * as Common from './common';
 import * as Pl from 'planck-js';
-import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, RemEnt, Event, InputEvent, clearArray, Vec2, accel} from './common';
+import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, RemEnt, Event, InputEvent, clearArray, Vec2, accel, entPosFromPl} from './common';
 
 const io = Sio();
 
@@ -38,36 +38,13 @@ function initSnap() {
 }
 
 function updateEntPhys(ent) {
-  ent.x = ratio * ent.bod.getPosition().x - ent.width / 2;
-  ent.y = ratio * -ent.bod.getPosition().y - ent.height / 2;
+  [ent.x, ent.y] = entPosFromPl(ent).toTuple();
   ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
   ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;
 }
 
-function feedInputs(player) {
-
-  const inputs = player.inputs;
-
-  if (inputs.left.isDown) {
-    //  Move to the left
-    player.bod.getLinearVelocity().x = Math.max(player.bod.getLinearVelocity().x - accel, -5);
-  } else if (inputs.right.isDown) {
-    //  Move to the right
-    player.bod.getLinearVelocity().x = Math.min(player.bod.getLinearVelocity().x + accel, 5);
-  } else {
-    ////  Reset the players velocity (movement)
-    if (player.bod.getLinearVelocity().x < 0) {
-      player.bod.getLinearVelocity().x = Math.min(0, player.bod.getLinearVelocity().x + accel);
-    } else {
-      player.bod.getLinearVelocity().x = Math.max(0, player.bod.getLinearVelocity().x - accel);
-    }
-  }
-
-}
-
 function update() {
-  for (let player of players) feedInputs(player);
-  Common.update();
+  Common.update(players);
   addLedges();
   tick += 1;
 }
