@@ -66,10 +66,10 @@ export class Vec2 {
   }
 }
 
-export function entPosFromPl(ent) {
+export function entPosFromPl(ent, pos = ent.bod.getPosition()) {
   return new Vec2(
-      ratio * ent.bod.getPosition().x - ent.width / 2,
-      ratio * -ent.bod.getPosition().y - ent.height / 2
+      ratio * pos.x - ent.width / 2,
+      ratio * -pos.y - ent.height / 2
   );
 }
 

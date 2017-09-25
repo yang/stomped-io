@@ -248,23 +248,182 @@ function update() {
   //}
 
   gfx.clear();
-  gfx.lineStyle(1,0x0088FF,1);
+  gfx.lineStyle(1,defaultColor,1);
   if (game.input.activePointer.isDown) {
     target = new Vec2(game.input.worldX, game.input.worldY);
   }
   if (target) {
     gfx.drawCircle(target.x, target.y, 100);
-  }
-  gfx.moveTo(me.x, me.y);
-  const dt = 1/10;
-  const horizon = 4;
-  for (let i = 0; i < horizon / dt; i++) {
-    Common.update(players, dt);
-    gfx.lineTo(...entPosFromPl(me).toTuple());
+    gfx.moveTo(me.x, me.y);
+    const horizon = 2;
+    const startState = getWorldState();
+    // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
+    // the space of possible moves using simple breadth-first search, picking the path that ends closest to the
+    // target location.
+    //
+    // The resulting performance is prohibitively slow for even modest horizons.  The AI has // some moments of
+    // intelligence, but with the short horizon, it just ends up flailing between non-optimal choices.
+    const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs({
+        start: startState,
+        edges: (worldState) => worldState.elapsed < horizon ?
+            [Dir.Left, Dir.Right] : [],
+        traverseEdge: sim,
+        cost: (worldState) => worldState == startState ? 9999999 : worldState.finalDistToTarget
+    });
+
+    for (let worldState of worldStates.concat([bestWorldState])) {
+      gfx.lineStyle(1, worldState == bestWorldState ? bestColor : defaultColor, 1);
+      gfx.moveTo(...entPosFromPl(me, worldState.mePath[0]).toTuple());
+      for (let pos of worldState.mePath.slice(1)) {
+        gfx.lineTo(...entPosFromPl(me, pos).toTuple());
+      }
+    }
+
+    setInputsByDir(bestPath[0][1]);
+    socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
   }
 
 }
+const defaultColor = 0x0088FF, bestColor = 0xFF0000;
+
 let target: Vec2;
+
+class BodyState {
+  constructor(public bod: Pl.Body, public pos: Pl.Vec2, public vel: Pl.Vec2) {}
+  //shadowEnt(ent: Ent): Ent {
+  //  const shadow = new Ent();
+  //  shadow.x = this.pos.x;
+  //  shadow.y = this.pos.y;
+  //  shadow.vel = new Vec2(this.vel);
+  //  shadow.height = ent.height;
+  //  shadow.width = ent.width;
+  //  return shadow;
+  //}
+}
+
+class WorldState {
+  constructor(
+      public elapsed: number,
+      public minDistToTarget: number,
+      public finalDistToTarget: number,
+      public plState: [Ent, BodyState][],
+      public mePath: Pl.Vec2[]
+  ) {}
+}
+
+const enum Dir { Left, Right };
+
+function getWorldState(elapsed: number = 0): WorldState {
+  return new WorldState(
+    elapsed,
+    dist(entPosFromPl(me), target),
+    dist(entPosFromPl(me), target),
+    (getEnts().map((ent) => <[Ent,BodyState]> [
+        ent, new BodyState(
+          ent.bod, copyVec(ent.bod.getPosition()), copyVec(ent.bod.getLinearVelocity())
+        )
+    ])),
+    [plPosFromEnt(me)]
+  );
+}
+
+function restoreBody(ent, bodyState) {
+  ent.bod.setPosition(copyVec(bodyState.pos));
+  ent.bod.setLinearVelocity(copyVec(bodyState.vel));
+}
+
+function dist(a: Vec2, b: Vec2) {
+  const x = a.x - b.x;
+  const y = a.y - b.y;
+  return Math.sqrt(x*x + y*y);
+}
+
+function copyVec(v: Pl.Vec2): Pl.Vec2 {
+  return Pl.Vec2(v.x, v.y);
+}
+
+function setInputs([left, right]) {
+  me.inputs.left.isDown = left;
+  me.inputs.right.isDown = right;
+}
+
+function setInputsByDir(dir) {
+  setInputs(dir == Dir.Left ? [true, false] : [false, true]);
+}
+
+const chunk = 1;
+function sim(init: WorldState, dir: Dir) {
+  // restore world state
+  for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
+  //for (let ent of getEnts()) restoreBody(ent, init.plState.get(ent));
+  // simulate core logic
+  const dt = 1/5;
+  let minDistToTarget = 9999999;
+  const mePath = [];
+  mePath.push(copyVec(me.bod.getPosition()));
+  const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
+  setInputsByDir(dir);
+  for (let t = 0; t < chunk; t += dt) {
+    Common.update(players, dt);
+    mePath.push(copyVec(me.bod.getPosition()));
+    minDistToTarget = Math.min(minDistToTarget, dist(entPosFromPl(me), target));
+  }
+  setInputs(origInputs);
+  // save world state
+  return new WorldState(
+    init.elapsed + chunk,
+    minDistToTarget,
+    dist(entPosFromPl(me), target),
+    getWorldState().plState,
+    mePath
+  );
+}
+
+interface BfsParams<V,E> {
+  start: V;
+  edges: (v: V) => E[];
+  traverseEdge: (v: V, e: E) => V;
+  cost: (v: V) => number;
+}
+
+interface BfsResult<V,E> {
+  bestCost: number;
+  bestNode: V;
+  bestPath: [V,E][];
+  visitedNodes: V[];
+}
+
+function bfs<V,E>({start, edges, traverseEdge, cost}: BfsParams<V,E>): BfsResult<V,E> {
+  const queue = [start];
+  const cameFrom = new Map<V,[V,E]>();
+  let bestNode = start;
+  let bestCost = cost(start);
+  const visitedNodes = [];
+  while (queue.length > 0) {
+    const [node] = queue.splice(0,1);
+    visitedNodes.push(node);
+    if (cost(node) < bestCost) {
+      bestNode = node;
+      bestCost = cost(node);
+    }
+    for (let edge of edges(node)) {
+      const next = traverseEdge(node, edge);
+      queue.push(next);
+      cameFrom.set(next, [node, edge]);
+    }
+  }
+  const bestPath = [];
+  let node = bestNode;
+  while (true) {
+    if (node == start) {
+      break;
+    }
+    bestPath.push(cameFrom.get(node));
+    node = cameFrom.get(node)[0];
+  }
+  bestPath.reverse();
+  return {bestCost, bestNode, bestPath, visitedNodes};
+}
 
 function plVelFromEnt(ent) {
   return Pl.Vec2(ent.vel.x / ratio, -ent.vel.y / ratio);
