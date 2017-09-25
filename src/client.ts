@@ -270,16 +270,17 @@ function update() {
         edges: (worldState) => worldState.elapsed < horizon ?
           [Dir.Left, Dir.Right] : [],
         traverseEdge: sim,
-        cost: (worldState) => worldState == startState ? 9999999 : worldState.finalDistToTarget
+        cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
       });
-      lastWorldStates = worldStates.concat([bestWorldState]);
+      lastWorldStates = worldStates;
+      lastBestSeq = bestPath.map(([ws,dir]) => ws).concat([bestWorldState]);
       setInputsByDir(bestPath[0][1]);
       socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
     }
 
     if (lastWorldStates) {
-      for (let worldState of lastWorldStates) {
-        gfx.lineStyle(1, worldState == lastWorldStates[lastWorldStates.length - 1] ? bestColor : defaultColor, 1);
+      for (let worldState of lastWorldStates.concat(lastBestSeq)) {
+        gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bestColor : defaultColor, 1);
         gfx.moveTo(...entPosFromPl(me, worldState.mePath[0]).toTuple());
         for (let pos of worldState.mePath.slice(1)) {
           gfx.lineTo(...entPosFromPl(me, pos).toTuple());
@@ -290,7 +291,7 @@ function update() {
 
 }
 
-let lastSimTime = 0, lastWorldStates = null;
+let lastSimTime = 0, lastWorldStates = null, lastBestSeq = null;
 const simPeriod = 1000;
 const defaultColor = 0x0088FF, bestColor = 0xFF0000;
 
