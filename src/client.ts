@@ -40,7 +40,7 @@ const timeline: Bcast[] = [];
 
 (<any>window).dbg = {platforms, cursors, lava, world, players, ledges};
 
-function destroy(sprite) {
+function destroy2(sprite) {
   world.destroyBody(sprite.bod);
   sprite.kill();
 }

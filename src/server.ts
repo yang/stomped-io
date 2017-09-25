@@ -1,5 +1,6 @@
 export {};
 
+import * as _ from 'lodash';
 import * as Sio from 'socket.io';
 import * as Common from './common';
 import * as Pl from 'planck-js';
@@ -45,7 +46,7 @@ function updateEntPhys(ent) {
 
 function update() {
   Common.update(players);
-  addLedges();
+  updateLedges();
   tick += 1;
 }
 
@@ -83,7 +84,7 @@ function bcast() {
 }
 
 const ledgeSpacing = 200;
-function addLedges() {
+function updateLedges() {
   while (true) {
     if (ledges.length > 0 && ledges[ledges.length - 1].y - ledgeSpacing < -ledgeHeight)
       break;
@@ -96,6 +97,11 @@ function addLedges() {
     ledge.bod.setLinearVelocity(Pl.Vec2(0, -2));
     ledges.push(ledge);
     events.push(new AddEnt(ledge).ser());
+    for (let ledge of ledges) {
+      if (ledge.y > game.world.height) {
+        destroy(ledge);
+      }
+    }
   }
 }
 
@@ -117,7 +123,7 @@ function create() {
   const lava = new Lava(0, game.world.height - 64);
   addBody(lava, 'kinematic');
 
-  addLedges();
+  updateLedges();
 
   for (let i = 0; i < 10; i++) {
     const player = makePlayer(`bot${i}`);
@@ -177,12 +183,12 @@ function create() {
 
 function destroy(ent) {
   world.destroyBody(ent.bod);
-  //if (ent instanceof Player) {
-  //  players.remove(ent);
-  //}
-  //if (ent instanceof Ledge) {
-  //  ledges.remove(ent);
-  //}
+  if (ent instanceof Player) {
+    _.remove(players, e => e == ent);
+  }
+  if (ent instanceof Ledge) {
+   _.remove(ledges, e => e == ent);
+  }
   events.push(new RemEnt(ent.id));
 }
 
