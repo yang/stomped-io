@@ -258,7 +258,7 @@ function update() {
     gfx.moveTo(me.x, me.y);
     if (currTime - lastSimTime > simPeriod) {
       lastSimTime = currTime;
-      const horizon = 4;
+      const horizon = 6;
       const startState = getWorldState();
       // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
       // the space of possible moves using simple breadth-first search, picking the path that ends closest to the
@@ -276,6 +276,7 @@ function update() {
       lastWorldStates = worldStates;
       lastBestSeq = bestPath.map(([ws,dir]) => ws).concat([bestWorldState]);
       lastBestStartTime = currTime;
+      console.log(lastBestSeq.length);
       if (bestPath.length > 0) {
         setInputsByDir(bestPath[0][1]);
         socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
@@ -286,7 +287,15 @@ function update() {
 //      if (currTime - lastBestStartTime > lastBestSeq)
       for (let worldState of lastWorldStates.concat(lastBestSeq)) {
         gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bestColor : defaultColor, 1);
-        gfx.moveTo(...entPosFromPl(me, worldState.mePath[0]).toTuple());
+        const startPos = entPosFromPl(me, worldState.mePath[0]).toTuple();
+        if (worldState.dir == null) {
+          gfx.drawCircle(...startPos, 10);
+        } else {
+          const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}];
+          const dirSign = Dir.Left == worldState.dir ? -1 : 1;
+          gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*10*x+startPos[0], y: 10*y+startPos[1]})));
+        }
+        gfx.moveTo(...startPos);
         // if (_.find(worldState.mePath, (pos: Pl.Vec2) => Math.abs(pos.y) > 9999)) {
         //   console.log(worldState.mePath.map((pos) => entPosFromPl(me, pos).y).join(' '));
         // }
@@ -300,7 +309,7 @@ function update() {
 }
 
 let lastSimTime = 0, lastWorldStates, lastBestSeq, lastBestStartTime;
-const simPeriod = 500;
+const simPeriod = 1000;
 const defaultColor = 0x0088FF, bestColor = 0xFF0000;
 
 let target: Vec2;
@@ -321,6 +330,7 @@ class BodyState {
 class WorldState {
   constructor(
       public elapsed: number,
+      public dir: Dir,
       public minDistToTarget: number,
       public finalDistToTarget: number,
       public plState: [Ent, BodyState][],
@@ -333,6 +343,7 @@ const enum Dir { Left, Right };
 function getWorldState(elapsed: number = 0): WorldState {
   return new WorldState(
     elapsed,
+    null,
     dist(entPosFromPl(me), target),
     dist(entPosFromPl(me), target),
     (getEnts().map((ent) => <[Ent,BodyState]> [
@@ -393,6 +404,7 @@ function sim(init: WorldState, dir: Dir) {
   // save world state
   return new WorldState(
     init.elapsed + chunk,
+    dir,
     minDistToTarget,
     dist(entPosFromPl(me), target),
     getWorldState().plState,
