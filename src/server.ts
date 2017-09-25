@@ -133,51 +133,7 @@ function create() {
   setInterval(bcast, bcastPeriod * 1000);
   setInterval(update, updatePeriod * 1000);
 
-  world.on('end-contact', (contact, imp) => {
-    const fA = contact.getFixtureA(), bA = fA.getBody();
-    const fB = contact.getFixtureB(), bB = fB.getBody();
-    function bounce(fA, bA, fB, bB) {
-      if (players.includes(bA.getUserData())) {
-        // only clear of each other in the next tick
-        setTimeout(() => {
-          //console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
-          if (fA.getAABB(0).lowerBound.y >= fB.getAABB(0).upperBound.y) {
-            bA.getLinearVelocity().y = 12;
-          }
-        }, 0);
-      }
-    }
-    bounce(fA, bA, fB, bB);
-    bounce(fB, bB, fA, bA);
-  });
-
-  world.on('begin-contact', (contact, imp) => {
-    const fA = contact.getFixtureA(), bA = fA.getBody();
-    const fB = contact.getFixtureB(), bB = fB.getBody();
-    function bounce(fA, bA, fB, bB) {
-      //if (players.includes(bA.getUserData()) && stars.children.includes(bB.getUserData())) {
-      //  const star = bB.getUserData();
-      //  contact.setEnabled(false);
-      //  // only clear of each other in the next tick
-      //  setTimeout(() => {
-      //    destroy(star);
-      //    //  Add and update the score
-      //    score += 10;
-      //    scoreText.text = 'Score: ' + score;
-      //  }, 0);
-      //}
-      if (players.includes(bA.getUserData()) && lava === bB.getUserData()) {
-        contact.setEnabled(false);
-        const player = bA.getUserData();
-        // only clear of each other in the next tick
-        setTimeout(() => {
-          destroy(player);
-        }, 0);
-      }
-    }
-    bounce(fA, bA, fB, bB);
-    bounce(fB, bB, fA, bA);
-  });
+  Common.create(players, destroy, lava);
 
 }
 

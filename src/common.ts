@@ -15,6 +15,64 @@ export class InputState {
   isDown = false;
 }
 
+export function create(players, destroy, lava) {
+  world.on('end-contact', (contact, imp) => {
+    const fA = contact.getFixtureA(), bA = fA.getBody();
+    const fB = contact.getFixtureB(), bB = fB.getBody();
+    function bounce(fA, bA, fB, bB) {
+      if (players.includes(bA.getUserData())) {
+        // only clear of each other in the next tick
+        postStep(() => {
+          //console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
+          if (fA.getAABB(0).lowerBound.y >= fB.getAABB(0).upperBound.y) {
+            bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 12));
+          }
+        });
+      }
+    }
+    bounce(fA, bA, fB, bB);
+    bounce(fB, bB, fA, bA);
+  });
+
+  world.on('begin-contact', (contact, imp) => {
+    const fA = contact.getFixtureA(), bA = fA.getBody();
+    const fB = contact.getFixtureB(), bB = fB.getBody();
+    function bounce(fA, bA, fB, bB) {
+      //if (players.includes(bA.getUserData()) && stars.children.includes(bB.getUserData())) {
+      //  const star = bB.getUserData();
+      //  contact.setEnabled(false);
+      //  // only clear of each other in the next tick
+      //  setTimeout(() => {
+      //    destroy(star);
+      //    //  Add and update the score
+      //    score += 10;
+      //    scoreText.text = 'Score: ' + score;
+      //  }, 0);
+      //}
+      if (players.includes(bA.getUserData()) && lava === bB.getUserData()) {
+        contact.setEnabled(false);
+        const player = bA.getUserData();
+        postStep(() => player.bod.setPosition(Pl.Vec2(
+          player.bod.getPosition().x, -99999)));
+        // only clear of each other in the next tick
+        if (destroy) {
+          setTimeout(() => {
+            destroy(player);
+          }, 0);
+        }
+      }
+    }
+    bounce(fA, bA, fB, bB);
+    bounce(fB, bB, fA, bA);
+  });
+
+}
+
+const postSteps = [];
+function postStep(f) {
+  postSteps.push(f);
+}
+
 export class Inputs {
   left = new InputState();
   down = new InputState();
@@ -183,4 +241,8 @@ export function update(players, _dt = dt) {
   if (lastTime == null) lastTime = Date.now() / 1000;
 
   world.step(_dt);
+  for (let f of postSteps) {
+    f();
+  }
+  clearArray(postSteps);
 }

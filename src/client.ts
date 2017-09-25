@@ -63,6 +63,7 @@ function create(initSnap) {
   lava = game.add.sprite(0, game.world.height - 64, 'lava');
   lava.enableBody = true;
   addBody(lava, 'kinematic');
+  Common.create(players, null, lava);
 
   //  The platforms group contains the ground and the 2 ledges we can jump on
   platforms = game.add.group();
@@ -257,7 +258,7 @@ function update() {
     gfx.moveTo(me.x, me.y);
     if (currTime - lastSimTime > simPeriod) {
       lastSimTime = currTime;
-      const horizon = 2;
+      const horizon = 4;
       const startState = getWorldState();
       // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
       // the space of possible moves using simple breadth-first search, picking the path that ends closest to the
@@ -274,14 +275,21 @@ function update() {
       });
       lastWorldStates = worldStates;
       lastBestSeq = bestPath.map(([ws,dir]) => ws).concat([bestWorldState]);
-      setInputsByDir(bestPath[0][1]);
-      socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
+      lastBestStartTime = currTime;
+      if (bestPath.length > 0) {
+        setInputsByDir(bestPath[0][1]);
+        socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
+      }
     }
 
     if (lastWorldStates) {
+//      if (currTime - lastBestStartTime > lastBestSeq)
       for (let worldState of lastWorldStates.concat(lastBestSeq)) {
         gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bestColor : defaultColor, 1);
         gfx.moveTo(...entPosFromPl(me, worldState.mePath[0]).toTuple());
+        // if (_.find(worldState.mePath, (pos: Pl.Vec2) => Math.abs(pos.y) > 9999)) {
+        //   console.log(worldState.mePath.map((pos) => entPosFromPl(me, pos).y).join(' '));
+        // }
         for (let pos of worldState.mePath.slice(1)) {
           gfx.lineTo(...entPosFromPl(me, pos).toTuple());
         }
@@ -291,8 +299,8 @@ function update() {
 
 }
 
-let lastSimTime = 0, lastWorldStates = null, lastBestSeq = null;
-const simPeriod = 1000;
+let lastSimTime = 0, lastWorldStates, lastBestSeq, lastBestStartTime;
+const simPeriod = 500;
 const defaultColor = 0x0088FF, bestColor = 0xFF0000;
 
 let target: Vec2;
@@ -374,6 +382,10 @@ function sim(init: WorldState, dir: Dir) {
   setInputsByDir(dir);
   for (let t = 0; t < chunk; t += dt) {
     Common.update(players, dt);
+    if (Math.abs(mePath[mePath.length - 1].y) > game.world.height / ratio &&
+      Math.abs(me.bod.getPosition().y) < game.world.height / ratio) {
+      console.log('jerking');
+    }
     mePath.push(copyVec(me.bod.getPosition()));
     minDistToTarget = Math.min(minDistToTarget, dist(entPosFromPl(me), target));
   }
