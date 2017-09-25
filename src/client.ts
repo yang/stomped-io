@@ -255,35 +255,43 @@ function update() {
   if (target) {
     gfx.drawCircle(target.x, target.y, 100);
     gfx.moveTo(me.x, me.y);
-    const horizon = 2;
-    const startState = getWorldState();
-    // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
-    // the space of possible moves using simple breadth-first search, picking the path that ends closest to the
-    // target location.
-    //
-    // The resulting performance is prohibitively slow for even modest horizons.  The AI has // some moments of
-    // intelligence, but with the short horizon, it just ends up flailing between non-optimal choices.
-    const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs({
+    if (currTime - lastSimTime > simPeriod) {
+      lastSimTime = currTime;
+      const horizon = 2;
+      const startState = getWorldState();
+      // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
+      // the space of possible moves using simple breadth-first search, picking the path that ends closest to the
+      // target location.
+      //
+      // The resulting performance is prohibitively slow for even modest horizons.  The AI has // some moments of
+      // intelligence, but with the short horizon, it just ends up flailing between non-optimal choices.
+      const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs({
         start: startState,
         edges: (worldState) => worldState.elapsed < horizon ?
-            [Dir.Left, Dir.Right] : [],
+          [Dir.Left, Dir.Right] : [],
         traverseEdge: sim,
         cost: (worldState) => worldState == startState ? 9999999 : worldState.finalDistToTarget
-    });
-
-    for (let worldState of worldStates.concat([bestWorldState])) {
-      gfx.lineStyle(1, worldState == bestWorldState ? bestColor : defaultColor, 1);
-      gfx.moveTo(...entPosFromPl(me, worldState.mePath[0]).toTuple());
-      for (let pos of worldState.mePath.slice(1)) {
-        gfx.lineTo(...entPosFromPl(me, pos).toTuple());
-      }
+      });
+      lastWorldStates = worldStates.concat([bestWorldState]);
+      setInputsByDir(bestPath[0][1]);
+      socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
     }
 
-    setInputsByDir(bestPath[0][1]);
-    socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
+    if (lastWorldStates) {
+      for (let worldState of lastWorldStates) {
+        gfx.lineStyle(1, worldState == lastWorldStates[lastWorldStates.length - 1] ? bestColor : defaultColor, 1);
+        gfx.moveTo(...entPosFromPl(me, worldState.mePath[0]).toTuple());
+        for (let pos of worldState.mePath.slice(1)) {
+          gfx.lineTo(...entPosFromPl(me, pos).toTuple());
+        }
+      }
+    }
   }
 
 }
+
+let lastSimTime = 0, lastWorldStates = null;
+const simPeriod = 1000;
 const defaultColor = 0x0088FF, bestColor = 0xFF0000;
 
 let target: Vec2;
