@@ -284,6 +284,7 @@ function update() {
     }
 
     if (lastWorldStates) {
+      const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}].map(({x,y}) => ({x: 5*x, y: 5*y}));
 //      if (currTime - lastBestStartTime > lastBestSeq)
       for (let worldState of lastWorldStates.concat(lastBestSeq)) {
         gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bestColor : defaultColor, 1);
@@ -291,9 +292,8 @@ function update() {
         if (worldState.dir == null) {
           gfx.drawCircle(...startPos, 10);
         } else {
-          const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}];
           const dirSign = Dir.Left == worldState.dir ? -1 : 1;
-          gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*10*x+startPos[0], y: 10*y+startPos[1]})));
+          gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*x+startPos[0], y: y+startPos[1]})));
         }
         gfx.moveTo(...startPos);
         // if (_.find(worldState.mePath, (pos: Pl.Vec2) => Math.abs(pos.y) > 9999)) {
@@ -301,6 +301,11 @@ function update() {
         // }
         for (let pos of worldState.mePath.slice(1)) {
           gfx.lineTo(...entPosFromPl(me, pos).toTuple());
+        }
+        for (let pos of worldState.mePath.slice(1)) {
+          const dirSign = Dir.Left == worldState.dir ? -1 : 1;
+          const entPos = entPosFromPl(me, pos);
+          gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*x+entPos.x, y: y+entPos.y})));
         }
       }
     }
