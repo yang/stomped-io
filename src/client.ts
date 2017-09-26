@@ -171,6 +171,11 @@ function tryRemove(id: number, ents: Ent[]) {
   }
 }
 
+function reallySetInput(dir: Dir, currTime: number) {
+  setInputsByDir(dir);
+  socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
+}
+
 function update() {
 
   if (lastTime == null) lastTime = performance.now() / 1000;
@@ -256,6 +261,13 @@ function update() {
   if (target) {
     gfx.drawCircle(target.x, target.y, 100);
     gfx.moveTo(me.x, me.y);
+    if (lastBestSeq) {
+      const currChunk = lastBestSeq[Math.ceil((currTime - lastSimTime) / (1000 * chunk))];
+      if (currChunk && getDir(me) != currChunk.dir) {
+        console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk))
+        reallySetInput(currChunk.dir, currTime);
+      }
+    }
     if (currTime - lastSimTime > simPeriod) {
       lastSimTime = currTime;
       const horizon = 6;
@@ -266,7 +278,7 @@ function update() {
       //
       // The resulting performance is prohibitively slow for even modest horizons.  The AI has // some moments of
       // intelligence, but with the short horizon, it just ends up flailing between non-optimal choices.
-      const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs({
+      const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
         start: startState,
         edges: (worldState) => worldState.elapsed < horizon ?
           [Dir.Left, Dir.Right] : [],
@@ -275,17 +287,14 @@ function update() {
       });
       lastWorldStates = worldStates;
       lastBestSeq = bestPath.map(([ws,dir]) => ws).concat([bestWorldState]);
-      lastBestStartTime = currTime;
       console.log(lastBestSeq.length);
       if (bestPath.length > 0) {
-        setInputsByDir(bestPath[0][1]);
-        socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
+        reallySetInput(bestPath[0][1], currTime);
       }
     }
 
     if (lastWorldStates) {
       const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}].map(({x,y}) => ({x: 5*x, y: 5*y}));
-//      if (currTime - lastBestStartTime > lastBestSeq)
       for (let worldState of lastWorldStates.concat(lastBestSeq)) {
         gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bestColor : defaultColor, 1);
         const startPos = entPosFromPl(me, worldState.mePath[0]).toTuple();
@@ -313,8 +322,8 @@ function update() {
 
 }
 
-let lastSimTime = 0, lastWorldStates, lastBestSeq, lastBestStartTime;
-const simPeriod = 1000;
+let lastSimTime = 0, lastWorldStates, lastBestSeq: WorldState[];
+const simPeriod = 2000;
 const defaultColor = 0x0088FF, bestColor = 0xFF0000;
 
 let target: Vec2;
@@ -382,6 +391,11 @@ function setInputs([left, right]) {
 
 function setInputsByDir(dir) {
   setInputs(dir == Dir.Left ? [true, false] : [false, true]);
+}
+
+function getDir(player) {
+  return player.inputs.left.isDown ? Dir.Left :
+    player.inputs.right.isDown ? Dir.Right : null;
 }
 
 const chunk = 1;
