@@ -210,22 +210,26 @@ let lastTime = null;
 const dt = 1 / 10.;
 export const updatePeriod = dt;
 
+function updateVel(bod, f) {
+  bod.setLinearVelocity(f(bod.getLinearVelocity()));
+}
+
 function feedInputs(player) {
 
   const inputs = player.inputs;
 
   if (inputs.left.isDown) {
     //  Move to the left
-    player.bod.getLinearVelocity().x = Math.max(player.bod.getLinearVelocity().x - accel / dt, -5);
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel / dt, -5), y));
   } else if (inputs.right.isDown) {
     //  Move to the right
-    player.bod.getLinearVelocity().x = Math.min(player.bod.getLinearVelocity().x + accel / dt, 5);
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel / dt, 5), y));
   } else {
     ////  Reset the players velocity (movement)
     if (player.bod.getLinearVelocity().x < 0) {
-      player.bod.getLinearVelocity().x = Math.min(0, player.bod.getLinearVelocity().x + accel / dt);
+      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel / dt, 0), y));
     } else {
-      player.bod.getLinearVelocity().x = Math.max(0, player.bod.getLinearVelocity().x - accel / dt);
+      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel / dt, 0), y));
     }
   }
 
