@@ -295,8 +295,9 @@ function update() {
 
     if (lastWorldStates) {
       const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}].map(({x,y}) => ({x: 5*x, y: 5*y}));
+      const bcolors = bestColors.concat(bestColors).concat(bestColors)[Symbol.iterator]();
       for (let worldState of lastWorldStates.concat(lastBestSeq)) {
-        gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bestColor : defaultColor, 1);
+        gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bcolors.next().value : defaultColor, 1);
         const startPos = entPosFromPl(me, worldState.mePath[0]).toTuple();
         if (worldState.dir == null) {
           gfx.drawCircle(...startPos, 10);
@@ -324,7 +325,14 @@ function update() {
 
 let lastSimTime = 0, lastWorldStates, lastBestSeq: WorldState[];
 const simPeriod = 2000;
-const defaultColor = 0x0088FF, bestColor = 0xFF0000;
+const defaultColor = 0x0088FF, bestColor = 0xFF0000, bestColors = [
+  0xff0000,
+  0xffff00,
+  0x00ff00,
+  0x00ffff,
+  0xff00ff,
+  0xffffff
+];
 
 let target: Vec2;
 
