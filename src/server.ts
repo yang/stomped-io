@@ -94,7 +94,7 @@ function updateLedges() {
       game.world.height - ledgeSpacing : ledges[ledges.length - 1].y - ledgeSpacing;
     const ledge = new Ledge(x, y);
     addBody(ledge, 'kinematic');
-    ledge.bod.setLinearVelocity(Pl.Vec2(0, -2));
+    ledge.bod.setLinearVelocity(Pl.Vec2(0, 0));
     ledges.push(ledge);
     events.push(new AddEnt(ledge).ser());
     for (let ledge of ledges) {
@@ -119,13 +119,15 @@ function schedRandInputs(player) {
   setTimeout(() => schedRandInputs(player), getRandomInt(1000, 3000));
 }
 
+const initPlayers = 0;
+
 function create() {
   const lava = new Lava(0, game.world.height - 64);
   addBody(lava, 'kinematic');
 
   updateLedges();
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < initPlayers; i++) {
     const player = makePlayer(`bot${i}`);
     schedRandInputs(player);
   }

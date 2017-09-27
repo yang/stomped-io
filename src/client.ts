@@ -7,7 +7,7 @@ const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split'
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
-import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt, InputEvent, clearArray, Vec2, gravity, accel, updatePeriod, plPosFromEnt, entPosFromPl} from './common';
+import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt, InputEvent, clearArray, Vec2, gravity, accel, updatePeriod, plPosFromEnt, entPosFromPl, timeWarp} from './common';
 import * as _ from 'lodash';
 
 var game;
@@ -262,13 +262,13 @@ function update() {
     gfx.drawCircle(target.x, target.y, 100);
     gfx.moveTo(me.x, me.y);
     if (lastBestSeq) {
-      const currChunk = lastBestSeq[Math.ceil((currTime - lastSimTime) / (1000 * chunk))];
+      const currChunk = lastBestSeq[Math.ceil((currTime - lastSimTime) / (1000 * chunk / timeWarp))];
       if (currChunk && getDir(me) != currChunk.dir) {
-        console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk))
+        //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
         reallySetInput(currChunk.dir, currTime);
       }
     }
-    if (currTime - lastSimTime > simPeriod) {
+    if (lastSimTime == null || currTime - lastSimTime > simPeriod / timeWarp) {
       lastSimTime = currTime;
       const horizon = 6;
       const startState = getWorldState();
@@ -287,7 +287,7 @@ function update() {
       });
       lastWorldStates = worldStates;
       lastBestSeq = bestPath.map(([ws,dir]) => ws).concat([bestWorldState]);
-      console.log(lastBestSeq.length);
+      //console.log(lastBestSeq.length);
       if (bestPath.length > 0) {
         reallySetInput(bestPath[0][1], currTime);
       }
@@ -298,7 +298,7 @@ function update() {
       const bcolors = bestColors.concat(bestColors).concat(bestColors)[Symbol.iterator]();
       for (let worldState of lastWorldStates.concat(lastBestSeq)) {
         gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bcolors.next().value : defaultColor, 1);
-        const startPos = entPosFromPl(me, worldState.mePath[0]).toTuple();
+        const startPos = entPosFromPl(me, worldState.mePath[0], true).toTuple();
         if (worldState.dir == null) {
           gfx.drawCircle(...startPos, 10);
         } else {
@@ -310,11 +310,11 @@ function update() {
         //   console.log(worldState.mePath.map((pos) => entPosFromPl(me, pos).y).join(' '));
         // }
         for (let pos of worldState.mePath.slice(1)) {
-          gfx.lineTo(...entPosFromPl(me, pos).toTuple());
+          gfx.lineTo(...entPosFromPl(me, pos, true).toTuple());
         }
         for (let pos of worldState.mePath.slice(1)) {
           const dirSign = Dir.Left == worldState.dir ? -1 : 1;
-          const entPos = entPosFromPl(me, pos);
+          const entPos = entPosFromPl(me, pos, true);
           gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*x+entPos.x, y: y+entPos.y})));
         }
       }
@@ -323,9 +323,9 @@ function update() {
 
 }
 
-let lastSimTime = 0, lastWorldStates, lastBestSeq: WorldState[];
-const simPeriod = 2000;
-const defaultColor = 0x0088FF, bestColor = 0xFF0000, bestColors = [
+const simPeriod = 4000;
+let lastSimTime = null, lastWorldStates, lastBestSeq: WorldState[];
+const defaultColor = 0x002244, bestColor = 0xFF0000, bestColors = [
   0xff0000,
   0xffff00,
   0x00ff00,
@@ -419,7 +419,7 @@ function sim(init: WorldState, dir: Dir) {
   const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
   setInputsByDir(dir);
   for (let t = 0; t < chunk; t += dt) {
-    Common.update(players, dt);
+    Common.update(players, dt, 1);
     if (Math.abs(mePath[mePath.length - 1].y) > game.world.height / ratio &&
       Math.abs(me.bod.getPosition().y) < game.world.height / ratio) {
       console.log('jerking');

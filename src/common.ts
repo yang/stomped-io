@@ -23,9 +23,9 @@ export function create(players, destroy, lava) {
       if (players.includes(bA.getUserData())) {
         // only clear of each other in the next tick
         postStep(() => {
-          //console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
+          console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
           if (fA.getAABB(0).lowerBound.y >= fB.getAABB(0).upperBound.y) {
-            bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 12));
+            bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 15));
           }
         });
       }
@@ -124,10 +124,10 @@ export class Vec2 {
   }
 }
 
-export function entPosFromPl(ent, pos = ent.bod.getPosition()) {
+export function entPosFromPl(ent, pos = ent.bod.getPosition(), midpoint = false) {
   return new Vec2(
-      ratio * pos.x - ent.width / 2,
-      ratio * -pos.y - ent.height / 2
+      ratio * pos.x - (midpoint ? 0 : ent.width / 2),
+      ratio * -pos.y - (midpoint ? 0 : ent.height / 2)
   );
 }
 
@@ -207,38 +207,39 @@ export function addBody(ent, type, fixtureOpts = {}) {
 }
 
 let lastTime = null;
-const dt = 1 / 10.;
-export const updatePeriod = dt;
+const dt = 1 / 10;
+export const updatePeriod = 1 / 10;
+export const timeWarp = 1 / 10;
 
 function updateVel(bod, f) {
   bod.setLinearVelocity(f(bod.getLinearVelocity()));
 }
 
-function feedInputs(player) {
+function feedInputs(player, timeWarp) {
 
   const inputs = player.inputs;
 
   if (inputs.left.isDown) {
     //  Move to the left
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel / dt, -5), y));
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel / dt * timeWarp, -5), y));
   } else if (inputs.right.isDown) {
     //  Move to the right
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel / dt, 5), y));
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel / dt * timeWarp, 5), y));
   } else {
     ////  Reset the players velocity (movement)
     if (player.bod.getLinearVelocity().x < 0) {
-      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel / dt, 0), y));
+      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel / dt * timeWarp, 0), y));
     } else {
-      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel / dt, 0), y));
+      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel / dt * timeWarp, 0), y));
     }
   }
 
 }
 
-export function update(players, _dt = dt) {
+export function update(players, _dt = dt * timeWarp, twarp = timeWarp) {
   // TODO we're feeding inputs every physics tick here, but we send inputs to
   // clients bucketed into the bcasts, which are less frequent.
-  for (let player of players) feedInputs(player);
+  for (let player of players) feedInputs(player, twarp);
 
   const currTime = Date.now() / 1000;
 
