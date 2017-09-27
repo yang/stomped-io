@@ -21,10 +21,14 @@ export function create(players, destroy, lava) {
     const fB = contact.getFixtureB(), bB = fB.getBody();
     function bounce(fA, bA, fB, bB) {
       if (players.includes(bA.getUserData())) {
+//        console.log('end-contact');
         // only clear of each other in the next tick
         postStep(() => {
-          console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
+//          console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
           if (fA.getAABB(0).lowerBound.y >= fB.getAABB(0).upperBound.y) {
+            if (fA.getAABB(0).lowerBound.y - fB.getAABB(0).upperBound.y > 1) {
+              // console.log('huge gap', bA.getUserData(), bB.getUserData(), fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y);
+            }
             bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 15));
           }
         });
@@ -38,6 +42,8 @@ export function create(players, destroy, lava) {
     const fA = contact.getFixtureA(), bA = fA.getBody();
     const fB = contact.getFixtureB(), bB = fB.getBody();
     function bounce(fA, bA, fB, bB) {
+//      if (players.includes(bA.getUserData()))
+//        console.log('begin-contact');
       //if (players.includes(bA.getUserData()) && stars.children.includes(bB.getUserData())) {
       //  const star = bB.getUserData();
       //  contact.setEnabled(false);

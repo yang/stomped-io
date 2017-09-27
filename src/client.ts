@@ -458,6 +458,7 @@ function sim(init: WorldState, dir: Dir) {
     mePath.push(copyVec(me.bod.getPosition()));
     minDistToTarget = Math.min(minDistToTarget, dist(entPosFromPl(me), target));
   }
+  // console.log('finish sim');
   setInputs(origInputs);
   // save world state
   return new WorldState(
