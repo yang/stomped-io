@@ -2,7 +2,7 @@ import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 
 export const ratio = 24;
-export const accel = 0.1;
+export const accel = 10;
 
 export const gravity = -10;
 export const world = Pl.World(Pl.Vec2(0, gravity));
@@ -207,39 +207,40 @@ export function addBody(ent, type, fixtureOpts = {}) {
 }
 
 let lastTime = null;
-const dt = 1 / 10;
+export const dt = 1 / 100;
 export const updatePeriod = 1 / 10;
-export const timeWarp = 1 / 10;
+// physics timestep per real timestep
+export const timeWarp = dt / updatePeriod;
 
 function updateVel(bod, f) {
   bod.setLinearVelocity(f(bod.getLinearVelocity()));
 }
 
-function feedInputs(player, timeWarp) {
+function feedInputs(player, dt) {
 
   const inputs = player.inputs;
 
   if (inputs.left.isDown) {
     //  Move to the left
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel / dt * timeWarp, -5), y));
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel * dt, -5), y));
   } else if (inputs.right.isDown) {
     //  Move to the right
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel / dt * timeWarp, 5), y));
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel * dt, 5), y));
   } else {
     ////  Reset the players velocity (movement)
     if (player.bod.getLinearVelocity().x < 0) {
-      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel / dt * timeWarp, 0), y));
+      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel * dt, 0), y));
     } else {
-      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel / dt * timeWarp, 0), y));
+      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel * dt, 0), y));
     }
   }
 
 }
 
-export function update(players, _dt = dt * timeWarp, twarp = timeWarp) {
+export function update(players, _dt = dt) {
   // TODO we're feeding inputs every physics tick here, but we send inputs to
   // clients bucketed into the bcasts, which are less frequent.
-  for (let player of players) feedInputs(player, twarp);
+  for (let player of players) feedInputs(player, _dt);
 
   const currTime = Date.now() / 1000;
 

@@ -117,7 +117,6 @@ function updateInputs() {
 }
 
 let lastTime = null;
-const dt = 1 / 60.;
 
 const timeBuffer = 200;
 let delta = null;
@@ -444,14 +443,14 @@ function sim(init: WorldState, dir: Dir) {
   for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
   //for (let ent of getEnts()) restoreBody(ent, init.plState.get(ent));
   // simulate core logic
-  const dt = 1/5;
+  const simDt = 1/10;
   let minDistToTarget = 9999999;
   const mePath = [];
   mePath.push(copyVec(me.bod.getPosition()));
   const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
   setInputsByDir(dir);
-  for (let t = 0; t < chunk; t += dt) {
-    Common.update(players, dt, 1);
+  for (let t = 0; t < chunk; t += simDt) {
+    Common.update(players, simDt);
     if (Math.abs(mePath[mePath.length - 1].y) > game.world.height / ratio &&
       Math.abs(me.bod.getPosition().y) < game.world.height / ratio) {
       console.log('jerking');
