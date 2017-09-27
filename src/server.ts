@@ -165,6 +165,10 @@ function makePlayer(name) {
 io.on('connection', (socket: SocketIO.Socket) => {
   console.log('client connected');
 
+  socket.on('ding', (data) => {
+    socket.emit('dong', data)
+  });
+
   socket.on('join', (playerData) => {
     const player = makePlayer(playerData.name);
     playerToSocket.set(player, socket);

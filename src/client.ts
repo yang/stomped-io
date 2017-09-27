@@ -547,12 +547,21 @@ function feedInputs(player) {
   }
 }
 
+const doPings = false;
 function main() {
   socket = Sio('http://localhost:3000');
   socket.on('connect', () => {
     console.log('connect')
 
     socket.emit('join', {name: 'z'});
+
+    if (doPings) {
+      setInterval(() => {
+        console.log('pinging');
+        socket.emit('ding', {pingTime: performance.now()})
+      }, 1000);
+    }
+    socket.on('dong', ({pingTime}) => console.log('ping', performance.now() - pingTime));
 
     socket.on('joined', (initSnap) => {
       game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
