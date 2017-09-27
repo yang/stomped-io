@@ -59,7 +59,7 @@ function create(initSnap) {
   gfx.lineStyle(1,0x0088FF,1);
 
   //  A simple background for our game
-  game.add.sprite(0, 0, 'sky');
+  // game.add.sprite(0, 0, 'sky');
 
   lava = game.add.sprite(0, game.world.height - 64, 'lava');
   lava.enableBody = true;
