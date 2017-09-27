@@ -176,6 +176,18 @@ function reallySetInput(dir: Dir, currTime: number) {
   socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
 }
 
+function* iterBodies(world) {
+  for (let body = world.getBodyList(); body; body = body.getNext()) {
+    yield body;
+  }
+}
+
+function* iterFixtures(body) {
+  for (let fixture = body.getFixtureList(); fixture; fixture = fixture.getNext()) {
+    yield fixture;
+  }
+}
+
 function update() {
 
   if (lastTime == null) lastTime = performance.now() / 1000;
@@ -254,6 +266,25 @@ function update() {
   //}
 
   gfx.clear();
+  gfx.lineStyle(1,0x555555,1);
+  function fixtureDims(fix) {
+    const v = [0,1,2,3].map(i => fix.getShape().getVertex(i)),
+      xs = v.map(p => p.x),
+      ys = v.map(p => p.y),
+      xmax = _(xs).max(),
+      xmin = _(xs).min(),
+      ymax = _(ys).max(),
+      ymin = _(ys).min();
+    return {width: xmax - xmin, height: ymax - ymin};
+  }
+  for (let body of iterBodies(world)) {
+    const [fix] = iterFixtures(body), dims = fixtureDims(fix);
+    gfx.drawRect(
+      ratio *  (body.getPosition().x - dims.width  / 2),
+      ratio * -(body.getPosition().y + dims.height / 2),
+      dims.width * ratio, dims.height * ratio
+    );
+  }
   gfx.lineStyle(1,defaultColor,1);
   if (game.input.activePointer.isDown) {
     target = new Vec2(game.input.worldX, game.input.worldY);

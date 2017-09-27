@@ -15,3 +15,9 @@ Multiplayer Engines
 
 Ultimately, just going with home-rolled (maybe with some assistance from
 TImeline), but Lance seems like the most promising if things get hairy quickly.
+
+Misc
+----
+
+- `moduleResolution: node` is from
+  https://github.com/Microsoft/TypeScript/issues/8189
