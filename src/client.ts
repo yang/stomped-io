@@ -9,7 +9,7 @@ import * as Sio from 'socket.io-client';
 import * as Common from './common';
 import {
   addBody,
-  AddEnt,
+  AddEnt, assert,
   Bcast,
   clearArray, dt,
   Ent,
@@ -213,26 +213,30 @@ function* iterFixtures(body) {
 const runLocally = true;
 
 function replayChunkStep(currTime: number) {
+  let currChunk;
+  assert(chunkSteps <= chunk / simDt);
   if (replayMode == ReplayMode.TIME) {
-    const currChunk = lastBestSeq[1 + Math.floor((currTime - lastSimTime) / (1000 * chunk / timeWarp))];
-    if (lastChunk != currChunk) {
-      if (chunkSteps && chunkSteps < chunk / simDt) {
-        console.log('switching from old chunk ', lastChunk && lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
-      }
-      chunkSteps = 0;
-    }
-    lastChunk = currChunk;
-    chunkSteps += 1;
-    console.log(chunkSteps, (currTime - lastSimTime) / (1000 * chunk / timeWarp), currTime - lastSimTime, 1000 * chunk / timeWarp, currTime, lastSimTime);
-    if (currChunk && getDir(me) != currChunk.dir) {
-      //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
-      reallySetInput(currChunk.dir, currTime);
-    }
+    currChunk = lastBestSeq[1 + Math.floor((currTime - lastSimTime) / (1000 * chunk / timeWarp))];
   } else if (replayMode == ReplayMode.STEPS) {
-//          assert(chunkSteps <= chunk / simDt);
-    //        const currChunk = chunkSteps == chunk / simDt;
+    const index = lastBestSeq.indexOf(lastChunk); // 0 if not found, i.e. new path
+    currChunk = index < 0 ? lastBestSeq[1] :
+      chunkSteps == chunk / simDt ? lastBestSeq[index + 1] :
+        lastChunk;
   } else {
     throw new Error();
+  }
+  if (lastChunk != currChunk) {
+    if (chunkSteps && chunkSteps < chunk / simDt) {
+      console.log('switching from old chunk ', lastChunk && lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
+    }
+    chunkSteps = 0;
+  }
+  chunkSteps += 1;
+  lastChunk = currChunk;
+//  console.log(currChunk.dir, chunkSteps, (currTime - lastSimTime) / (1000 * chunk / timeWarp), currTime - lastSimTime, 1000 * chunk / timeWarp, currTime, lastSimTime);
+  if (currChunk && getDir(me) != currChunk.dir) {
+    //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
+    reallySetInput(currChunk.dir, currTime);
   }
 }
 
@@ -353,7 +357,16 @@ function update() {
       if (lastBestSeq) {
         replayChunkStep(currTime);
       }
-      if (lastSimTime == null || currTime - lastSimTime > simPeriod / timeWarp) {
+      let doSim = false;
+      if (replayMode == ReplayMode.TIME) {
+        doSim = lastSimTime == null || currTime - lastSimTime > simPeriod / timeWarp;
+      } else if (replayMode == ReplayMode.STEPS) {
+        console.log(lastChunk && lastChunk.elapsed - chunk, chunkSteps, lastChunk && (lastChunk.elapsed + chunkSteps * simDt / chunk) * 1000);
+        doSim = !lastChunk || (lastChunk.elapsed - chunk + chunkSteps * simDt / chunk) * 1000 > simPeriod;
+      } else {
+        throw new Error();
+      }
+      if (doSim) {
         lastSimTime = currTime;
         const startState = getWorldState();
         // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
@@ -428,10 +441,18 @@ function update() {
 }
 
 enum ReplayMode { TIME, STEPS }
-const replayMode = ReplayMode.TIME; // runLocally && simDt == dt ? ReplayMode.TIME : ReplayMode.STEPS;
+let replayMode = ReplayMode.STEPS;
 
 const simPeriod = 3000;
 let lastSimTime = null, lastWorldStates, lastBestSeq: WorldState[], lastChunk: WorldState, chunkSteps: number;
+
+//const chunk = 1 / 5, horizon = 6 / 5;
+const chunk = 1, horizon = 6;
+const simDt = 1/10;
+
+if (replayMode == ReplayMode.STEPS)
+  assert(runLocally && simDt == dt);
+
 const defaultColor = 0x002244, bestColor = 0xFF0000, bestColors = [
   0xff0000,
   0xffff00,
@@ -512,10 +533,6 @@ function getDir(player) {
   return player.inputs.left.isDown ? Dir.Left :
     player.inputs.right.isDown ? Dir.Right : null;
 }
-
-//const chunk = 1 / 5, horizon = 6 / 5;
-const chunk = 1, horizon = 6;
-const simDt = 1/10;
 
 function sim(init: WorldState, dir: Dir) {
   // restore world state
