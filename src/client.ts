@@ -54,6 +54,7 @@ let gfx;
 function create(initSnap) {
 
   game.world.setBounds(0,0,800,2400);
+  game.time.advancedTiming = true;
 
   gfx = game.add.graphics(0,0);
   gfx.lineStyle(1,0x0088FF,1);
@@ -189,6 +190,8 @@ function* iterFixtures(body) {
 }
 
 function update() {
+
+  game.debug.text(game.time.fps, 2, 14, "#00ff00");
 
   if (lastTime == null) lastTime = performance.now() / 1000;
   const currTime = performance.now();
