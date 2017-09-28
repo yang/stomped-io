@@ -214,7 +214,7 @@ export function addBody(ent, type, fixtureOpts = {}) {
 
 let lastTime = null;
 export const dt = 1 / 10;
-export const updatePeriod = 1 / 10;
+export const updatePeriod = 1 / 1;
 // physics timestep per real timestep
 export const timeWarp = dt / updatePeriod;
 
@@ -257,4 +257,10 @@ export function update(players, _dt = dt) {
     f();
   }
   clearArray(postSteps);
+}
+
+export function updateEntPhys(ent) {
+  [ent.x, ent.y] = entPosFromPl(ent).toTuple();
+  ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
+  ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;
 }

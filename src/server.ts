@@ -1,10 +1,23 @@
-export {};
-
 import * as _ from 'lodash';
 import * as Sio from 'socket.io';
 import * as Common from './common';
+import {
+  addBody,
+  AddEnt,
+  Bcast,
+  clearArray,
+  Event,
+  Lava,
+  Ledge,
+  ledgeHeight,
+  ledgeWidth,
+  Player,
+  RemEnt,
+  updateEntPhys,
+  updatePeriod,
+  world
+} from './common';
 import * as Pl from 'planck-js';
-import {addBody, Player, Ledge, Lava, world, ledgeHeight, ledgeWidth, ratio, updatePeriod, Bcast, AddEnt, RemEnt, Event, InputEvent, clearArray, Vec2, accel, entPosFromPl} from './common';
 
 const io = Sio();
 
@@ -36,12 +49,6 @@ function initSnap() {
     events: [],
     ents: getEnts().map((p) => p.ser())
   }
-}
-
-function updateEntPhys(ent) {
-  [ent.x, ent.y] = entPosFromPl(ent).toTuple();
-  ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
-  ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;
 }
 
 function update() {

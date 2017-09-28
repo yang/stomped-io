@@ -7,7 +7,26 @@ const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split'
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
-import {Player, Ledge, world, ratio, addBody, Bcast, Ent, Event, AddEnt, RemEnt, InputEvent, clearArray, Vec2, gravity, accel, updatePeriod, plPosFromEnt, entPosFromPl, timeWarp} from './common';
+import {
+  addBody,
+  AddEnt,
+  Bcast,
+  clearArray, dt,
+  Ent,
+  entPosFromPl,
+  Event,
+  InputEvent,
+  Ledge,
+  Player,
+  plPosFromEnt,
+  ratio,
+  RemEnt,
+  timeWarp,
+  updateEntPhys,
+  updatePeriod,
+  Vec2,
+  world
+} from './common';
 import * as _ from 'lodash';
 
 var game;
@@ -117,7 +136,7 @@ function updateInputs() {
   return me.inputs;
 }
 
-let lastTime = null;
+let lastTime = 0;
 
 const timeBuffer = 50;
 let delta = null;
@@ -189,55 +208,71 @@ function* iterFixtures(body) {
   }
 }
 
+// This enables easier debugging---no runaway server-side simulation while setting breakpoints, no skipped frames,
+// no latency/interpolation, exact same resutls between predicted and actual physics.
+const runLocally = true;
+
 function update() {
 
   game.debug.text(game.time.fps, 2, 14, "#00ff00");
-
-  if (lastTime == null) lastTime = performance.now() / 1000;
   const currTime = performance.now();
+  let updating = false;
 
-  if (events.length > 0) {
-    socket.emit('input', {
-      time: currTime,
-      events: events.map((e) => e.ser())
-    });
-    clearArray(events);
-  }
-
-  const targetTime = currTime + delta - timeBuffer;
-  // console.log(currTime, delta, timeBuffer, currTime + delta - timeBuffer);
-  const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
-  if (nextBcastIdx <= 0) {
-    console.log('off end of timeline');
-    return;
-  }
-  const nextBcast = timeline[nextBcastIdx];
-  const prevBcast = timeline[nextBcastIdx - 1];
-  const alpha = (targetTime - prevBcast.time) / (nextBcast.time - prevBcast.time);
-
-  const aMap = new Map(prevBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
-  const bMap = new Map(nextBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
-  for (let ev of prevBcast.events) {
-    switch (ev.type) {
-      case 'AddEnt':
-        const ent: Ent = (<AddEnt>ev).ent;
-        addEnt(ent);
-        break;
-      case 'RemEnt':
-        const id = (<RemEnt>ev).id;
-        tryRemove(id, players);
-        tryRemove(id, ledges);
-        break;
+  if (runLocally) {
+    if (currTime - lastTime >= updatePeriod * 1000) {
+      updating = true;
     }
-  }
-  for (let ent of getEnts()) {
-    const [a,b] = [aMap.get(ent.id), bMap.get(ent.id)];
-    if (a && b) {
-      if (ent instanceof Player && a instanceof Player) ent.inputs = a.inputs;
-      ent.x = lerp(a.x, b.x, alpha);
-      ent.y = lerp(a.y, b.y, alpha);
-      ent.vel.x = lerp(a.vel.x, b.vel.x, alpha);
-      ent.vel.y = lerp(a.vel.y, b.vel.y, alpha);
+  } else {
+    if (events.length > 0) {
+      socket.emit('input', {
+        time: currTime,
+        events: events.map((e) => e.ser())
+      });
+      clearArray(events);
+    }
+
+    const targetTime = currTime + delta - timeBuffer;
+    // console.log(currTime, delta, timeBuffer, currTime + delta - timeBuffer);
+    const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
+    if (nextBcastIdx <= 0) {
+      console.log('off end of timeline');
+      return;
+    }
+    const nextBcast = timeline[nextBcastIdx];
+    const prevBcast = timeline[nextBcastIdx - 1];
+    const alpha = (targetTime - prevBcast.time) / (nextBcast.time - prevBcast.time);
+
+    const aMap = new Map(prevBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
+    const bMap = new Map(nextBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
+    for (let ev of prevBcast.events) {
+      switch (ev.type) {
+        case 'AddEnt':
+          const ent: Ent = (<AddEnt>ev).ent;
+          addEnt(ent);
+          break;
+        case 'RemEnt':
+          const id = (<RemEnt>ev).id;
+          tryRemove(id, players);
+          tryRemove(id, ledges);
+          break;
+      }
+    }
+    for (let ent of getEnts()) {
+      const [a, b] = [aMap.get(ent.id), bMap.get(ent.id)];
+      if (a && b) {
+        if (ent instanceof Player && a instanceof Player) ent.inputs = a.inputs;
+        ent.x = lerp(a.x, b.x, alpha);
+        ent.y = lerp(a.y, b.y, alpha);
+        ent.vel.x = lerp(a.vel.x, b.vel.x, alpha);
+        ent.vel.y = lerp(a.vel.y, b.vel.y, alpha);
+      }
+    }
+    for (let player of players) {
+      feedInputs(player);
+    }
+
+    for (let ent of getEnts()) {
+      updatePos(ent);
     }
   }
 
@@ -258,15 +293,6 @@ function update() {
   //for (var chr of charSprites) {
     //updatePos(chr);
   //}
-
-  for (let player of players) {
-    feedInputs(player);
-    updatePos(player);
-  }
-
-  for (let ledge of ledges) {
-    updatePos(ledge);
-  }
 
   //for (let star of stars.children) {
     //updatePos(star);
@@ -299,35 +325,39 @@ function update() {
   if (target) {
     gfx.drawCircle(target.x, target.y, 100);
     gfx.moveTo(me.x, me.y);
-    if (lastBestSeq) {
-      const currChunk = lastBestSeq[Math.ceil((currTime - lastSimTime) / (1000 * chunk / timeWarp))];
-      if (currChunk && getDir(me) != currChunk.dir) {
-        //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
-        reallySetInput(currChunk.dir, currTime);
+    if (!runLocally || updating) {
+      if (lastBestSeq) {
+        if (currChunk && getDir(me) != currChunk.dir) {
+          //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
+          reallySetInput(currChunk.dir, currTime);
+        }
       }
-    }
-    if (lastSimTime == null || currTime - lastSimTime > simPeriod / timeWarp) {
-      lastSimTime = currTime;
-      const horizon = 6;
-      const startState = getWorldState();
-      // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
-      // the space of possible moves using simple breadth-first search, picking the path that ends closest to the
-      // target location.
-      //
-      // The resulting performance is prohibitively slow for even modest horizons.  The AI has // some moments of
-      // intelligence, but with the short horizon, it just ends up flailing between non-optimal choices.
-      const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
-        start: startState,
-        edges: (worldState) => worldState.elapsed < horizon ?
-          [Dir.Left, Dir.Right] : [],
-        traverseEdge: sim,
-        cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
-      });
-      lastWorldStates = worldStates;
-      lastBestSeq = bestPath.map(([ws,dir]) => ws).concat([bestWorldState]);
-      //console.log(lastBestSeq.length);
-      if (bestPath.length > 0) {
-        reallySetInput(bestPath[0][1], currTime);
+      if (lastSimTime == null || currTime - lastSimTime > simPeriod / timeWarp) {
+        lastSimTime = currTime;
+        const startState = getWorldState();
+        // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
+        // the space of possible moves using simple breadth-first search, picking the path that ends closest to the
+        // target location.
+        //
+        // The resulting performance is prohibitively slow for even modest horizons.  The AI has // some moments of
+        // intelligence, but with the short horizon, it just ends up flailing between non-optimal choices.
+        const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
+          start: startState,
+          edges: (worldState) => worldState.elapsed < horizon ?
+            [Dir.Left, Dir.Right] : [],
+          traverseEdge: sim,
+          cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
+        });
+        // revert bodies to their original states
+        for (let ent of getEnts()) {
+          updatePos(ent);
+        }
+        lastWorldStates = worldStates;
+        lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
+        //console.log(lastBestSeq.length);
+        if (bestPath.length > 0) {
+          reallySetInput(bestPath[0][1], currTime);
+        }
       }
     }
 
@@ -359,10 +389,24 @@ function update() {
     }
   }
 
+  if (runLocally && updating) {
+    Common.update(players);
+    for (let player of players) {
+      feedInputs(player);
+    }
+    // update sprites
+    for (let ent of getEnts()) {
+      updateEntPhys(ent);
+      updatePos(ent);
+    }
+    lastTime = currTime;
+  }
 }
 
-const simPeriod = 4000;
-let lastSimTime = null, lastWorldStates, lastBestSeq: WorldState[];
+enum ReplayMode { TIME, STEPS }
+
+const simPeriod = 3000;
+let lastSimTime = null, lastWorldStates, lastBestSeq: WorldState[], lastChunk: WorldState, chunkSteps: number;
 const defaultColor = 0x002244, bestColor = 0xFF0000, bestColors = [
   0xff0000,
   0xffff00,
@@ -444,19 +488,21 @@ function getDir(player) {
     player.inputs.right.isDown ? Dir.Right : null;
 }
 
-const chunk = 1;
+//const chunk = 1 / 5, horizon = 6 / 5;
+const chunk = 1, horizon = 6;
+const simDt = 1/10;
+
 function sim(init: WorldState, dir: Dir) {
   // restore world state
   for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
   //for (let ent of getEnts()) restoreBody(ent, init.plState.get(ent));
   // simulate core logic
-  const simDt = 1/10;
   let minDistToTarget = 9999999;
   const mePath = [];
   mePath.push(copyVec(me.bod.getPosition()));
   const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
   setInputsByDir(dir);
-  for (let t = 0; t < chunk; t += simDt) {
+  for (let i = 0; i < chunk / simDt; i++) {
     Common.update(players, simDt);
     if (Math.abs(mePath[mePath.length - 1].y) > game.world.height / ratio &&
       Math.abs(me.bod.getPosition().y) < game.world.height / ratio) {
