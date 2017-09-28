@@ -212,6 +212,30 @@ function* iterFixtures(body) {
 // no latency/interpolation, exact same resutls between predicted and actual physics.
 const runLocally = true;
 
+function replayChunkStep(currTime: number) {
+  if (replayMode == ReplayMode.TIME) {
+    const currChunk = lastBestSeq[1 + Math.floor((currTime - lastSimTime) / (1000 * chunk / timeWarp))];
+    if (lastChunk != currChunk) {
+      if (chunkSteps && chunkSteps < chunk / simDt) {
+        console.log('switching from old chunk ', lastChunk && lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
+      }
+      chunkSteps = 0;
+    }
+    lastChunk = currChunk;
+    chunkSteps += 1;
+    console.log(chunkSteps, (currTime - lastSimTime) / (1000 * chunk / timeWarp), currTime - lastSimTime, 1000 * chunk / timeWarp, currTime, lastSimTime);
+    if (currChunk && getDir(me) != currChunk.dir) {
+      //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
+      reallySetInput(currChunk.dir, currTime);
+    }
+  } else if (replayMode == ReplayMode.STEPS) {
+//          assert(chunkSteps <= chunk / simDt);
+    //        const currChunk = chunkSteps == chunk / simDt;
+  } else {
+    throw new Error();
+  }
+}
+
 function update() {
 
   game.debug.text(game.time.fps, 2, 14, "#00ff00");
@@ -327,10 +351,7 @@ function update() {
     gfx.moveTo(me.x, me.y);
     if (!runLocally || updating) {
       if (lastBestSeq) {
-        if (currChunk && getDir(me) != currChunk.dir) {
-          //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
-          reallySetInput(currChunk.dir, currTime);
-        }
+        replayChunkStep(currTime);
       }
       if (lastSimTime == null || currTime - lastSimTime > simPeriod / timeWarp) {
         lastSimTime = currTime;
@@ -354,9 +375,12 @@ function update() {
         }
         lastWorldStates = worldStates;
         lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
-        //console.log(lastBestSeq.length);
-        if (bestPath.length > 0) {
-          reallySetInput(bestPath[0][1], currTime);
+        console.log('simulated');
+        if (lastBestSeq.length > 1) {
+          chunkSteps = null;
+          replayChunkStep(currTime);
+//          reallySetInput(lastBestSeq[1].dir, currTime);
+//          console.log('switching to brand new path ');
         }
       }
     }
@@ -404,6 +428,7 @@ function update() {
 }
 
 enum ReplayMode { TIME, STEPS }
+const replayMode = ReplayMode.TIME; // runLocally && simDt == dt ? ReplayMode.TIME : ReplayMode.STEPS;
 
 const simPeriod = 3000;
 let lastSimTime = null, lastWorldStates, lastBestSeq: WorldState[], lastChunk: WorldState, chunkSteps: number;
