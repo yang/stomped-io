@@ -213,7 +213,7 @@ export function addBody(ent, type, fixtureOpts = {}) {
 }
 
 let lastTime = null;
-export const dt = 1 / 100;
+export const dt = 1 / 10;
 export const updatePeriod = 1 / 10;
 // physics timestep per real timestep
 export const timeWarp = dt / updatePeriod;

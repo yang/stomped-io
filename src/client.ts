@@ -119,7 +119,7 @@ function updateInputs() {
 
 let lastTime = null;
 
-const timeBuffer = 200;
+const timeBuffer = 50;
 let delta = null;
 
 function lerp(a,b,alpha) {
@@ -205,8 +205,12 @@ function update() {
   }
 
   const targetTime = currTime + delta - timeBuffer;
+  // console.log(currTime, delta, timeBuffer, currTime + delta - timeBuffer);
   const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
-  if (nextBcastIdx <= 0) return;
+  if (nextBcastIdx <= 0) {
+    console.log('off end of timeline');
+    return;
+  }
   const nextBcast = timeline[nextBcastIdx];
   const prevBcast = timeline[nextBcastIdx - 1];
   const alpha = (targetTime - prevBcast.time) / (nextBcast.time - prevBcast.time);
