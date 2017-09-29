@@ -15,12 +15,12 @@ export class InputState {
   isDown = false;
 }
 
-export function create(players, destroy, lava) {
+export function create(players: Player[], destroy, lava, world: Pl.World) {
   world.on('end-contact', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
     const fB = contact.getFixtureB(), bB = fB.getBody();
     function bounce(fA, bA, fB, bB) {
-      if (players.includes(bA.getUserData())) {
+      if (bA.getUserData().type == 'Player') {
 //        console.log('end-contact');
         // only clear of each other in the next tick
         postStep(() => {
@@ -197,19 +197,24 @@ export function plPosFromEnt(ent) {
 }
 
 export function addBody(ent, type, fixtureOpts = {}) {
-  ent.bod = world.createBody({
+  ent.bod = createBody(world, ent, type, fixtureOpts);
+  return ent.bod;
+}
+
+export function createBody(world: Pl.World, ent, type, fixtureOpts = {}) {
+  const bod = world.createBody({
     type: type,
     fixedRotation: true,
     position: plPosFromEnt(ent),
     userData: ent
   });
-  ent.bod.createFixture(Object.assign({
+  bod.createFixture(Object.assign({
     shape: Pl.Box(ent.width / 2 / ratio, ent.height / 2 / ratio),
     density: 1,
     restitution: 1,
     friction: 0
   }, fixtureOpts));
-  return ent.bod;
+  return bod;
 }
 
 let lastTime = null;
@@ -247,7 +252,7 @@ function feedInputs(player, dt) {
 
 }
 
-export function update(players, _dt = dt) {
+export function update(players: Player[], _dt = dt, _world = world) {
   // TODO we're feeding inputs every physics tick here, but we send inputs to
   // clients bucketed into the bcasts, which are less frequent.
   for (let player of players) feedInputs(player, _dt);
@@ -256,7 +261,7 @@ export function update(players, _dt = dt) {
 
   if (lastTime == null) lastTime = Date.now() / 1000;
 
-  world.step(_dt);
+  _world.step(_dt);
   for (let f of postSteps) {
     f();
   }
@@ -268,3 +273,41 @@ export function updateEntPhys(ent) {
   ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
   ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;
 }
+
+export function copyVec(v: Pl.Vec2): Pl.Vec2 {
+  return Pl.Vec2(v.x, v.y);
+}
+
+export function cloneWorld(world: Pl.World): Pl.World {
+  const newWorld = Pl.World(Pl.Vec2(0, gravity));
+  for (let body of [...iterBodies(world)].reverse()) {
+    const clone = createBody(newWorld, body.getUserData(), body.getType());
+    clone.setLinearVelocity(copyVec(body.getLinearVelocity()));
+    clone.setPosition(copyVec(body.getPosition()));
+  }
+  assert(_.isEqual(
+    Array.from(iterBodies(world)).map(body => body.getUserData()),
+    Array.from(iterBodies(newWorld)).map(body => body.getUserData())));
+  return newWorld;
+}
+
+export function isClose(a: number, b: number) {
+  return Math.abs(a-b) <=  Math.max(1e-9 * Math.max(Math.abs(a), Math.abs(b)), 0);
+}
+
+export function veq(a,b) {
+  return isClose(a.x, b.x) && isClose(a.y, b.y);
+}
+
+export function* iterBodies(world)/*: Pl.Body*/ {
+  for (let body = world.getBodyList(); body; body = body.getNext()) {
+    yield body;
+  }
+}
+
+export function* iterFixtures(body)/*: Pl.Fixture*/ {
+  for (let fixture = body.getFixtureList(); fixture; fixture = fixture.getNext()) {
+    yield fixture;
+  }
+}
+

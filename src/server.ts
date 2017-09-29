@@ -22,7 +22,7 @@ import * as Pl from 'planck-js';
 const io = Sio();
 
 const events: Event[] = [];
-const players = [];
+const players: Player[] = [];
 const ledges = [];
 const game = {
   world: {
@@ -142,7 +142,7 @@ function create() {
   setInterval(bcast, bcastPeriod * 1000);
   setInterval(update, updatePeriod * 1000);
 
-  Common.create(players, destroy, lava);
+  Common.create(players, destroy, lava, world);
 
 }
 

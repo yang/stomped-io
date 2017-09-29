@@ -11,8 +11,11 @@ import {
   addBody,
   AddEnt, assert,
   Bcast,
-  clearArray, dt,
+  clearArray, cloneWorld, dt,
+  copyVec,
   Ent,
+  isClose,
+  veq,
   entPosFromPl,
   Event,
   InputEvent,
@@ -25,9 +28,13 @@ import {
   updateEntPhys,
   updatePeriod,
   Vec2,
-  world
+  world,
+  iterBodies,
+  iterFixtures
 } from './common';
 import * as _ from 'lodash';
+
+let doCloneWorlds = true;
 
 var game;
 
@@ -84,7 +91,7 @@ function create(initSnap) {
   lava = game.add.sprite(0, game.world.height - 64, 'lava');
   lava.enableBody = true;
   addBody(lava, 'kinematic');
-  Common.create(players, null, lava);
+  Common.create(players, null, lava, world);
 
   //  The platforms group contains the ground and the 2 ledges we can jump on
   platforms = game.add.group();
@@ -192,20 +199,8 @@ function tryRemove(id: number, ents: Ent[]) {
 }
 
 function reallySetInput(dir: Dir, currTime: number) {
-  setInputsByDir(dir);
+  setInputsByDir(me, dir);
   socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
-}
-
-function* iterBodies(world) {
-  for (let body = world.getBodyList(); body; body = body.getNext()) {
-    yield body;
-  }
-}
-
-function* iterFixtures(body) {
-  for (let fixture = body.getFixtureList(); fixture; fixture = fixture.getNext()) {
-    yield fixture;
-  }
 }
 
 // This enables easier debugging---no runaway server-side simulation while setting breakpoints, no skipped frames,
@@ -243,6 +238,56 @@ function replayChunkStep(currTime: number) {
     //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
     reallySetInput(currChunk.dir, currTime);
   }
+}
+
+function runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) => WorldState) {
+  const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
+    start: startState,
+    edges: (worldState) => worldState.elapsed < horizon ?
+      [Dir.Left, Dir.Right] : [],
+    traverseEdge: simFunc,
+    cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
+  });
+  return {bestWorldState, bestPath, worldStates};
+}
+
+function runSimsReuse() {
+  const startState = getWorldState(capturePlState());
+  const res = runSims(startState, (init, dir) => {
+    // restore world state
+    for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
+    const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
+    setInputsByDir(me, dir);
+    const res = sim(dir, world, players, init, world => capturePlState());
+    setInputs(me, origInputs);
+    return res;
+  });
+  // revert bodies to their original states
+  for (let ent of getEnts()) {
+    updatePos(ent);
+  }
+  return res;
+}
+
+function runSimsClone() {
+  const startState = getWorldState([]);
+//  return runSims(startState, simClone);
+  return runSims(startState, (init, dir) => {
+    const world = cloneWorld(init.plWorld);
+    const playerToNewBody = new Map(
+      Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
+    );
+    const newPlayers = players.map(p => {
+      const q = new Player(p.name, p.x, p.y);
+      q.bod = playerToNewBody.get(p);
+      setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
+      return q;
+    });
+    const newMe = newPlayers[players.findIndex(p => p == me)];
+    setInputsByDir(newMe, dir);
+    Common.create(newPlayers, null, lava, world);
+    return sim(dir, world, newPlayers, init, world => []);
+  });
 }
 
 function update() {
@@ -373,24 +418,10 @@ function update() {
       }
       if (doSim) {
         lastSimTime = currTime;
-        const startState = getWorldState();
-        // This approach simply reuses the existing game logic to simulate hypothetical input sequences.  It explores
-        // the space of possible moves using simple breadth-first search, picking the path that ends closest to the
-        // target location.
-        //
-        // The resulting performance is prohibitively slow for even modest horizons.  The AI has // some moments of
-        // intelligence, but with the short horizon, it just ends up flailing between non-optimal choices.
-        const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
-          start: startState,
-          edges: (worldState) => worldState.elapsed < horizon ?
-            [Dir.Left, Dir.Right] : [],
-          traverseEdge: sim,
-          cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
-        });
-        // revert bodies to their original states
-        for (let ent of getEnts()) {
-          updatePos(ent);
-        }
+        console.log(me, me.bod.getPosition());
+        const {worldStates, bestPath, bestWorldState} =
+          doCloneWorlds ? runSimsClone() : runSimsReuse();
+        console.log(me, me.bod.getPosition());
         lastWorldStates = worldStates;
         lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
         console.log('simulated');
@@ -451,14 +482,6 @@ function update() {
   }
 }
 
-function isClose(a: number, b: number) {
-  return Math.abs(a-b) <=  Math.max(1e-9 * Math.max(Math.abs(a), Math.abs(b)), 0);
-}
-
-function veq(a,b) {
-  return isClose(a.x, b.x) && isClose(a.y, b.y);
-}
-
 enum ReplayMode { TIME, STEPS }
 let replayMode = ReplayMode.STEPS;
 
@@ -496,31 +519,39 @@ class BodyState {
   //}
 }
 
+type PlState = [Ent, BodyState][];
+
 class WorldState {
   constructor(
       public elapsed: number,
       public dir: Dir,
       public minDistToTarget: number,
       public finalDistToTarget: number,
-      public plState: [Ent, BodyState][],
-      public mePath: Pl.Vec2[]
+      public plState: PlState,
+      public mePath: Pl.Vec2[],
+      public plWorld: Pl.World
   ) {}
 }
 
 const enum Dir { Left, Right };
 
-function getWorldState(elapsed: number = 0): WorldState {
+function capturePlState(): PlState {
+  return getEnts().map((ent) => <[Ent, BodyState]> [
+    ent, new BodyState(
+      ent.bod, copyVec(ent.bod.getPosition()), copyVec(ent.bod.getLinearVelocity())
+    )
+  ]);
+}
+
+function getWorldState(plState: PlState, elapsed: number = 0): WorldState {
   return new WorldState(
     elapsed,
     null,
     dist(entPosFromPl(me), target),
     dist(entPosFromPl(me), target),
-    (getEnts().map((ent) => <[Ent,BodyState]> [
-        ent, new BodyState(
-          ent.bod, copyVec(ent.bod.getPosition()), copyVec(ent.bod.getLinearVelocity())
-        )
-    ])),
-    [plPosFromEnt(me)]
+    plState,
+    [plPosFromEnt(me)],
+    world
   );
 }
 
@@ -535,17 +566,13 @@ function dist(a: Vec2, b: Vec2) {
   return Math.sqrt(x*x + y*y);
 }
 
-function copyVec(v: Pl.Vec2): Pl.Vec2 {
-  return Pl.Vec2(v.x, v.y);
+function setInputs(player: Player, [left, right]: [boolean, boolean]) {
+  player.inputs.left.isDown = left;
+  player.inputs.right.isDown = right;
 }
 
-function setInputs([left, right]) {
-  me.inputs.left.isDown = left;
-  me.inputs.right.isDown = right;
-}
-
-function setInputsByDir(dir) {
-  setInputs(dir == Dir.Left ? [true, false] : [false, true]);
+function setInputsByDir(player: Player, dir: Dir) {
+  setInputs(player, dir == Dir.Left ? [true, false] : [false, true]);
 }
 
 function getDir(player) {
@@ -553,35 +580,31 @@ function getDir(player) {
     player.inputs.right.isDown ? Dir.Right : null;
 }
 
-function sim(init: WorldState, dir: Dir) {
-  // restore world state
-  for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
-  //for (let ent of getEnts()) restoreBody(ent, init.plState.get(ent));
+function sim(dir: Dir, world: Pl.World, players: Player[], init: WorldState, capturePlState: (world: Pl.World) => PlState) {
   // simulate core logic
-  let minDistToTarget = 9999999;
+  let minDistToTarget = 9999999, distance = null;
   const mePath = [];
-  mePath.push(copyVec(me.bod.getPosition()));
-  const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
-  setInputsByDir(dir);
+  const meBody = _(Array.from(iterBodies(world))).find(body => body.getUserData() == me);
+  mePath.push(copyVec(meBody.getPosition()));
   for (let i = 0; i < chunk / simDt; i++) {
-    Common.update(players, simDt);
+    Common.update(players, simDt, world);
     if (Math.abs(mePath[mePath.length - 1].y) > game.world.height / ratio &&
-      Math.abs(me.bod.getPosition().y) < game.world.height / ratio) {
+      Math.abs(meBody.getPosition().y) < game.world.height / ratio) {
       console.log('jerking');
     }
-    mePath.push(copyVec(me.bod.getPosition()));
-    minDistToTarget = Math.min(minDistToTarget, dist(entPosFromPl(me), target));
+    mePath.push(copyVec(meBody.getPosition()));
+    distance = dist(entPosFromPl(me, meBody.getPosition()), target);
+    minDistToTarget = Math.min(minDistToTarget, distance);
   }
   // console.log('finish sim');
-  setInputs(origInputs);
-  // save world state
   return new WorldState(
     init.elapsed + chunk,
     dir,
     minDistToTarget,
-    dist(entPosFromPl(me), target),
-    getWorldState().plState,
-    mePath
+    distance,
+    capturePlState(world),
+    mePath,
+    world
   );
 }
 
