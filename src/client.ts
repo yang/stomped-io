@@ -529,6 +529,7 @@ class WorldState {
       public finalDistToTarget: number,
       public plState: PlState,
       public mePath: Pl.Vec2[],
+      public meVels: Pl.Vec2[],
       public plWorld: Pl.World
   ) {}
 }
@@ -551,6 +552,7 @@ function getWorldState(plState: PlState, elapsed: number = 0): WorldState {
     dist(entPosFromPl(me), target),
     plState,
     [plPosFromEnt(me)],
+    [],
     world
   );
 }
@@ -583,9 +585,10 @@ function getDir(player) {
 function sim(dir: Dir, world: Pl.World, players: Player[], init: WorldState, capturePlState: (world: Pl.World) => PlState) {
   // simulate core logic
   let minDistToTarget = 9999999, distance = null;
-  const mePath = [];
+  const mePath = [], meVels = [];
   const meBody = _(Array.from(iterBodies(world))).find(body => body.getUserData() == me);
   mePath.push(copyVec(meBody.getPosition()));
+  meVels.push(copyVec(meBody.getLinearVelocity()));
   for (let i = 0; i < chunk / simDt; i++) {
     Common.update(players, simDt, world);
     if (Math.abs(mePath[mePath.length - 1].y) > game.world.height / ratio &&
@@ -593,6 +596,7 @@ function sim(dir: Dir, world: Pl.World, players: Player[], init: WorldState, cap
       console.log('jerking');
     }
     mePath.push(copyVec(meBody.getPosition()));
+    meVels.push(copyVec(meBody.getLinearVelocity()));
     distance = dist(entPosFromPl(me, meBody.getPosition()), target);
     minDistToTarget = Math.min(minDistToTarget, distance);
   }
@@ -604,6 +608,7 @@ function sim(dir: Dir, world: Pl.World, players: Player[], init: WorldState, cap
     distance,
     capturePlState(world),
     mePath,
+    meVels,
     world
   );
 }
