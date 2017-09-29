@@ -212,7 +212,7 @@ function* iterFixtures(body) {
 // no latency/interpolation, exact same resutls between predicted and actual physics.
 const runLocally = true;
 
-function replayChunkStep(currTime: number) {
+function getCurrChunk(currTime: number): WorldState {
   let currChunk;
   assert(chunkSteps <= chunk / simDt);
   if (replayMode == ReplayMode.TIME) {
@@ -225,6 +225,11 @@ function replayChunkStep(currTime: number) {
   } else {
     throw new Error();
   }
+  return currChunk;
+}
+
+function replayChunkStep(currTime: number) {
+  const currChunk = getCurrChunk(currTime);
   if (lastChunk != currChunk) {
     if (chunkSteps && chunkSteps < chunk / simDt) {
       console.log('switching from old chunk ', lastChunk && lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
@@ -428,6 +433,12 @@ function update() {
 
   if (runLocally && updating) {
     Common.update(players);
+    if (target && replayMode == ReplayMode.STEPS) {
+      const currChunk = getCurrChunk(currTime);
+      if (!veq(me.bod.getPosition(), currChunk.mePath[chunkSteps % (chunk / simDt)])) {
+        console.error('diverging from predicted path!');
+      }
+    }
     for (let player of players) {
       feedInputs(player);
     }
@@ -438,6 +449,14 @@ function update() {
     }
     lastTime = currTime;
   }
+}
+
+function isClose(a: number, b: number) {
+  return Math.abs(a-b) <=  Math.max(1e-9 * Math.max(Math.abs(a), Math.abs(b)), 0);
+}
+
+function veq(a,b) {
+  return isClose(a.x, b.x) && isClose(a.y, b.y);
 }
 
 enum ReplayMode { TIME, STEPS }
