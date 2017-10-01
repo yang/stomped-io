@@ -30,7 +30,7 @@ import {
   Vec2,
   world,
   iterBodies,
-  iterFixtures
+  iterFixtures, Lava
 } from './common';
 import * as _ from 'lodash';
 
@@ -88,9 +88,10 @@ function create(initSnap) {
   //  A simple background for our game
   // game.add.sprite(0, 0, 'sky');
 
-  lava = game.add.sprite(0, game.world.height - 64, 'lava');
-  lava.enableBody = true;
+  lava = new Lava(0, game.world.height - 64);
   addBody(lava, 'kinematic');
+  entToSprite.set(lava, game.add.sprite(0, game.world.height - 64, 'lava'));
+
   Common.create(players, null, lava, world);
 
   //  The platforms group contains the ground and the 2 ledges we can jump on
