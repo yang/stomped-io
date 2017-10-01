@@ -299,15 +299,14 @@ export function veq(a,b) {
   return isClose(a.x, b.x) && isClose(a.y, b.y);
 }
 
-export function* iterBodies(world)/*: Pl.Body*/ {
-  for (let body = world.getBodyList(); body; body = body.getNext()) {
-    yield body;
-  }
+function* iterList(node) {
+  for (; node; node = node.getNext()) yield node;
 }
 
-export function* iterFixtures(body)/*: Pl.Fixture*/ {
-  for (let fixture = body.getFixtureList(); fixture; fixture = fixture.getNext()) {
-    yield fixture;
-  }
+export function iterBodies(world) {
+  return iterList(world.getBodyList());
 }
 
+export function iterFixtures(body) {
+  return iterList(body.getFixtureList());
+}
