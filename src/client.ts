@@ -34,6 +34,8 @@ import {
 } from './common';
 import * as _ from 'lodash';
 
+// doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
+// vs. 167ms for non-cloning - most of the time goes into _.deepClone().
 let doCloneWorlds = true;
 
 var game;

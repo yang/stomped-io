@@ -278,16 +278,22 @@ export function copyVec(v: Pl.Vec2): Pl.Vec2 {
 }
 
 export function cloneWorld(world: Pl.World): Pl.World {
-  const newWorld = Pl.World(Pl.Vec2(0, gravity));
-  for (let body of [...iterBodies(world)].reverse()) {
-    const clone = createBody(newWorld, body.getUserData(), body.getType());
-    clone.setLinearVelocity(copyVec(body.getLinearVelocity()));
-    clone.setPosition(copyVec(body.getPosition()));
+  // Temporarily clear the user data, since the user data has reverse links pointing back into the
+  // (original) world, which would cause cloning to unnecessarily also clone the original world
+  // (along with the passed-in world). This drops the time from 500ms to 300ms.
+  const userData = [];
+  for (let body of iterBodies(world)) {
+    userData.push(body.getUserData());
+    body.setUserData(null);
   }
-  assert(_.isEqual(
-    Array.from(iterBodies(world)).map(body => body.getUserData()),
-    Array.from(iterBodies(newWorld)).map(body => body.getUserData())));
-  return newWorld;
+  const clone: Pl.World = _.cloneDeepWith(world);
+  clone.addPair = clone.createContact.bind(clone);
+  clone.m_broadPhase.queryCallback = clone.m_broadPhase.__proto__.queryCallback.bind(clone.m_broadPhase);
+  for (let [u,a,b] of _.zip(userData, [...iterBodies(world)], [...iterBodies(clone)])) {
+    a.setUserData(u);
+    b.setUserData(u);
+  }
+  return clone;
 }
 
 export function isClose(a: number, b: number) {
