@@ -58,8 +58,7 @@ export function create(players: Player[], destroy, lava: Lava, world: Pl.World) 
       if (players.includes(bA.getUserData()) && lava === bB.getUserData()) {
         contact.setEnabled(false);
         const player = bA.getUserData();
-        postStep(() => player.bod.setPosition(Pl.Vec2(
-          player.bod.getPosition().x, -99999)));
+        postStep(() => bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999)));
         // only clear of each other in the next tick
         if (destroy) {
           setTimeout(() => {
