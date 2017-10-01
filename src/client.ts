@@ -692,6 +692,57 @@ function feedInputs(player) {
 
 const doPings = false;
 function main() {
+  if (0 / 1) {
+    let world = Pl.World(Pl.Vec2(0, -10))
+    const a = world.createBody({
+      type: 'dynamic',
+      fixedRotation: true,
+      position: Pl.Vec2(0, 0),
+      linearVelocity: Pl.Vec2(1, 0)
+    });
+    a.createFixture({
+      shape: Pl.Box(1, 1),
+      density: 1,
+      restitution: 1,
+      friction: 0
+    });
+
+    const b = world.createBody({
+      type: 'kinematic',
+      fixedRotation: true,
+      position: Pl.Vec2(0, -2.5),
+      linearVelocity: Pl.Vec2(1, 0)
+    });
+    b.createFixture({
+      shape: Pl.Box(1, 1),
+      density: 1,
+      restitution: 1,
+      friction: 0
+    });
+
+    let contacting = false;
+    world.on('begin-contact', (contact) => {
+      contacting = true;
+      console.log('begin-contact', a.getPosition(), a.getLinearVelocity(), b.getPosition(), b.getLinearVelocity())
+    });
+    world.on('end-contact', (contact) => {
+      console.log('end-contact', a.getPosition(), a.getLinearVelocity(), b.getPosition(), b.getLinearVelocity())
+    });
+
+    const baseWorld = world;
+    const initClone = cloneWorld(baseWorld);
+    world = cloneWorld(world);
+    for (let i = 0; i < 10; i++) {
+      console.log(a.getPosition(), a.getLinearVelocity());
+      world.step(.1);
+      if (contacting && 0 / 1) {
+        world = cloneWorld(world);
+      }
+      contacting = false;
+    }
+    return;
+  }
+
   socket = Sio('http://localhost:3000');
   socket.on('connect', () => {
     console.log('connect')
