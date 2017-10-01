@@ -253,7 +253,7 @@ function runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) =
 }
 
 function runSimsReuse() {
-  const startState = getWorldState(capturePlState());
+  const startState = getWorldState(capturePlState(), world);
   const res = runSims(startState, (init, dir) => {
     // restore world state
     for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
@@ -271,7 +271,7 @@ function runSimsReuse() {
 }
 
 function runSimsClone() {
-  const startState = getWorldState([]);
+  const startState = getWorldState([], cloneWorld(world));
 //  return runSims(startState, simClone);
   return runSims(startState, (init, dir) => {
     const world = cloneWorld(init.plWorld);
@@ -545,16 +545,16 @@ function capturePlState(): PlState {
   ]);
 }
 
-function getWorldState(plState: PlState, elapsed: number = 0): WorldState {
+function getWorldState(plState: PlState, plWorld: Pl.World): WorldState {
   return new WorldState(
-    elapsed,
+    0,
     null,
     dist(entPosFromPl(me), target),
     dist(entPosFromPl(me), target),
     plState,
     [plPosFromEnt(me)],
     [],
-    world
+    plWorld
   );
 }
 
