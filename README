@@ -1,3 +1,10 @@
+Design Notes
+============
+
+Can start out with this simple linear lava, but consider adding something wave-y like this:
+
+https://phaser.io/examples/v2/tile-sprites/tile-sprite-from-animated-sprite
+
 Dev Notes
 =========
 
