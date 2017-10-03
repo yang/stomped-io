@@ -217,8 +217,8 @@ export function createBody(world: Pl.World, ent, type, fixtureOpts = {}) {
 }
 
 let lastTime = null;
-export const dt = 1 / 10;
-export const updatePeriod = 1 / 10;
+export const dt = 1 / 20;
+export const updatePeriod = 1 / 20;
 // physics timestep per real timestep
 export const timeWarp = dt / updatePeriod;
 

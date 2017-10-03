@@ -30,7 +30,7 @@ import {
   Vec2,
   world,
   iterBodies,
-  iterFixtures, Lava
+  iterFixtures, Lava, ledgeWidth, ledgeHeight
 } from './common';
 import * as _ from 'lodash';
 
@@ -42,10 +42,10 @@ var game;
 
 function preload() {
 
-  game.load.image('sky', 'assets/sky.png');
-  game.load.image('ground', 'assets/platform.png');
+  game.load.image('sky', 'assets/bg-grad.png');
+  game.load.image('ground', 'assets/ledge.png');
   game.load.image('star', 'assets/star.png');
-  game.load.image('lava', 'assets/lava.jpg');
+  game.load.image('lava', 'assets/lava.png');
   game.load.spritesheet('dude', 'dist/assets/player-white.png', 567, 756);
   game.stage.disableVisibilityChange = true;
 
@@ -88,11 +88,14 @@ function create(initSnap) {
   gfx.lineStyle(1,0x0088FF,1);
 
   //  A simple background for our game
-  // game.add.sprite(0, 0, 'sky');
+  game.add.sprite(0, 0, 'sky');
 
   lava = new Lava(0, game.world.height - 64);
   addBody(lava, 'kinematic');
-  entToSprite.set(lava, game.add.sprite(0, game.world.height - 64, 'lava'));
+  const lavaSprite = game.add.sprite(0, game.world.height - 64, 'lava');
+  entToSprite.set(lava, lavaSprite);
+  lavaSprite.width = lava.width;
+  lavaSprite.height = lava.height;
 
   Common.create(players, null, lava, world);
 
@@ -187,7 +190,8 @@ function addLedge(ledge) {
   if (!ledges.find((p) => p.id == ledge.id)) {
     ledges.push(ledge);
     const platform = platforms.create(ledge.x, ledge.y, 'ground');
-    platform.scale.setTo(.75, 1);
+    platform.width = ledgeWidth;
+    platform.height = ledgeHeight;
     entToSprite.set(ledge, platform);
     addBody(ledge, 'kinematic');
   }
@@ -495,7 +499,7 @@ let lastSimTime = null, lastWorldStates, lastBestSeq: WorldState[], lastChunk: W
 
 //const chunk = 1 / 5, horizon = 6 / 5;
 const chunk = 1, horizon = 6;
-const simDt = 1/10;
+const simDt = 1/20;
 
 if (replayMode == ReplayMode.STEPS)
   assert(runLocally && simDt == dt);
