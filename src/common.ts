@@ -156,8 +156,8 @@ export class Lava extends Ent {
 }
 
 export class Player extends Ent {
-  width = 32;
-  height = 48;
+  width = 24;
+  height = 32;
   inputs = new Inputs();
   constructor(public name: string, public x: number, public y: number) {super();}
 }

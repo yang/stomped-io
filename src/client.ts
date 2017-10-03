@@ -46,7 +46,7 @@ function preload() {
   game.load.image('ground', 'assets/platform.png');
   game.load.image('star', 'assets/star.png');
   game.load.image('lava', 'assets/lava.jpg');
-  game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+  game.load.spritesheet('dude', 'dist/assets/player-white.png', 567, 756);
   game.stage.disableVisibilityChange = true;
 
 }
@@ -174,8 +174,10 @@ function addPlayer(player) {
   if (!players.find((p) => p.id == player.id)) {
     players.push(player);
     const sprite = game.add.sprite(player.x, player.y, 'dude');
-    sprite.animations.add('left', [0, 1, 2, 3], 10, true);
-    sprite.animations.add('right', [5, 6, 7, 8], 10, true);
+    sprite.width = 24;
+    sprite.height = 32;
+    sprite.animations.add('left', [3, 4, 3, 5], 10, true);
+    sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     entToSprite.set(player, sprite);
     addBody(player, 'dynamic');
   }
@@ -688,7 +690,8 @@ function feedInputs(player) {
   } else {
     //  Stand still
     sprite.animations.stop();
-    sprite.frame = 4;
+    if (sprite.frame < 3) sprite.frame = 0;
+    else sprite.frame = 3;
   }
 }
 
