@@ -42,6 +42,7 @@ var game;
 
 function preload() {
 
+  game.load.image('bg', 'assets/bg.png');
   game.load.image('sky', 'assets/bg-grad.png');
   game.load.image('ground', 'assets/ledge.png');
   game.load.image('star', 'assets/star.png');
@@ -89,6 +90,10 @@ function create(initSnap) {
 
   //  A simple background for our game
   game.add.sprite(0, 0, 'sky');
+
+  const bg = game.add.tileSprite(0,0,800,2400,'bg');
+  bg.tileScale.x = 1/4;
+  bg.tileScale.y = 1/4;
 
   lava = new Lava(0, game.world.height - 64);
   addBody(lava, 'kinematic');
