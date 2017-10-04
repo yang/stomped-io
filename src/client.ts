@@ -727,7 +727,9 @@ function main() {
         state: {
           onResize: function(scaleMgr, parentBounds) {
             const scale = Math.max(parentBounds.width / 800, parentBounds.height / 800);
-            this.world.scale.set(scale); // , scale, parentBounds.width - this.game.width, parentBounds.height - this.game.height);
+            this.world.scale.set(scale);
+            // This is needed to keep the camera on the player. Camera doesn't register game rescales.
+            this.camera.follow(entToSprite.get(me));
           },
           preload: preload,
           create: function() {
