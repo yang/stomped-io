@@ -1,8 +1,8 @@
 export {};
 
-(<any>window).PIXI = require('phaser/build/custom/pixi');
-(<any>window).p2 = require('phaser/build/custom/p2');
-const Phaser = (<any>window).Phaser = require('phaser/build/custom/phaser-split');
+(<any>window).PIXI = require('phaser-ce/build/custom/pixi');
+(<any>window).p2 = require('phaser-ce/build/custom/p2');
+const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-split');
 
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
