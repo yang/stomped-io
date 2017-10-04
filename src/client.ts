@@ -721,10 +721,21 @@ function main() {
     socket.on('dong', ({pingTime}) => console.log('ping', performance.now() - pingTime));
 
     socket.on('joined', (initSnap) => {
-      game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
-        preload: preload,
-        create: () => create(initSnap),
-        update: update
+      game = new Phaser.Game({
+        scaleMode: Phaser.ScaleManager.RESIZE,
+        state: {
+          onResize: function(scaleMgr, parentBounds) {
+            const scale = Math.max(parentBounds.width / 800, parentBounds.height / 800);
+            this.world.scale.set(scale); // , scale, parentBounds.width - this.game.width, parentBounds.height - this.game.height);
+          },
+          preload: preload,
+          create: function() {
+            this.scale.setResizeCallback(this.onResize, this);
+            this.scale.refresh();
+            create(initSnap);
+          },
+          update: update
+        }
       });
 
       timeline.push(initSnap);
