@@ -94,6 +94,7 @@ function create(initSnap) {
   const bg = game.add.tileSprite(0,0,800,2400,'bg');
   bg.tileScale.x = 1/4;
   bg.tileScale.y = 1/4;
+  bg.alpha = .05;
 
   lava = new Lava(0, game.world.height - 64);
   addBody(lava, 'kinematic');
