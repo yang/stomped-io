@@ -6,6 +6,7 @@ export const accel = 10;
 
 export const gravity = -10;
 export const world = Pl.World(Pl.Vec2(0, gravity));
+const gWorld = world;
 
 export const gameWorld = {
   width: 1600,
@@ -14,6 +15,9 @@ export const gameWorld = {
 
 export class GameState {
   public time = 0;
+  public players: Player[] = [];
+  public ledges: Ledge[] = [];
+  constructor(public world: Pl.World = gWorld) {}
 }
 
 export function clearArray(xs) {
@@ -264,17 +268,17 @@ export function oscillate(ledge: Ledge, time: number) {
   ledge.bod.setLinearVelocity(Pl.Vec2(Math.sin(time * 2 * Math.PI / ledge.oscPeriod) * gameWorld.width / 8 / ratio, 0));
 }
 
-export function update(players: Player[], ledges: Ledge[], gameState: GameState, _dt: number = dt, _world: Pl.World = world) {
+export function update(gameState: GameState, _dt: number = dt, _world: Pl.World = world) {
   // TODO we're feeding inputs every physics tick here, but we send inputs to
   // clients bucketed into the bcasts, which are less frequent.
-  for (let player of players) feedInputs(player, _dt);
-  for (let ledge of ledges) oscillate(ledge, gameState.time);
+  for (let player of gameState.players) feedInputs(player, _dt);
+  for (let ledge of gameState.ledges) oscillate(ledge, gameState.time);
 
   const currTime = Date.now() / 1000;
 
   if (lastTime == null) lastTime = Date.now() / 1000;
 
-  gameState.time += dt;
+  gameState.time += _dt;
   _world.step(_dt);
   for (let f of postSteps) {
     f();

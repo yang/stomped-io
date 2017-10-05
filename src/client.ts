@@ -65,8 +65,8 @@ var scoreText;
 var socket;
 var me: Player;
 
-const players: Player[] = [];
-const ledges: Ledge[] = [];
+const players = gameState.players;
+const ledges = gameState.ledges;
 
 const timeline: Bcast[] = [];
 
@@ -269,13 +269,13 @@ function runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) =
 }
 
 function runSimsReuse() {
-  const startState = getWorldState(capturePlState(), world);
+  const startState = getWorldState(capturePlState(), gameState);
   const res = runSims(startState, (init, dir) => {
     // restore world state
     for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
     const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
     setInputsByDir(me, dir);
-    const res = sim(dir, world, players, ledges, init, world => capturePlState());
+    const res = sim(dir, world, gameState, init, world => capturePlState());
     setInputs(me, origInputs);
     return res;
   });
@@ -287,10 +287,12 @@ function runSimsReuse() {
 }
 
 function runSimsClone() {
-  const startState = getWorldState([], cloneWorld(world));
+  const initGameState = _.clone(gameState);
+  initGameState.world = cloneWorld(world);
+  const startState = getWorldState([], initGameState);
 //  return runSims(startState, simClone);
   return runSims(startState, (init, dir) => {
-    const world = cloneWorld(init.plWorld);
+    const world = cloneWorld(init.gameState.world);
     const entToNewBody = new Map(
       Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
     );
@@ -307,8 +309,12 @@ function runSimsClone() {
     });
     const newMe = newPlayers[players.findIndex(p => p == me)];
     setInputsByDir(newMe, dir);
+    const newGameState = _.clone(init.gameState);
+    newGameState.ledges = newLedges;
+    newGameState.players = newPlayers;
+    newGameState.world = world;
     Common.create(newPlayers, null, lava, world);
-    return sim(dir, world, newPlayers, newLedges, init, world => []);
+    return sim(dir, world, newGameState, init, world => []);
   });
 }
 
@@ -485,7 +491,7 @@ function update() {
   }
 
   if (runLocally && updating) {
-    Common.update(players, ledges, gameState);
+    Common.update(gameState);
     if (target && replayMode == ReplayMode.STEPS) {
       const currChunk = getCurrChunk(currTime);
       if (!veq(me.bod.getPosition(), currChunk.mePath[chunkSteps % (chunk / simDt)])) {
@@ -552,7 +558,7 @@ class WorldState {
       public plState: PlState,
       public mePath: Pl.Vec2[],
       public meVels: Pl.Vec2[],
-      public plWorld: Pl.World
+      public gameState: GameState
   ) {}
 }
 
@@ -566,7 +572,7 @@ function capturePlState(): PlState {
   ]);
 }
 
-function getWorldState(plState: PlState, plWorld: Pl.World): WorldState {
+function getWorldState(plState: PlState, gameState: GameState): WorldState {
   return new WorldState(
     0,
     null,
@@ -575,7 +581,7 @@ function getWorldState(plState: PlState, plWorld: Pl.World): WorldState {
     plState,
     [plPosFromEnt(me)],
     [],
-    plWorld
+    gameState
   );
 }
 
@@ -604,7 +610,7 @@ function getDir(player) {
     player.inputs.right.isDown ? Dir.Right : null;
 }
 
-function sim(dir: Dir, world: Pl.World, players: Player[], ledges: Ledge[], init: WorldState, capturePlState: (world: Pl.World) => PlState) {
+function sim(dir: Dir, world: Pl.World, gameState: GameState, init: WorldState, capturePlState: (world: Pl.World) => PlState) {
   // simulate core logic
   let minDistToTarget = 9999999, distance = null;
   const mePath = [], meVels = [];
@@ -612,7 +618,7 @@ function sim(dir: Dir, world: Pl.World, players: Player[], ledges: Ledge[], init
   mePath.push(copyVec(meBody.getPosition()));
   meVels.push(copyVec(meBody.getLinearVelocity()));
   for (let i = 0; i < chunk / simDt; i++) {
-    Common.update(players, ledges, gameState, simDt, world);
+    Common.update(gameState, simDt, world);
     if (Math.abs(mePath[mePath.length - 1].y) > Common.gameWorld.height / ratio &&
       Math.abs(meBody.getPosition().y) < Common.gameWorld.height / ratio) {
       console.log('jerking');
@@ -622,7 +628,6 @@ function sim(dir: Dir, world: Pl.World, players: Player[], ledges: Ledge[], init
     distance = dist(entPosFromPl(me, meBody.getPosition()), target);
     minDistToTarget = Math.min(minDistToTarget, distance);
   }
-  // console.log('finish sim');
   return new WorldState(
     init.elapsed + chunk,
     dir,
@@ -631,7 +636,7 @@ function sim(dir: Dir, world: Pl.World, players: Player[], ledges: Ledge[], init
     capturePlState(world),
     mePath,
     meVels,
-    world
+    gameState
   );
 }
 

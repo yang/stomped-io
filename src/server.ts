@@ -5,7 +5,7 @@ import {
   addBody,
   AddEnt,
   Bcast,
-  clearArray,
+  clearArray, Ent,
   Event, GameState,
   Lava,
   Ledge,
@@ -24,8 +24,8 @@ const io = Sio();
 const gameState = new GameState();
 
 const events: Event[] = [];
-const players: Player[] = [];
-const ledges = [];
+const players = gameState.players;
+const ledges = gameState.ledges;
 
 let lastBcastTime = null;
 const bcastPeriod = 1 / 10;
@@ -48,15 +48,15 @@ function initSnap() {
 }
 
 function update() {
-  Common.update(players, ledges, gameState);
+  Common.update(gameState);
   updateLedges();
   tick += 1;
 }
 
 const playerToSocket = new Map();
 
-function getEnts() {
-  return players.concat(ledges);
+function getEnts(): Ent[] {
+  return (<Ent[]>players).concat(ledges);
 }
 
 function bcast() {
