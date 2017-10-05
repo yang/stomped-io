@@ -138,7 +138,7 @@ function create() {
   setInterval(bcast, bcastPeriod * 1000);
   setInterval(update, updatePeriod * 1000);
 
-  Common.create(players, destroy, lava, world);
+  Common.create(destroy, lava, gameState);
 
 }
 

@@ -105,7 +105,7 @@ function create(initSnap) {
   lavaSprite.width = lava.width;
   lavaSprite.height = lava.height;
 
-  Common.create(players, null, lava, world);
+  Common.create(null, lava, gameState);
 
   //  The platforms group contains the ground and the 2 ledges we can jump on
   platforms = game.add.group();
@@ -313,7 +313,7 @@ function runSimsClone() {
     newGameState.ledges = newLedges;
     newGameState.players = newPlayers;
     newGameState.world = world;
-    Common.create(newPlayers, null, lava, world);
+    Common.create(null, lava, newGameState);
     return sim(dir, world, newGameState, init, world => []);
   });
 }

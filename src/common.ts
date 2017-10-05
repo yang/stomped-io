@@ -28,7 +28,9 @@ export class InputState {
   isDown = false;
 }
 
-export function create(players: Player[], destroy, lava: Lava, world: Pl.World) {
+export function create(destroy, lava: Lava, gameState: GameState) {
+  const players = gameState.players, world = gameState.world;
+
   world.on('end-contact', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
     const fB = contact.getFixtureB(), bB = fB.getBody();
