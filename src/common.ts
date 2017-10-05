@@ -1,11 +1,16 @@
 import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 
-export const ratio = 24;
+export const ratio = 64;
 export const accel = 10;
 
 export const gravity = -10;
 export const world = Pl.World(Pl.Vec2(0, gravity));
+
+export const gameWorld = {
+  width: 1600,
+  height: 1600
+};
 
 export function clearArray(xs) {
   xs.splice(0, xs.length);
@@ -29,7 +34,7 @@ export function create(players: Player[], destroy, lava: Lava, world: Pl.World) 
             if (fA.getAABB(0).lowerBound.y - fB.getAABB(0).upperBound.y > 1) {
               // console.log('huge gap', bA.getUserData(), bB.getUserData(), fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y);
             }
-            bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 15));
+            bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 8));
           }
         });
       }
@@ -150,7 +155,7 @@ export class Ent extends Serializable {
 }
 
 export class Lava extends Ent {
-  width = 800;
+  width = gameWorld.width;
   height = 64;
   constructor(public x: number, public y: number) {super();}
 }
@@ -162,7 +167,7 @@ export class Player extends Ent {
   constructor(public name: string, public x: number, public y: number) {super();}
 }
 
-export const ledgeWidth = 300, ledgeHeight = 32;
+export const ledgeWidth = 300, ledgeHeight = 24;
 
 export class Ledge extends Ent {
   width = ledgeWidth;

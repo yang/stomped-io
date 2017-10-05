@@ -68,7 +68,7 @@ const ledges: Ledge[] = [];
 
 const timeline: Bcast[] = [];
 
-(<any>window).dbg = {platforms, cursors, lava, world, players, ledges};
+(<any>window).dbg = {platforms, cursors, lava, gameWorld: world, players, ledges};
 
 function destroy2(sprite) {
   world.destroyBody(sprite.bod);
@@ -82,7 +82,7 @@ let gfx;
 
 function create(initSnap) {
 
-  game.world.setBounds(0,0,800,2400);
+  game.world.setBounds(0,0,Common.gameWorld.width,Common.gameWorld.height);
   game.time.advancedTiming = true;
 
   gfx = game.add.graphics(0,0);
@@ -91,14 +91,14 @@ function create(initSnap) {
   //  A simple background for our game
   game.add.sprite(0, 0, 'sky');
 
-  const bg = game.add.tileSprite(0,0,800,2400,'bg');
+  const bg = game.add.tileSprite(0,0,Common.gameWorld.width,Common.gameWorld.height,'bg');
   bg.tileScale.x = 1/4;
   bg.tileScale.y = 1/4;
   bg.alpha = .05;
 
-  lava = new Lava(0, game.world.height - 64);
+  lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
-  const lavaSprite = game.add.sprite(0, game.world.height - 64, 'lava');
+  const lavaSprite = game.add.sprite(0, Common.gameWorld.height - 64, 'lava');
   entToSprite.set(lava, lavaSprite);
   lavaSprite.width = lava.width;
   lavaSprite.height = lava.height;
@@ -606,8 +606,8 @@ function sim(dir: Dir, world: Pl.World, players: Player[], init: WorldState, cap
   meVels.push(copyVec(meBody.getLinearVelocity()));
   for (let i = 0; i < chunk / simDt; i++) {
     Common.update(players, simDt, world);
-    if (Math.abs(mePath[mePath.length - 1].y) > game.world.height / ratio &&
-      Math.abs(meBody.getPosition().y) < game.world.height / ratio) {
+    if (Math.abs(mePath[mePath.length - 1].y) > Common.gameWorld.height / ratio &&
+      Math.abs(meBody.getPosition().y) < Common.gameWorld.height / ratio) {
       console.log('jerking');
     }
     mePath.push(copyVec(meBody.getPosition()));

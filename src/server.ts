@@ -24,12 +24,6 @@ const io = Sio();
 const events: Event[] = [];
 const players: Player[] = [];
 const ledges = [];
-const game = {
-  world: {
-    width: 800,
-    height: 2400
-  }
-};
 
 let lastBcastTime = null;
 const bcastPeriod = 1 / 10;
@@ -95,17 +89,17 @@ function updateLedges() {
   while (true) {
     if (ledges.length > 0 && ledges[ledges.length - 1].y - ledgeSpacing < -ledgeHeight)
       break;
-    const xSpace = (game.world.width - ledgeWidth);
+    const xSpace = (Common.gameWorld.width - ledgeWidth);
     const x = getRandomInt(0, xSpace / 2) + (ledges.length % 2 ? xSpace / 2 : 0);
     const y = ledges.length == 0 ?
-      game.world.height - ledgeSpacing : ledges[ledges.length - 1].y - ledgeSpacing;
+      Common.gameWorld.height - ledgeSpacing : ledges[ledges.length - 1].y - ledgeSpacing;
     const ledge = new Ledge(x, y);
     addBody(ledge, 'kinematic');
     ledge.bod.setLinearVelocity(Pl.Vec2(0, 0));
     ledges.push(ledge);
     events.push(new AddEnt(ledge).ser());
     for (let ledge of ledges) {
-      if (ledge.y > game.world.height) {
+      if (ledge.y > Common.gameWorld.height) {
         destroy(ledge);
       }
     }
@@ -129,7 +123,7 @@ function schedRandInputs(player) {
 const initPlayers = 0;
 
 function create() {
-  const lava = new Lava(0, game.world.height - 64);
+  const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
 
   updateLedges();
@@ -160,8 +154,8 @@ function destroy(ent) {
 function makePlayer(name) {
   const player = new Player(
     name,
-    getRandomInt(0, game.world.width),
-    getRandomInt(0, game.world.height - 200)
+    getRandomInt(0, Common.gameWorld.width),
+    getRandomInt(0, Common.gameWorld.height - 200)
   );
   addBody(player, 'dynamic');
   players.push(player);
