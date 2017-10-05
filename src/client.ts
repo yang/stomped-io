@@ -30,7 +30,7 @@ import {
   Vec2,
   world,
   iterBodies,
-  iterFixtures, Lava, ledgeWidth, ledgeHeight
+  iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState
 } from './common';
 import * as _ from 'lodash';
 
@@ -39,6 +39,8 @@ import * as _ from 'lodash';
 let doCloneWorlds = true;
 
 var game;
+
+const gameState = new GameState();
 
 function preload() {
 
@@ -273,7 +275,7 @@ function runSimsReuse() {
     for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
     const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
     setInputsByDir(me, dir);
-    const res = sim(dir, world, players, init, world => capturePlState());
+    const res = sim(dir, world, players, ledges, init, world => capturePlState());
     setInputs(me, origInputs);
     return res;
   });
@@ -289,19 +291,24 @@ function runSimsClone() {
 //  return runSims(startState, simClone);
   return runSims(startState, (init, dir) => {
     const world = cloneWorld(init.plWorld);
-    const playerToNewBody = new Map(
+    const entToNewBody = new Map(
       Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
     );
+    const newLedges = ledges.map(l => {
+      const m = new Ledge(l.x, l.y, l.oscPeriod);
+      m.bod = entToNewBody.get(l);
+      return m;
+    });
     const newPlayers = players.map(p => {
       const q = new Player(p.name, p.x, p.y);
-      q.bod = playerToNewBody.get(p);
+      q.bod = entToNewBody.get(p);
       setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
       return q;
     });
     const newMe = newPlayers[players.findIndex(p => p == me)];
     setInputsByDir(newMe, dir);
     Common.create(newPlayers, null, lava, world);
-    return sim(dir, world, newPlayers, init, world => []);
+    return sim(dir, world, newPlayers, newLedges, init, world => []);
   });
 }
 
@@ -478,7 +485,7 @@ function update() {
   }
 
   if (runLocally && updating) {
-    Common.update(players);
+    Common.update(players, ledges, gameState);
     if (target && replayMode == ReplayMode.STEPS) {
       const currChunk = getCurrChunk(currTime);
       if (!veq(me.bod.getPosition(), currChunk.mePath[chunkSteps % (chunk / simDt)])) {
@@ -597,7 +604,7 @@ function getDir(player) {
     player.inputs.right.isDown ? Dir.Right : null;
 }
 
-function sim(dir: Dir, world: Pl.World, players: Player[], init: WorldState, capturePlState: (world: Pl.World) => PlState) {
+function sim(dir: Dir, world: Pl.World, players: Player[], ledges: Ledge[], init: WorldState, capturePlState: (world: Pl.World) => PlState) {
   // simulate core logic
   let minDistToTarget = 9999999, distance = null;
   const mePath = [], meVels = [];
@@ -605,7 +612,7 @@ function sim(dir: Dir, world: Pl.World, players: Player[], init: WorldState, cap
   mePath.push(copyVec(meBody.getPosition()));
   meVels.push(copyVec(meBody.getLinearVelocity()));
   for (let i = 0; i < chunk / simDt; i++) {
-    Common.update(players, simDt, world);
+    Common.update(players, ledges, gameState, simDt, world);
     if (Math.abs(mePath[mePath.length - 1].y) > Common.gameWorld.height / ratio &&
       Math.abs(meBody.getPosition().y) < Common.gameWorld.height / ratio) {
       console.log('jerking');

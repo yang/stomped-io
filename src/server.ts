@@ -6,7 +6,7 @@ import {
   AddEnt,
   Bcast,
   clearArray,
-  Event,
+  Event, GameState,
   Lava,
   Ledge,
   ledgeHeight,
@@ -20,6 +20,8 @@ import {
 import * as Pl from 'planck-js';
 
 const io = Sio();
+
+const gameState = new GameState();
 
 const events: Event[] = [];
 const players: Player[] = [];
@@ -46,7 +48,7 @@ function initSnap() {
 }
 
 function update() {
-  Common.update(players);
+  Common.update(players, ledges, gameState);
   updateLedges();
   tick += 1;
 }
@@ -93,7 +95,7 @@ function updateLedges() {
     const x = getRandomInt(0, xSpace / 2) + (ledges.length % 2 ? xSpace / 2 : 0);
     const y = ledges.length == 0 ?
       Common.gameWorld.height - ledgeSpacing : ledges[ledges.length - 1].y - ledgeSpacing;
-    const ledge = new Ledge(x, y);
+    const ledge = new Ledge(x, y, getRandomInt(5, 10));
     addBody(ledge, 'kinematic');
     ledge.bod.setLinearVelocity(Pl.Vec2(0, 0));
     ledges.push(ledge);

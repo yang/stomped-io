@@ -12,6 +12,10 @@ export const gameWorld = {
   height: 1600
 };
 
+export class GameState {
+  public time = 0;
+}
+
 export function clearArray(xs) {
   xs.splice(0, xs.length);
 }
@@ -172,7 +176,7 @@ export const ledgeWidth = 300, ledgeHeight = 24;
 export class Ledge extends Ent {
   width = ledgeWidth;
   height = ledgeHeight;
-  constructor(public x: number, public y: number) {super();}
+  constructor(public x: number, public y: number, public oscPeriod: number) {super();}
 }
 
 export class Event extends Serializable {}
@@ -256,15 +260,21 @@ function feedInputs(player, dt) {
 
 }
 
-export function update(players: Player[], _dt = dt, _world = world) {
+export function oscillate(ledge: Ledge, time: number) {
+  ledge.bod.setLinearVelocity(Pl.Vec2(Math.sin(time * 2 * Math.PI / ledge.oscPeriod) * gameWorld.width / 8 / ratio, 0));
+}
+
+export function update(players: Player[], ledges: Ledge[], gameState: GameState, _dt: number = dt, _world: Pl.World = world) {
   // TODO we're feeding inputs every physics tick here, but we send inputs to
   // clients bucketed into the bcasts, which are less frequent.
   for (let player of players) feedInputs(player, _dt);
+  for (let ledge of ledges) oscillate(ledge, gameState.time);
 
   const currTime = Date.now() / 1000;
 
   if (lastTime == null) lastTime = Date.now() / 1000;
 
+  gameState.time += dt;
   _world.step(_dt);
   for (let f of postSteps) {
     f();
