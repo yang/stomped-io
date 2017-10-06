@@ -10,7 +10,7 @@ import {
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth,
+  ledgeWidth, oscDist,
   Player,
   RemEnt, Star,
   updateEntPhys,
@@ -31,7 +31,7 @@ let lastBcastTime = null;
 const bcastPeriod = 1 / 10;
 let tick = 0, bcastNum = 0;
 
-function getRandomInt(min, max) {
+function getRandomInt(min: number, max: number) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
@@ -86,24 +86,48 @@ function bcast() {
   bcastNum += 1;
 }
 
+function whichBucket(bucketStart: number, bucketSize: number, x: number) {
+  return Math.floor((x - bucketStart) / bucketSize);
+}
+
 const ledgeSpacing = 200;
 function updateLedges() {
+  for (let ledge of ledges) {
+    if (ledge.y > Common.gameWorld.height) {
+      destroy(ledge);
+    }
+  }
   while (true) {
-    if (ledges.length > 0 && ledges[ledges.length - 1].y - ledgeSpacing < -ledgeHeight)
+    const lastLedge = _(ledges).last();
+    if (ledges.length > 0 && lastLedge.y - ledgeSpacing < -ledgeHeight)
       break;
-    const xSpace = (Common.gameWorld.width - ledgeWidth);
-    const x = getRandomInt(0, xSpace / 2) + (ledges.length % 2 ? xSpace / 2 : 0);
+
     const y = ledges.length == 0 ?
-      Common.gameWorld.height - ledgeSpacing : ledges[ledges.length - 1].y - ledgeSpacing;
-    const ledge = new Ledge(x, y, getRandomInt(5, 10));
-    addBody(ledge, 'kinematic');
-    ledge.bod.setLinearVelocity(Pl.Vec2(0, 0));
-    ledges.push(ledge);
-    events.push(new AddEnt(ledge).ser());
-    for (let ledge of ledges) {
-      if (ledge.y > Common.gameWorld.height) {
-        destroy(ledge);
-      }
+      Common.gameWorld.height - ledgeSpacing : lastLedge.y - ledgeSpacing;
+
+    const numCols = 2;
+    const margin = oscDist / 2 + ledgeWidth;
+    const [spawnMin, spawnMax] = [margin, Common.gameWorld.width - margin];
+    const spawnWidth = spawnMax - spawnMin;
+    const colWidth = spawnWidth / numCols;
+    const wasOdd = lastLedge && whichBucket(spawnMin, colWidth, lastLedge.initPos.x + ledgeWidth / 2) % 2 == 1;
+    console.log(numCols, margin, spawnMin, spawnMax, spawnWidth, colWidth);
+
+    for (let column = wasOdd ? 0 : 1; column < numCols; column += 2) {
+      /*
+      const xCenter = getRandomInt(
+        spawnMin + column * colWidth,
+        spawnMin + (column + 1) * colWidth
+      );
+      */
+      const xCenter = spawnMin + (column + 0.5) * colWidth;
+      const x = xCenter - ledgeWidth / 2;
+      const ledge = new Ledge(x, y, getRandomInt(5, 10));
+      console.log(wasOdd, column, xCenter, x, y);
+      addBody(ledge, 'kinematic');
+      ledge.bod.setLinearVelocity(Pl.Vec2(0, 0));
+      ledges.push(ledge);
+      events.push(new AddEnt(ledge).ser());
     }
   }
 }

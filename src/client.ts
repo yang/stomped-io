@@ -87,6 +87,8 @@ let gfx;
 
 function create(initSnap) {
 
+  gameState.time = initSnap.tick * dt;
+
   game.world.setBounds(0,0,Common.gameWorld.width,Common.gameWorld.height);
   game.time.advancedTiming = true;
 

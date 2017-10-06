@@ -13,6 +13,8 @@ export const gameWorld = {
   height: 1600
 };
 
+export const oscDist = gameWorld.width / 8 * 2;
+
 export class GameState {
   public time = 0;
   public players: Player[] = [];
@@ -197,7 +199,11 @@ export const ledgeWidth = 300, ledgeHeight = 24;
 export class Ledge extends Ent {
   width = ledgeWidth;
   height = ledgeHeight;
-  constructor(public x: number, public y: number, public oscPeriod: number) {super();}
+  initPos: Vec2;
+  constructor(public x: number, public y: number, public oscPeriod: number) {
+    super();
+    this.initPos = new Vec2(x,y);
+  }
 }
 
 export class Star extends Ent {
@@ -288,7 +294,7 @@ function feedInputs(player, dt) {
 }
 
 export function oscillate(ledge: Ledge, time: number) {
-  ledge.bod.setLinearVelocity(Pl.Vec2(Math.sin(time * 2 * Math.PI / ledge.oscPeriod) * gameWorld.width / 8 / ratio, 0));
+  ledge.bod.setLinearVelocity(Pl.Vec2(Math.cos(time * 2 * Math.PI / ledge.oscPeriod) * oscDist / 2 / ratio, 0));
 }
 
 export function update(gameState: GameState, _dt: number = dt, _world: Pl.World = world) {
