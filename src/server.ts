@@ -12,7 +12,7 @@ import {
   ledgeHeight,
   ledgeWidth,
   Player,
-  RemEnt,
+  RemEnt, Star,
   updateEntPhys,
   updatePeriod,
   world
@@ -56,7 +56,7 @@ function update() {
 const playerToSocket = new Map();
 
 function getEnts(): Ent[] {
-  return (<Ent[]>players).concat(ledges);
+  return gameState.getEnts();
 }
 
 function bcast() {
@@ -122,6 +122,32 @@ function schedRandInputs(player) {
   setTimeout(() => schedRandInputs(player), getRandomInt(1000, 3000));
 }
 
+function updateStars(gameState: GameState) {
+  const gridDim = 200, expPerGrid = 10;
+  const gridCounts = [];
+  for (let x = 0; x < Common.gameWorld.width / gridDim; x++) {
+    gridCounts.push([]);
+    for (let y = 0; y < Common.gameWorld.height / gridDim; y++) {
+      gridCounts[x].push(0);
+    }
+  }
+  for (let star of gameState.stars) {
+    gridCounts[Math.floor(star.x / gridDim)][Math.floor(star.y / gridDim)] += 1;
+  }
+  for (let x = 0; x < Common.gameWorld.width / gridDim; x++) {
+    for (let y = 0; y < Common.gameWorld.height / gridDim; y++) {
+      while (gridCounts[x][y] < expPerGrid) {
+        const star = new Star(
+          getRandomInt(gridDim * x, gridDim * (x + 1) - 1),
+          getRandomInt(gridDim * y, gridDim * (y + 1) - 1));
+        gameState.stars.push(star);
+        addBody(star, 'kinematic');
+        gridCounts[x][y] += 1;
+      }
+    }
+  }
+}
+
 const initPlayers = 0;
 
 function create() {
@@ -129,6 +155,7 @@ function create() {
   addBody(lava, 'kinematic');
   gameState.lava = lava;
 
+  updateStars(gameState);
   updateLedges();
 
   for (let i = 0; i < initPlayers; i++) {

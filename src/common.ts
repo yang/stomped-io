@@ -18,7 +18,15 @@ export class GameState {
   public players: Player[] = [];
   public ledges: Ledge[] = [];
   public lava: Lava;
+  public stars: Star[] = [];
   constructor(public world: Pl.World = gWorld) {}
+  getEnts() {
+    return (<Ent[]>this.players).concat(this.ledges).concat(this.stars);
+  }
+}
+
+export function pushAll(xs, ys) {
+  xs.splice(xs.length, 0, ys);
 }
 
 export function clearArray(xs) {
@@ -71,13 +79,21 @@ export function create(destroy, gameState: GameState) {
       //    scoreText.text = 'Score: ' + score;
       //  }, 0);
       //}
-      if (players.includes(bA.getUserData()) && gameState.lava === bB.getUserData()) {
-        contact.setEnabled(false);
-        const player = bA.getUserData();
-        postStep(() => bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999)));
-        // only clear of each other in the next tick
-        if (destroy) {
-          postStep(() => destroy(player));
+      if (players.includes(bA.getUserData())) {
+        if (gameState.lava === bB.getUserData() || bB.getUserData().type == 'Lava') {
+          contact.setEnabled(false);
+          const player = bA.getUserData();
+          postStep(() => bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999)));
+          // only clear of each other in the next tick
+          if (destroy) {
+            postStep(() => destroy(player));
+          }
+        } else if (gameState.stars.includes(bB.getUserData())) {
+          contact.setEnabled(false);
+          const star = bB.getUserData();
+          if (destroy) {
+            postStep(() => destroy(star));
+          }
         }
       }
     }
@@ -182,6 +198,12 @@ export class Ledge extends Ent {
   width = ledgeWidth;
   height = ledgeHeight;
   constructor(public x: number, public y: number, public oscPeriod: number) {super();}
+}
+
+export class Star extends Ent {
+  width = 16;
+  height = 16;
+  constructor(public x: number, public y: number) {super();}
 }
 
 export class Event extends Serializable {}

@@ -30,7 +30,7 @@ import {
   Vec2,
   world,
   iterBodies,
-  iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState
+  iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState, Star, pushAll
 } from './common';
 import * as _ from 'lodash';
 
@@ -69,15 +69,12 @@ const ledges = gameState.ledges;
 
 const timeline: Bcast[] = [];
 
-(<any>window).dbg = {platforms, cursors, gameWorld: world, players, ledges};
-
 let isSim = false;
 
 function destroy2(ent) {
   if (!isSim) {
     world.destroyBody(ent.bod);
     entToSprite.get(ent).kill();
-    target = null;
   }
 }
 
@@ -85,6 +82,8 @@ const entToSprite = new Map();
 const events: Event[] = [];
 
 let gfx;
+
+(<any>window).dbg = {platforms, cursors, gameWorld: world, players, ledges, entToSprite};
 
 function create(initSnap) {
 
@@ -172,7 +171,7 @@ function lerp(a,b,alpha) {
 }
 
 function getEnts() {
-  return (<Ent[]>players).concat(ledges);
+  return gameState.getEnts();
 }
 
 function addEnt(ent) {
@@ -182,6 +181,9 @@ function addEnt(ent) {
       break;
     case 'Ledge':
       addLedge(<Ledge>ent);
+      break;
+    case 'Star':
+      addStar(<Star>ent);
       break;
   }
 }
@@ -207,6 +209,20 @@ function addLedge(ledge) {
     platform.height = ledgeHeight;
     entToSprite.set(ledge, platform);
     addBody(ledge, 'kinematic');
+  }
+}
+
+function addStar(star) {
+  if (!gameState.stars.find(s => s.id == star.id)) {
+    gameState.stars.push(star);
+    // TODO eventually make star display larger than physics size
+    const starDispDim = 1 * star.width;
+    const offset = (star.width - starDispDim) / 2;
+    const sprite = game.add.sprite(star.x + offset, star.y + offset, 'star');
+    sprite.width = starDispDim;
+    sprite.height = starDispDim;
+    entToSprite.set(star, sprite);
+    addBody(star, 'kinematic');
   }
 }
 
@@ -282,8 +298,11 @@ function runSimsReuse() {
     for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
     const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
     setInputsByDir(me, dir);
+    const stars = gameState.stars;
+    clearArray(gameState.stars);
     const res = sim(dir, world, gameState, init, world => capturePlState());
     setInputs(me, origInputs);
+    pushAll(gameState.stars, stars);
     return res;
   });
   // revert bodies to their original states
@@ -295,9 +314,14 @@ function runSimsReuse() {
 
 function runSimsClone() {
   const initGameState = _.clone(gameState);
+  initGameState.stars = [];
   initGameState.world = cloneWorld(world);
+  for (let body of iterBodies(initGameState.world)) {
+    if (gameState.stars.includes(body.getUserData())) {
+      initGameState.world.destroyBody(body);
+    }
+  }
   const startState = getWorldState([], initGameState);
-//  return runSims(startState, simClone);
   return runSims(startState, (init, dir) => {
     const world = cloneWorld(init.gameState.world);
     const entToNewBody = new Map(
@@ -314,6 +338,8 @@ function runSimsClone() {
       setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
       return q;
     });
+    // What needs to be cloned depends on how .bod is traversed in Common.update() and potentially how the collision
+    // handlers use it.
     // No need to clone lava.
     const newMe = newPlayers[players.findIndex(p => p == me)];
     setInputsByDir(newMe, dir);
@@ -367,6 +393,7 @@ function update() {
           const id = (<RemEnt>ev).id;
           tryRemove(id, players);
           tryRemove(id, ledges);
+          tryRemove(id, gameState.stars);
           break;
       }
     }
@@ -435,7 +462,7 @@ function update() {
   if (game.input.activePointer.isDown) {
     target = new Vec2(game.input.worldX, game.input.worldY);
   }
-  if (target) {
+  if (target && me.y < Common.gameWorld.height) {
     gfx.drawCircle(target.x, target.y, 100);
     gfx.moveTo(me.x, me.y);
     if (!runLocally || updating) {
@@ -499,7 +526,7 @@ function update() {
 
   if (runLocally && updating) {
     Common.update(gameState);
-    if (target && replayMode == ReplayMode.STEPS) {
+    if (target && me.y < Common.gameWorld.height && replayMode == ReplayMode.STEPS) {
       const currChunk = getCurrChunk(currTime);
       if (!veq(me.bod.getPosition(), currChunk.mePath[chunkSteps % (chunk / simDt)])) {
         console.error('diverging from predicted path!');
