@@ -42,6 +42,8 @@ var game;
 
 const gameState = new GameState();
 
+let drawPlanckBoxes = false;
+
 function preload() {
 
   game.load.image('bg', 'assets/bg.png');
@@ -452,13 +454,15 @@ function update() {
       ymin = _(ys).min();
     return {width: xmax - xmin, height: ymax - ymin};
   }
-  for (let body of iterBodies(world)) {
-    const [fix] = iterFixtures(body), dims = fixtureDims(fix);
-    gfx.drawRect(
-      ratio *  (body.getPosition().x - dims.width  / 2),
-      ratio * -(body.getPosition().y + dims.height / 2),
-      dims.width * ratio, dims.height * ratio
-    );
+  if (drawPlanckBoxes) {
+    for (let body of iterBodies(world)) {
+      const [fix] = iterFixtures(body), dims = fixtureDims(fix);
+      gfx.drawRect(
+        ratio * (body.getPosition().x - dims.width / 2),
+        ratio * -(body.getPosition().y + dims.height / 2),
+        dims.width * ratio, dims.height * ratio
+      );
+    }
   }
   gfx.lineStyle(1,defaultColor,1);
   if (game.input.activePointer.isDown) {
