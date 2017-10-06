@@ -77,9 +77,7 @@ export function create(destroy, gameState: GameState) {
         postStep(() => bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999)));
         // only clear of each other in the next tick
         if (destroy) {
-          setTimeout(() => {
-            destroy(player);
-          }, 0);
+          postStep(() => destroy(player));
         }
       }
     }

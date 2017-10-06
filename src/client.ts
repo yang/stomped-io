@@ -71,9 +71,14 @@ const timeline: Bcast[] = [];
 
 (<any>window).dbg = {platforms, cursors, gameWorld: world, players, ledges};
 
-function destroy2(sprite) {
-  world.destroyBody(sprite.bod);
-  sprite.kill();
+let isSim = false;
+
+function destroy2(ent) {
+  if (!isSim) {
+    world.destroyBody(ent.bod);
+    entToSprite.get(ent).kill();
+    target = null;
+  }
 }
 
 const entToSprite = new Map();
@@ -105,7 +110,7 @@ function create(initSnap) {
   lavaSprite.width = lava.width;
   lavaSprite.height = lava.height;
 
-  Common.create(null, gameState);
+  Common.create(destroy2, gameState);
 
   //  The platforms group contains the ground and the 2 ledges we can jump on
   platforms = game.add.group();
@@ -258,6 +263,7 @@ function replayChunkStep(currTime: number) {
 }
 
 function runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) => WorldState) {
+  isSim = true;
   const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
     start: startState,
     edges: (worldState) => worldState.elapsed < horizon ?
@@ -265,6 +271,7 @@ function runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) =
     traverseEdge: simFunc,
     cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
   });
+  isSim = false;
   return {bestWorldState, bestPath, worldStates};
 }
 
