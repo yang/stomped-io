@@ -127,6 +127,7 @@ const initPlayers = 0;
 function create() {
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
+  gameState.lava = lava;
 
   updateLedges();
 
@@ -138,7 +139,7 @@ function create() {
   setInterval(bcast, bcastPeriod * 1000);
   setInterval(update, updatePeriod * 1000);
 
-  Common.create(destroy, lava, gameState);
+  Common.create(destroy, gameState);
 
 }
 

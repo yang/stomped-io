@@ -17,6 +17,7 @@ export class GameState {
   public time = 0;
   public players: Player[] = [];
   public ledges: Ledge[] = [];
+  public lava: Lava;
   constructor(public world: Pl.World = gWorld) {}
 }
 
@@ -28,7 +29,7 @@ export class InputState {
   isDown = false;
 }
 
-export function create(destroy, lava: Lava, gameState: GameState) {
+export function create(destroy, gameState: GameState) {
   const players = gameState.players, world = gameState.world;
 
   world.on('end-contact', (contact, imp) => {
@@ -70,7 +71,7 @@ export function create(destroy, lava: Lava, gameState: GameState) {
       //    scoreText.text = 'Score: ' + score;
       //  }, 0);
       //}
-      if (players.includes(bA.getUserData()) && lava === bB.getUserData()) {
+      if (players.includes(bA.getUserData()) && gameState.lava === bB.getUserData()) {
         contact.setEnabled(false);
         const player = bA.getUserData();
         postStep(() => bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999)));

@@ -56,7 +56,6 @@ function preload() {
 
 var platforms;
 var cursors;
-var lava;
 
 var stars;
 var score = 0;
@@ -70,7 +69,7 @@ const ledges = gameState.ledges;
 
 const timeline: Bcast[] = [];
 
-(<any>window).dbg = {platforms, cursors, lava, gameWorld: world, players, ledges};
+(<any>window).dbg = {platforms, cursors, gameWorld: world, players, ledges};
 
 function destroy2(sprite) {
   world.destroyBody(sprite.bod);
@@ -98,14 +97,15 @@ function create(initSnap) {
   bg.tileScale.y = 1/4;
   bg.alpha = .05;
 
-  lava = new Lava(0, Common.gameWorld.height - 64);
+  const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
+  gameState.lava = lava;
   const lavaSprite = game.add.sprite(0, Common.gameWorld.height - 64, 'lava');
   entToSprite.set(lava, lavaSprite);
   lavaSprite.width = lava.width;
   lavaSprite.height = lava.height;
 
-  Common.create(null, lava, gameState);
+  Common.create(null, gameState);
 
   //  The platforms group contains the ground and the 2 ledges we can jump on
   platforms = game.add.group();
@@ -307,13 +307,14 @@ function runSimsClone() {
       setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
       return q;
     });
+    // No need to clone lava.
     const newMe = newPlayers[players.findIndex(p => p == me)];
     setInputsByDir(newMe, dir);
     const newGameState = _.clone(init.gameState);
     newGameState.ledges = newLedges;
     newGameState.players = newPlayers;
     newGameState.world = world;
-    Common.create(null, lava, newGameState);
+    Common.create(null, newGameState);
     return sim(dir, world, newGameState, init, world => []);
   });
 }
