@@ -314,7 +314,6 @@ function runSimsClone() {
     newGameState.ledges = newLedges;
     newGameState.players = newPlayers;
     newGameState.world = world;
-    Common.create(null, newGameState);
     return sim(dir, world, newGameState, init, world => []);
   });
 }
