@@ -248,4 +248,6 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
 create();
 
+console.log('listening');
+
 io.listen(3000);
