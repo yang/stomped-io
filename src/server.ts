@@ -208,8 +208,8 @@ function destroy(ent) {
 function makePlayer(name) {
   const player = new Player(
     name,
-    getRandomInt(0, Common.gameWorld.width),
-    getRandomInt(0, Common.gameWorld.height - 200)
+    ledges[2].x + ledgeWidth / 2,
+    ledges[2].y - 50
   );
   addBody(player, 'dynamic');
   players.push(player);
