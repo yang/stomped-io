@@ -242,121 +242,9 @@ function tryRemove(id: number, ents: Ent[]) {
   }
 }
 
-function reallySetInput(dir: Dir, currTime: number) {
-  setInputsByDir(me, dir);
-  socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
-}
-
 // This enables easier debugging---no runaway server-side simulation while setting breakpoints, no skipped frames,
 // no latency/interpolation, exact same resutls between predicted and actual physics.
 const runLocally = true;
-
-function getCurrChunk(currTime: number): WorldState {
-  let currChunk;
-  assert(chunkSteps <= chunk / simDt);
-  if (replayMode == ReplayMode.TIME) {
-    currChunk = lastBestSeq[1 + Math.floor((currTime - lastSimTime) / (1000 * chunk / timeWarp))];
-  } else if (replayMode == ReplayMode.STEPS) {
-    const index = lastBestSeq.indexOf(lastChunk); // 0 if not found, i.e. new path
-    currChunk = index < 0 ? lastBestSeq[1] :
-      chunkSteps == chunk / simDt ? lastBestSeq[index + 1] :
-        lastChunk;
-  } else {
-    throw new Error();
-  }
-  return currChunk;
-}
-
-function replayChunkStep(currTime: number) {
-  const log = getLogger('replay');
-  const currChunk = getCurrChunk(currTime);
-  if (lastChunk != currChunk) {
-    if (chunkSteps && chunkSteps < chunk / simDt) {
-      log.log('switching from old chunk ', lastChunk && lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
-    }
-    chunkSteps = 0;
-  }
-  chunkSteps += 1;
-  lastChunk = currChunk;
-//  console.log(currChunk.dir, chunkSteps, (currTime - lastSimTime) / (1000 * chunk / timeWarp), currTime - lastSimTime, 1000 * chunk / timeWarp, currTime, lastSimTime);
-  if (currChunk && getDir(me) != currChunk.dir) {
-    //console.log(getDir(me), currChunk.dir, (currTime - lastSimTime) / (1000 * chunk / timeWarp))
-    reallySetInput(currChunk.dir, currTime);
-  }
-}
-
-function runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) => WorldState) {
-  isSim = true;
-  const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
-    start: startState,
-    edges: (worldState) => worldState.elapsed < horizon ?
-      [Dir.Left, Dir.Right] : [],
-    traverseEdge: simFunc,
-    cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
-  });
-  isSim = false;
-  return {bestWorldState, bestPath, worldStates};
-}
-
-function runSimsReuse() {
-  const startState = getWorldState(capturePlState(), gameState);
-  const res = runSims(startState, (init, dir) => {
-    // restore world state
-    for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
-    const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
-    setInputsByDir(me, dir);
-    const stars = gameState.stars;
-    clearArray(gameState.stars);
-    const res = sim(dir, world, gameState, init, world => capturePlState());
-    setInputs(me, origInputs);
-    pushAll(gameState.stars, stars);
-    return res;
-  });
-  // revert bodies to their original states
-  for (let ent of getEnts()) {
-    updatePos(ent);
-  }
-  return res;
-}
-
-function runSimsClone() {
-  const initGameState = _.clone(gameState);
-  initGameState.stars = [];
-  initGameState.world = cloneWorld(world);
-  for (let body of iterBodies(initGameState.world)) {
-    if (gameState.stars.includes(body.getUserData())) {
-      initGameState.world.destroyBody(body);
-    }
-  }
-  const startState = getWorldState([], initGameState);
-  return runSims(startState, (init, dir) => {
-    const world = cloneWorld(init.gameState.world);
-    const entToNewBody = new Map(
-      Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
-    );
-    const newLedges = ledges.map(l => {
-      const m = new Ledge(l.x, l.y, l.oscPeriod);
-      m.bod = entToNewBody.get(l);
-      return m;
-    });
-    const newPlayers = players.map(p => {
-      const q = new Player(p.name, p.x, p.y);
-      q.bod = entToNewBody.get(p);
-      setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
-      return q;
-    });
-    // What needs to be cloned depends on how .bod is traversed in Common.update() and potentially how the collision
-    // handlers use it.
-    // No need to clone lava.
-    const newMe = newPlayers[players.findIndex(p => p == me)];
-    setInputsByDir(newMe, dir);
-    const newGameState = _.clone(init.gameState);
-    newGameState.ledges = newLedges;
-    newGameState.players = newPlayers;
-    newGameState.world = world;
-    return sim(dir, world, newGameState, init, world => []);
-  });
-}
 
 function update() {
 
@@ -469,77 +357,20 @@ function update() {
   }
   gfx.lineStyle(1,defaultColor,1);
   if (game.input.activePointer.isDown) {
-    target = new Vec2(game.input.worldX, game.input.worldY);
-    makeBot();
+    const bot = makeBot();
+    bot.target = new Vec2(game.input.worldX, game.input.worldY);
   }
-  if (meIsBot && target && me.y < Common.gameWorld.height) {
-    const log = getLogger('replay');
-    gfx.drawCircle(target.x, target.y, 100);
-    gfx.moveTo(me.x, me.y);
-    if (!runLocally || updating) {
-      if (lastBestSeq) {
-        replayChunkStep(currTime);
-      }
-      let doSim = false;
-      if (replayMode == ReplayMode.TIME) {
-        doSim = lastSimTime == null || currTime - lastSimTime > simPeriod / timeWarp;
-      } else if (replayMode == ReplayMode.STEPS) {
-        log.log(lastChunk && lastChunk.elapsed - chunk, chunkSteps, lastChunk && (lastChunk.elapsed + chunkSteps * simDt / chunk) * 1000);
-        doSim = !lastChunk || (lastChunk.elapsed - chunk + chunkSteps * simDt / chunk) * 1000 > simPeriod;
-      } else {
-        throw new Error();
-      }
-      if (doSim) {
-        lastSimTime = currTime;
-        const {worldStates, bestPath, bestWorldState} =
-          doCloneWorlds ? runSimsClone() : runSimsReuse();
-        lastWorldStates = worldStates;
-        lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
-        log.log('simulated');
-        if (lastBestSeq.length > 1) {
-          chunkSteps = null;
-          replayChunkStep(currTime);
-//          reallySetInput(lastBestSeq[1].dir, currTime);
-//          console.log('switching to brand new path ');
-        }
-      }
-    }
-
-    if (lastWorldStates) {
-      const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}].map(({x,y}) => ({x: 5*x, y: 5*y}));
-      const bcolors = bestColors.concat(bestColors).concat(bestColors)[Symbol.iterator]();
-      for (let worldState of lastWorldStates.concat(lastBestSeq)) {
-        gfx.lineStyle(1, lastBestSeq.includes(worldState) ? bcolors.next().value : defaultColor, 1);
-        const startPos = entPosFromPl(me, worldState.mePath[0], true).toTuple();
-        if (worldState.dir == null) {
-          gfx.drawCircle(...startPos, 10);
-        } else {
-          const dirSign = Dir.Left == worldState.dir ? -1 : 1;
-          gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*x+startPos[0], y: y+startPos[1]})));
-        }
-        gfx.moveTo(...startPos);
-        // if (_.find(worldState.mePath, (pos: Pl.Vec2) => Math.abs(pos.y) > 9999)) {
-        //   console.log(worldState.mePath.map((pos) => entPosFromPl(me, pos).y).join(' '));
-        // }
-        for (let pos of worldState.mePath.slice(1)) {
-          gfx.lineTo(...entPosFromPl(me, pos, true).toTuple());
-        }
-        for (let pos of worldState.mePath.slice(1)) {
-          const dirSign = Dir.Left == worldState.dir ? -1 : 1;
-          const entPos = entPosFromPl(me, pos, true);
-          gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*x+entPos.x, y: y+entPos.y})));
-        }
-      }
-    }
+  for (let bot of bots) {
+    bot.replayPlan(updating, currTime);
+  }
+  for (let bot of bots) {
+    bot.drawPlan();
   }
 
   if (runLocally && updating) {
     Common.update(gameState);
-    if (meIsBot && target && me.y < Common.gameWorld.height && replayMode == ReplayMode.STEPS) {
-      const currChunk = getCurrChunk(currTime);
-      if (!veq(me.bod.getPosition(), currChunk.mePath[chunkSteps % (chunk / simDt)])) {
-        console.error('diverging from predicted path!');
-      }
+    for (let bot of bots) {
+      bot.checkPlan(currTime);
     }
     for (let player of players) {
       feedInputs(player);
@@ -557,7 +388,6 @@ enum ReplayMode { TIME, STEPS }
 let replayMode = ReplayMode.STEPS;
 
 const simPeriod = 3000;
-let lastSimTime = null, lastWorldStates, lastBestSeq: WorldState[], lastChunk: WorldState, chunkSteps: number;
 
 //const chunk = 1 / 5, horizon = 6 / 5;
 const chunk = 1, horizon = 6;
@@ -574,8 +404,6 @@ const defaultColor = 0x002244, bestColor = 0xFF0000, bestColors = [
   0xff00ff,
   0xffffff
 ];
-
-let target: Vec2;
 
 class BodyState {
   constructor(public bod: Pl.Body, public pos: Pl.Vec2, public vel: Pl.Vec2) {}
@@ -615,19 +443,6 @@ function capturePlState(): PlState {
   ]);
 }
 
-function getWorldState(plState: PlState, gameState: GameState): WorldState {
-  return new WorldState(
-    0,
-    null,
-    dist(entPosFromPl(me), target),
-    dist(entPosFromPl(me), target),
-    plState,
-    [plPosFromEnt(me)],
-    [],
-    gameState
-  );
-}
-
 function restoreBody(ent, bodyState) {
   ent.bod.setPosition(copyVec(bodyState.pos));
   ent.bod.setLinearVelocity(copyVec(bodyState.vel));
@@ -651,36 +466,6 @@ function setInputsByDir(player: Player, dir: Dir) {
 function getDir(player) {
   return player.inputs.left.isDown ? Dir.Left :
     player.inputs.right.isDown ? Dir.Right : null;
-}
-
-function sim(dir: Dir, world: Pl.World, gameState: GameState, init: WorldState, capturePlState: (world: Pl.World) => PlState) {
-  // simulate core logic
-  let minDistToTarget = 9999999, distance = null;
-  const mePath = [], meVels = [];
-  const meBody = _(Array.from(iterBodies(world))).find(body => body.getUserData() == me);
-  mePath.push(copyVec(meBody.getPosition()));
-  meVels.push(copyVec(meBody.getLinearVelocity()));
-  for (let i = 0; i < chunk / simDt; i++) {
-    Common.update(gameState, simDt, world);
-    if (Math.abs(mePath[mePath.length - 1].y) > Common.gameWorld.height / ratio &&
-      Math.abs(meBody.getPosition().y) < Common.gameWorld.height / ratio) {
-      console.log('jerking');
-    }
-    mePath.push(copyVec(meBody.getPosition()));
-    meVels.push(copyVec(meBody.getLinearVelocity()));
-    distance = dist(entPosFromPl(me, meBody.getPosition()), target);
-    minDistToTarget = Math.min(minDistToTarget, distance);
-  }
-  return new WorldState(
-    init.elapsed + chunk,
-    dir,
-    minDistToTarget,
-    distance,
-    capturePlState(world),
-    mePath,
-    meVels,
-    gameState
-  );
 }
 
 interface BfsParams<V,E> {
@@ -762,7 +547,251 @@ function feedInputs(player) {
 
 const bots: Bot[] = [];
 class Bot {
+  target: Vec2;
+  lastSimTime = null;
+  lastWorldStates;
+  lastBestSeq: WorldState[];
+  lastChunk: WorldState;
+  chunkSteps: number;
+
   constructor(public player: Player) {}
+
+  getWorldState(plState: PlState, gameState: GameState): WorldState {
+    const me = this.player;
+    return new WorldState(
+      0,
+      null,
+      dist(entPosFromPl(me), this.target),
+      dist(entPosFromPl(me), this.target),
+      plState,
+      [plPosFromEnt(me)],
+      [],
+      gameState
+    );
+  }
+
+  getCurrChunk(currTime: number): WorldState {
+    let currChunk;
+    assert(this.chunkSteps <= chunk / simDt);
+    if (replayMode == ReplayMode.TIME) {
+      currChunk = this.lastBestSeq[1 + Math.floor((currTime - this.lastSimTime) / (1000 * chunk / timeWarp))];
+    } else if (replayMode == ReplayMode.STEPS) {
+      const index = this.lastBestSeq.indexOf(this.lastChunk); // 0 if not found, i.e. new path
+      currChunk = index < 0 ? this.lastBestSeq[1] :
+        this.chunkSteps == chunk / simDt ? this.lastBestSeq[index + 1] :
+          this.lastChunk;
+    } else {
+      throw new Error();
+    }
+    return currChunk;
+  }
+
+  runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) => WorldState) {
+    isSim = true;
+    const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
+      start: startState,
+      edges: (worldState) => worldState.elapsed < horizon ?
+        [Dir.Left, Dir.Right] : [],
+      traverseEdge: simFunc,
+      cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
+    });
+    isSim = false;
+    return {bestWorldState, bestPath, worldStates};
+  }
+
+  runSimsReuse() {
+    const me = this.player;
+    const startState = this.getWorldState(capturePlState(), gameState);
+    const res = this.runSims(startState, (init, dir) => {
+      // restore world state
+      for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
+      const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
+      setInputsByDir(me, dir);
+      const stars = gameState.stars;
+      clearArray(gameState.stars);
+      const res = this.sim(dir, world, gameState, init, world => capturePlState());
+      setInputs(me, origInputs);
+      pushAll(gameState.stars, stars);
+      return res;
+    });
+    // revert bodies to their original states
+    for (let ent of getEnts()) {
+      updatePos(ent);
+    }
+    return res;
+  }
+
+  runSimsClone() {
+    const me = this.player;
+    const initGameState = _.clone(gameState);
+    initGameState.stars = [];
+    initGameState.world = cloneWorld(world);
+    for (let body of iterBodies(initGameState.world)) {
+      if (gameState.stars.includes(body.getUserData())) {
+        initGameState.world.destroyBody(body);
+      }
+    }
+    const startState = this.getWorldState([], initGameState);
+    return this.runSims(startState, (init, dir) => {
+      const world = cloneWorld(init.gameState.world);
+      const entToNewBody = new Map(
+        Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
+      );
+      const newLedges = ledges.map(l => {
+        const m = new Ledge(l.x, l.y, l.oscPeriod);
+        m.bod = entToNewBody.get(l);
+        return m;
+      });
+      const newPlayers = players.map(p => {
+        const q = new Player(p.name, p.x, p.y);
+        q.bod = entToNewBody.get(p);
+        setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
+        return q;
+      });
+      // What needs to be cloned depends on how .bod is traversed in Common.update() and potentially how the collision
+      // handlers use it.
+      // No need to clone lava.
+      const newMe = newPlayers[players.findIndex(p => p == me)];
+      setInputsByDir(newMe, dir);
+      const newGameState = _.clone(init.gameState);
+      newGameState.ledges = newLedges;
+      newGameState.players = newPlayers;
+      newGameState.world = world;
+      return this.sim(dir, world, newGameState, init, world => []);
+    });
+  }
+
+  // simulate core logic
+  sim(dir: Dir, world: Pl.World, gameState: GameState, init: WorldState, capturePlState: (world: Pl.World) => PlState) {
+    const me = this.player;
+    let minDistToTarget = 9999999, distance = null;
+    const mePath = [], meVels = [];
+    const meBody = _(Array.from(iterBodies(world))).find(body => body.getUserData() == me);
+    mePath.push(copyVec(meBody.getPosition()));
+    meVels.push(copyVec(meBody.getLinearVelocity()));
+    for (let i = 0; i < chunk / simDt; i++) {
+      Common.update(gameState, simDt, world);
+      if (Math.abs(mePath[mePath.length - 1].y) > Common.gameWorld.height / ratio &&
+        Math.abs(meBody.getPosition().y) < Common.gameWorld.height / ratio) {
+        console.log('jerking');
+      }
+      mePath.push(copyVec(meBody.getPosition()));
+      meVels.push(copyVec(meBody.getLinearVelocity()));
+      distance = dist(entPosFromPl(me, meBody.getPosition()), this.target);
+      minDistToTarget = Math.min(minDistToTarget, distance);
+    }
+    return new WorldState(
+      init.elapsed + chunk,
+      dir,
+      minDistToTarget,
+      distance,
+      capturePlState(world),
+      mePath,
+      meVels,
+      gameState
+    );
+  }
+
+  reallySetInput(dir: Dir, currTime: number) {
+    const me = this.player;
+    setInputsByDir(me, dir);
+    socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
+  }
+
+  replayChunkStep(currTime: number) {
+    const me = this.player;
+    const log = getLogger('replay');
+    const currChunk = this.getCurrChunk(currTime);
+    if (this.lastChunk != currChunk) {
+      if (this.chunkSteps && this.chunkSteps < chunk / simDt) {
+        log.log('switching from old chunk ', this.lastChunk && this.lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
+      }
+      this.chunkSteps = 0;
+    }
+    this.chunkSteps += 1;
+    this.lastChunk = currChunk;
+//  console.log(currChunk.dir, this.chunkSteps, (currTime - this.lastSimTime) / (1000 * chunk / timeWarp), currTime - this.lastSimTime, 1000 * chunk / timeWarp, currTime, this.lastSimTime);
+    if (currChunk && getDir(me) != currChunk.dir) {
+      //console.log(getDir(me), currChunk.dir, (currTime - this.lastSimTime) / (1000 * chunk / timeWarp))
+      this.reallySetInput(currChunk.dir, currTime);
+    }
+  }
+
+  replayPlan(updating: boolean, currTime: number) {
+    const log = getLogger('replay');
+    if (!runLocally || updating) {
+      if (this.lastBestSeq) {
+        this.replayChunkStep(currTime);
+      }
+      let doSim = false;
+      if (replayMode == ReplayMode.TIME) {
+        doSim = this.lastSimTime == null || currTime - this.lastSimTime > simPeriod / timeWarp;
+      } else if (replayMode == ReplayMode.STEPS) {
+        log.log(this.lastChunk && this.lastChunk.elapsed - chunk, this.chunkSteps, this.lastChunk && (this.lastChunk.elapsed + this.chunkSteps * simDt / chunk) * 1000);
+        doSim = !this.lastChunk || (this.lastChunk.elapsed - chunk + this.chunkSteps * simDt / chunk) * 1000 > simPeriod;
+      } else {
+        throw new Error();
+      }
+      if (doSim) {
+        this.lastSimTime = currTime;
+        const {worldStates, bestPath, bestWorldState} =
+          doCloneWorlds ? this.runSimsClone() : this.runSimsReuse();
+        this.lastWorldStates = worldStates;
+        this.lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
+        log.log('simulated');
+        if (this.lastBestSeq.length > 1) {
+          this.chunkSteps = null;
+          this.replayChunkStep(currTime);
+//          reallySetInput(this.lastBestSeq[1].dir, currTime);
+//          console.log('switching to brand new path ');
+        }
+      }
+    }
+  }
+  
+  drawPlan() {
+    const me = this.player;
+    if (this.chunkSteps <= 2 && this.target && me.y < Common.gameWorld.height) {
+      gfx.drawCircle(this.target.x, this.target.y, 100);
+
+      if (this.lastWorldStates) {
+        const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}].map(({x,y}) => ({x: 5*x, y: 5*y}));
+        const bcolors = bestColors.concat(bestColors).concat(bestColors)[Symbol.iterator]();
+        for (let worldState of this.lastWorldStates.concat(this.lastBestSeq)) {
+          gfx.lineStyle(1, this.lastBestSeq.includes(worldState) ? bcolors.next().value : defaultColor, 1);
+          const startPos = entPosFromPl(me, worldState.mePath[0], true).toTuple();
+          if (worldState.dir == null) {
+            gfx.drawCircle(...startPos, 10);
+          } else {
+            const dirSign = Dir.Left == worldState.dir ? -1 : 1;
+            gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*x+startPos[0], y: y+startPos[1]})));
+          }
+          gfx.moveTo(...startPos);
+          // if (_.find(worldState.mePath, (pos: Pl.Vec2) => Math.abs(pos.y) > 9999)) {
+          //   console.log(worldState.mePath.map((pos) => entPosFromPl(me, pos).y).join(' '));
+          // }
+          for (let pos of worldState.mePath.slice(1)) {
+            gfx.lineTo(...entPosFromPl(me, pos, true).toTuple());
+          }
+          for (let pos of worldState.mePath.slice(1)) {
+            const dirSign = Dir.Left == worldState.dir ? -1 : 1;
+            const entPos = entPosFromPl(me, pos, true);
+            gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*x+entPos.x, y: y+entPos.y})));
+          }
+        }
+      }
+    }
+  }
+  
+  checkPlan(currTime: number) {
+    const me = this.player;
+    if (meIsBot && this.target && me.y < Common.gameWorld.height && replayMode == ReplayMode.STEPS) {
+      const currChunk = this.getCurrChunk(currTime);
+      if (!veq(me.bod.getPosition(), currChunk.mePath[this.chunkSteps % (chunk / simDt)])) {
+        console.error('diverging from predicted path!');
+      }
+    }
+  }
 }
 
 function makeBot() {
