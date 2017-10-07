@@ -343,7 +343,7 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
   clearArray(postSteps);
 }
 
-export function updateEntPhys(ent) {
+export function updateEntPhysFromPl(ent) {
   [ent.x, ent.y] = entPosFromPl(ent).toTuple();
   ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
   ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;

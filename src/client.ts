@@ -25,7 +25,7 @@ import {
   ratio,
   RemEnt,
   timeWarp,
-  updateEntPhys,
+  updateEntPhysFromPl,
   updatePeriod,
   Vec2,
   world,
@@ -315,7 +315,7 @@ function update() {
     }
 
     for (let ent of getEnts()) {
-      updatePos(ent);
+      updateSpriteAndPlFromEnt(ent);
     }
   }
 
@@ -386,8 +386,8 @@ function update() {
     }
     // update sprites. iterate over all origEnts, including ones that may have been destroyed & removed, since we can then update their Entity positions to their final physics body positions.
     for (let ent of origEnts) {
-      updateEntPhys(ent);
-      updatePos(ent);
+      updateEntPhysFromPl(ent);
+      updateSpriteAndPlFromEnt(ent);
     }
     lastTime = currTime;
   }
@@ -527,7 +527,7 @@ function plVelFromEnt(ent) {
   return Pl.Vec2(ent.vel.x / ratio, -ent.vel.y / ratio);
 }
 
-function updatePos(ent) {
+function updateSpriteAndPlFromEnt(ent) {
   const sprite = entToSprite.get(ent);
   sprite.x = ent.x;
   sprite.y = ent.y;
@@ -625,7 +625,7 @@ class Bot {
     });
     // revert bodies to their original states
     for (let ent of getEnts()) {
-      updatePos(ent);
+      updateSpriteAndPlFromEnt(ent);
     }
     return res;
   }

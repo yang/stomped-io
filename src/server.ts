@@ -13,7 +13,7 @@ import {
   ledgeWidth, oscDist,
   Player,
   RemEnt, Star,
-  updateEntPhys,
+  updateEntPhysFromPl,
   updatePeriod,
   world
 } from './common';
@@ -61,7 +61,7 @@ function getEnts(): Ent[] {
 
 function bcast() {
   for (let ent of getEnts()) {
-    updateEntPhys(ent);
+    updateEntPhysFromPl(ent);
   }
   //if (lastBcastTime == null) lastBcastTime = Date.now() / 1000;
   //if (currTime - lastBcastTime >= bcastPeriod) {
