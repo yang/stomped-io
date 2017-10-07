@@ -346,8 +346,8 @@ function update() {
     return {width: xmax - xmin, height: ymax - ymin};
   }
   if (drawPlanckBoxes) {
-    for (let body of iterBodies(world)) {
-      const [fix] = iterFixtures(body), dims = fixtureDims(fix);
+    for (let body of Array.from(iterBodies(world))) {
+      const [fix] = Array.from(iterFixtures(body)), dims = fixtureDims(fix);
       gfx.drawRect(
         ratio * (body.getPosition().x - dims.width / 2),
         ratio * -(body.getPosition().y + dims.height / 2),
@@ -626,7 +626,7 @@ class Bot {
     const initGameState = _.clone(gameState);
     initGameState.stars = [];
     initGameState.world = cloneWorld(world);
-    for (let body of iterBodies(initGameState.world)) {
+    for (let body of Array.from(iterBodies(initGameState.world))) {
       if (gameState.stars.includes(body.getUserData())) {
         initGameState.world.destroyBody(body);
       }

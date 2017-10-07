@@ -357,14 +357,14 @@ export function cloneWorld(world: Pl.World): Pl.World {
   // (original) world, which would cause cloning to unnecessarily also clone the original world
   // (along with the passed-in world). This drops the time from 500ms to 300ms.
   const userData = [];
-  for (let body of iterBodies(world)) {
+  for (let body of Array.from(iterBodies(world))) {
     userData.push(body.getUserData());
     body.setUserData(null);
   }
   const clone: Pl.World = _.cloneDeepWith(world);
   clone.addPair = clone.createContact.bind(clone);
   clone.m_broadPhase.queryCallback = clone.m_broadPhase.__proto__.queryCallback.bind(clone.m_broadPhase);
-  for (let [u,a,b] of _.zip(userData, [...iterBodies(world)], [...iterBodies(clone)])) {
+  for (let [u,a,b] of _.zip(userData, Array.from(iterBodies(world)), Array.from(iterBodies(clone)))) {
     a.setUserData(u);
     b.setUserData(u);
   }
