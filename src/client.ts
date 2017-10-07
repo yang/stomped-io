@@ -73,6 +73,8 @@ const timeline: Bcast[] = [];
 
 let isSim = false;
 
+const meIsBot = false;
+
 function destroy2(ent) {
   if (!isSim) {
     world.destroyBody(ent.bod);
@@ -468,8 +470,9 @@ function update() {
   gfx.lineStyle(1,defaultColor,1);
   if (game.input.activePointer.isDown) {
     target = new Vec2(game.input.worldX, game.input.worldY);
+    makeBot();
   }
-  if (target && me.y < Common.gameWorld.height) {
+  if (meIsBot && target && me.y < Common.gameWorld.height) {
     const log = getLogger('replay');
     gfx.drawCircle(target.x, target.y, 100);
     gfx.moveTo(me.x, me.y);
@@ -532,7 +535,7 @@ function update() {
 
   if (runLocally && updating) {
     Common.update(gameState);
-    if (target && me.y < Common.gameWorld.height && replayMode == ReplayMode.STEPS) {
+    if (meIsBot && target && me.y < Common.gameWorld.height && replayMode == ReplayMode.STEPS) {
       const currChunk = getCurrChunk(currTime);
       if (!veq(me.bod.getPosition(), currChunk.mePath[chunkSteps % (chunk / simDt)])) {
         console.error('diverging from predicted path!');
@@ -755,6 +758,23 @@ function feedInputs(player) {
     if (sprite.frame < 3) sprite.frame = 0;
     else sprite.frame = 3;
   }
+}
+
+const bots: Bot[] = [];
+class Bot {
+  constructor(public player: Player) {}
+}
+
+function makeBot() {
+  const player = new Player(
+    name,
+    ledges[2].x + ledgeWidth / 2,
+    ledges[2].y - 50
+  );
+  addPlayer(player);
+  const bot = new Bot(player);
+  bots.push(bot);
+  return bot;
 }
 
 const doPings = false;
