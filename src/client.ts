@@ -71,23 +71,19 @@ const ledges = gameState.ledges;
 
 const timeline: Bcast[] = [];
 
-let isSim = false;
-
 const meIsBot = false;
 
 // This may get called multiple times on same object in a single frame when multiple entities collide with something.
 function destroy2(ent) {
   const log = getLogger('destroy');
-  if (!isSim) {
-    world.destroyBody(ent.bod);
-    entToSprite.get(ent).kill();
-    const removed = [
-      ..._.remove(gameState.players, e => e == ent),
-      ..._.remove(gameState.stars, e => e == ent)
-    ];
-    log.log(isSim, removed.length, ent.type, ent.id);
-    assert(ent.type != 'Player' || removed.length == 1);
-  }
+  world.destroyBody(ent.bod);
+  entToSprite.get(ent).kill();
+  const removed = [
+    ..._.remove(gameState.players, e => e == ent),
+    ..._.remove(gameState.stars, e => e == ent)
+  ];
+  log.log(removed.length, ent.type, ent.id);
+  assert(ent.type != 'Player' || removed.length == 1);
 }
 
 const entToSprite = new Map();
@@ -596,7 +592,6 @@ class Bot {
   }
 
   runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) => WorldState) {
-    isSim = true;
     const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
       start: startState,
       edges: (worldState) => worldState.elapsed < horizon ?
@@ -604,7 +599,6 @@ class Bot {
       traverseEdge: simFunc,
       cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
     });
-    isSim = false;
     return {bestWorldState, bestPath, worldStates};
   }
 
@@ -643,20 +637,25 @@ class Bot {
     const startState = this.getWorldState([], initGameState);
     return this.runSims(startState, (init, dir) => {
       const world = cloneWorld(init.gameState.world);
+      world._listeners = {};
+      // TODO should IDs be copied?
       const entToNewBody = new Map(
         Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
       );
-      const newLedges = ledges.map(l => {
+      const newLedges = init.gameState.ledges.map(l => {
         const m = new Ledge(l.x, l.y, l.oscPeriod);
         m.bod = entToNewBody.get(l);
         return m;
       });
-      const newPlayers = players.map(p => {
+      const newPlayers = init.gameState.players.map(p => {
         const q = new Player(p.name, p.x, p.y);
         q.bod = entToNewBody.get(p);
         setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
         return q;
       });
+      for (let ent of [].concat(newLedges).concat(newPlayers)) {
+        ent.bod.setUserData(ent);
+      }
       // What needs to be cloned depends on how .bod is traversed in Common.update() and potentially how the collision
       // handlers use it.
       // No need to clone lava.
@@ -666,6 +665,7 @@ class Bot {
       newGameState.ledges = newLedges;
       newGameState.players = newPlayers;
       newGameState.world = world;
+      Common.create(null, newGameState);
       return this.sim(dir, world, newGameState, init, world => []);
     });
   }
@@ -675,7 +675,8 @@ class Bot {
     const me = this.player;
     let minDistToTarget = 9999999, distance = null;
     const mePath = [], meVels = [];
-    const meBody = _(Array.from(iterBodies(world))).find(body => body.getUserData() == me);
+    const meBodyPos = _(Array.from(iterBodies(Common.world))).findIndex(body => body == me.bod);
+    const meBody = Array.from(iterBodies(world))[meBodyPos];
     mePath.push(copyVec(meBody.getPosition()));
     meVels.push(copyVec(meBody.getLinearVelocity()));
     for (let i = 0; i < chunk / simDt; i++) {
