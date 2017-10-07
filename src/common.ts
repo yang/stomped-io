@@ -118,6 +118,7 @@ export function create(destroy, gameState: GameState) {
             postStep(() => destroy(player));
           }
         } else if (gameState.stars.includes(bB.getUserData())) {
+          // TODO attribute the star to only one player
           contact.setEnabled(false);
           const star = bB.getUserData();
           if (destroy) {
