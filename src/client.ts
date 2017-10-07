@@ -75,10 +75,18 @@ let isSim = false;
 
 const meIsBot = false;
 
+// This may get called multiple times on same object in a single frame when multiple entities collide with something.
 function destroy2(ent) {
+  const log = getLogger('destroy');
   if (!isSim) {
     world.destroyBody(ent.bod);
     entToSprite.get(ent).kill();
+    const removed = [
+      ..._.remove(gameState.players, e => e == ent),
+      ..._.remove(gameState.stars, e => e == ent)
+    ];
+    log.log(isSim, removed.length, ent.type, ent.id);
+    assert(ent.type != 'Player' || removed.length == 1);
   }
 }
 
@@ -368,6 +376,7 @@ function update() {
   }
 
   if (runLocally && updating) {
+    const origEnts = getEnts();
     Common.update(gameState);
     for (let bot of bots) {
       bot.checkPlan(currTime);
@@ -375,8 +384,8 @@ function update() {
     for (let player of players) {
       feedInputs(player);
     }
-    // update sprites
-    for (let ent of getEnts()) {
+    // update sprites. iterate over all origEnts, including ones that may have been destroyed & removed, since we can then update their Entity positions to their final physics body positions.
+    for (let ent of origEnts) {
       updateEntPhys(ent);
       updatePos(ent);
     }
@@ -719,7 +728,7 @@ class Bot {
 
   replayPlan(updating: boolean, currTime: number) {
     const log = getLogger('replay');
-    if (!runLocally || updating) {
+    if (!this.isDead() && (!runLocally || updating)) {
       if (this.lastBestSeq) {
         this.replayChunkStep(currTime);
       }
@@ -748,10 +757,14 @@ class Bot {
       }
     }
   }
+
+  isDead() {
+    return this.player.y >= Common.gameWorld.height;
+  }
   
   drawPlan() {
     const me = this.player;
-    if (drawPlans && this.target && me.y < Common.gameWorld.height) {
+    if (drawPlans && this.target && !this.isDead()) {
       gfx.drawCircle(this.target.x, this.target.y, 100);
 
       if (this.lastWorldStates) {
@@ -786,7 +799,7 @@ class Bot {
   
   checkPlan(currTime: number) {
     const me = this.player;
-    if (meIsBot && this.target && me.y < Common.gameWorld.height && replayMode == ReplayMode.STEPS) {
+    if (meIsBot && this.target && !this.isDead() && replayMode == ReplayMode.STEPS) {
       const currChunk = this.getCurrChunk(currTime);
       if (!veq(me.bod.getPosition(), currChunk.mePath[this.chunkSteps % (chunk / simDt)])) {
         console.error('diverging from predicted path!');
