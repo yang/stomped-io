@@ -42,7 +42,7 @@ var game;
 
 const gameState = new GameState();
 
-let drawPlanckBoxes = false, drawAllPaths = false, drawPlans = true;
+let drawPlanckBoxes = true, drawAllPaths = false, drawPlans = true;
 
 function preload() {
 
@@ -230,7 +230,7 @@ function addStar(star) {
   if (!gameState.stars.find(s => s.id == star.id)) {
     gameState.stars.push(star);
     // TODO eventually make star display larger than physics size
-    const starDispDim = 1 * star.width;
+    const starDispDim = 2 * star.width;
     const offset = (star.width - starDispDim) / 2;
     const sprite = game.add.sprite(star.x + offset, star.y + offset, 'star');
     sprite.width = starDispDim;
@@ -529,8 +529,8 @@ function plVelFromEnt(ent) {
 
 function updateSpriteAndPlFromEnt(ent) {
   const sprite = entToSprite.get(ent);
-  sprite.x = ent.x;
-  sprite.y = ent.y;
+  sprite.x = ent.x + (ent.width - sprite.width) / 2;
+  sprite.y = ent.y + (ent.height - sprite.height) / 2;
   ent.bod.setPosition(plPosFromEnt(ent));
   ent.bod.setLinearVelocity(plVelFromEnt(ent));
 }
