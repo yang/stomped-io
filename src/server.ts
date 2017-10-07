@@ -6,7 +6,7 @@ import {
   AddEnt,
   Bcast,
   clearArray, Ent,
-  Event, GameState,
+  Event, GameState, getLogger,
   Lava,
   Ledge,
   ledgeHeight,
@@ -92,6 +92,7 @@ function whichBucket(bucketStart: number, bucketSize: number, x: number) {
 
 const ledgeSpacing = 200;
 function updateLedges() {
+  const log = getLogger('updateLedges');
   for (let ledge of ledges) {
     if (ledge.y > Common.gameWorld.height) {
       destroy(ledge);
@@ -111,7 +112,7 @@ function updateLedges() {
     const spawnWidth = spawnMax - spawnMin;
     const colWidth = spawnWidth / numCols;
     const wasOdd = lastLedge && whichBucket(spawnMin, colWidth, lastLedge.initPos.x + ledgeWidth / 2) % 2 == 1;
-    console.log(numCols, margin, spawnMin, spawnMax, spawnWidth, colWidth);
+    log.log(numCols, margin, spawnMin, spawnMax, spawnWidth, colWidth);
 
     for (let column = wasOdd ? 0 : 1; column < numCols; column += 2) {
       /*
@@ -123,7 +124,7 @@ function updateLedges() {
       const xCenter = spawnMin + (column + 0.5) * colWidth;
       const x = xCenter - ledgeWidth / 2;
       const ledge = new Ledge(x, y, getRandomInt(5, 10));
-      console.log(wasOdd, column, xCenter, x, y);
+      log.log(wasOdd, column, xCenter, x, y);
       addBody(ledge, 'kinematic');
       ledge.bod.setLinearVelocity(Pl.Vec2(0, 0));
       ledges.push(ledge);

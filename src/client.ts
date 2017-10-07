@@ -30,7 +30,7 @@ import {
   Vec2,
   world,
   iterBodies,
-  iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState, Star, pushAll
+  iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState, Star, pushAll, getLogger
 } from './common';
 import * as _ from 'lodash';
 
@@ -146,7 +146,7 @@ function create(initSnap) {
   cursors = game.input.keyboard.createCursorKeys();
   for (let keyName of ['left', 'down', 'right', 'up']) {
     const key = cursors[keyName];
-    key.onDown.add(() => events.push(trace(new InputEvent(updateInputs()))));
+    key.onDown.add(() => events.push(new InputEvent(updateInputs())));
     key.onUp.add(() => events.push(new InputEvent(updateInputs())));
   }
 
@@ -266,10 +266,11 @@ function getCurrChunk(currTime: number): WorldState {
 }
 
 function replayChunkStep(currTime: number) {
+  const log = getLogger('replay');
   const currChunk = getCurrChunk(currTime);
   if (lastChunk != currChunk) {
     if (chunkSteps && chunkSteps < chunk / simDt) {
-      console.log('switching from old chunk ', lastChunk && lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
+      log.log('switching from old chunk ', lastChunk && lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
     }
     chunkSteps = 0;
   }
@@ -378,7 +379,7 @@ function update() {
     // console.log(currTime, delta, timeBuffer, currTime + delta - timeBuffer);
     const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
     if (nextBcastIdx <= 0) {
-      console.log('off end of timeline');
+      console.warn('off end of timeline');
       return;
     }
     const nextBcast = timeline[nextBcastIdx];
@@ -469,6 +470,7 @@ function update() {
     target = new Vec2(game.input.worldX, game.input.worldY);
   }
   if (target && me.y < Common.gameWorld.height) {
+    const log = getLogger('replay');
     gfx.drawCircle(target.x, target.y, 100);
     gfx.moveTo(me.x, me.y);
     if (!runLocally || updating) {
@@ -479,20 +481,18 @@ function update() {
       if (replayMode == ReplayMode.TIME) {
         doSim = lastSimTime == null || currTime - lastSimTime > simPeriod / timeWarp;
       } else if (replayMode == ReplayMode.STEPS) {
-        console.log(lastChunk && lastChunk.elapsed - chunk, chunkSteps, lastChunk && (lastChunk.elapsed + chunkSteps * simDt / chunk) * 1000);
+        log.log(lastChunk && lastChunk.elapsed - chunk, chunkSteps, lastChunk && (lastChunk.elapsed + chunkSteps * simDt / chunk) * 1000);
         doSim = !lastChunk || (lastChunk.elapsed - chunk + chunkSteps * simDt / chunk) * 1000 > simPeriod;
       } else {
         throw new Error();
       }
       if (doSim) {
         lastSimTime = currTime;
-        console.log(me, me.bod.getPosition());
         const {worldStates, bestPath, bestWorldState} =
           doCloneWorlds ? runSimsClone() : runSimsReuse();
-        console.log(me, me.bod.getPosition());
         lastWorldStates = worldStates;
         lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
-        console.log('simulated');
+        log.log('simulated');
         if (lastBestSeq.length > 1) {
           chunkSteps = null;
           replayChunkStep(currTime);

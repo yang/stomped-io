@@ -1,6 +1,33 @@
 import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 
+export class Logger {
+  constructor(public name: string, public handler: LogHandler) {}
+  log(...args) { this.handler.log(this.name, args); }
+}
+
+export class LogHandler {
+  buffer = [];
+  enabled = new Set<string>();
+  log(name, msg) {
+    this.buffer.push([name, msg]);
+    if (this.enabled.has(name)) {
+      console.log(`#{name}:`, ...msg);
+    }
+  }
+}
+
+export const baseHandler = new LogHandler();
+const nameToLogger = new Map<string, Logger>();
+export function getLogger(name: string) {
+  let logger = nameToLogger.get(name);
+  if (!logger) {
+    logger = new Logger(name, baseHandler);
+    nameToLogger.set(name, logger)
+  }
+  return logger;
+}
+
 export const ratio = 64;
 export const accel = 10;
 
