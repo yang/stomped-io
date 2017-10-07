@@ -824,6 +824,8 @@ const doPings = false;
 function main() {
   socket = Sio('http://localhost:3000');
   socket.on('connect', () => {
+    if (game) return;
+
     console.log('connect')
 
     socket.emit('join', {name: 'z'});
