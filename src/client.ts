@@ -42,7 +42,7 @@ var game;
 
 const gameState = new GameState();
 
-let drawPlanckBoxes = false;
+let drawPlanckBoxes = false, drawAllPaths = false, drawPlans = true;
 
 function preload() {
 
@@ -751,13 +751,14 @@ class Bot {
   
   drawPlan() {
     const me = this.player;
-    if (this.chunkSteps <= 2 && this.target && me.y < Common.gameWorld.height) {
+    if (drawPlans && this.target && me.y < Common.gameWorld.height) {
       gfx.drawCircle(this.target.x, this.target.y, 100);
 
       if (this.lastWorldStates) {
         const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}].map(({x,y}) => ({x: 5*x, y: 5*y}));
         const bcolors = bestColors.concat(bestColors).concat(bestColors)[Symbol.iterator]();
-        for (let worldState of this.lastWorldStates.concat(this.lastBestSeq)) {
+        const pathsToDraw = (drawAllPaths ? this.lastWorldStates : []).concat(this.lastBestSeq);
+        for (let worldState of pathsToDraw) {
           gfx.lineStyle(1, this.lastBestSeq.includes(worldState) ? bcolors.next().value : defaultColor, 1);
           const startPos = entPosFromPl(me, worldState.mePath[0], true).toTuple();
           if (worldState.dir == null) {
