@@ -796,6 +796,7 @@ function main() {
     socket.on('joined', (initSnap) => {
       game = new Phaser.Game({
         scaleMode: Phaser.ScaleManager.RESIZE,
+        renderer: Phaser.WEBGL,
         state: {
           onResize: function(scaleMgr, parentBounds) {
             const scale = Math.max(parentBounds.width / 800, parentBounds.height / 800);
