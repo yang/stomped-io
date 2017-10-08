@@ -203,10 +203,11 @@ function addPlayer(playerObj) {
   if (!found) {
     const player = new Player(playerObj.name, playerObj.x, playerObj.y);
     _.extend(player, playerObj);
+    player.baseDims = Vec2.fromObj(player.baseDims);
     players.push(player);
     const sprite = game.add.sprite(player.x, player.y, 'dude');
-    sprite.width = 24;
-    sprite.height = 32;
+    sprite.width = player.width;
+    sprite.height = player.height;
     sprite.animations.add('left', [3, 4, 3, 5], 10, true);
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     entToSprite.set(player, sprite);
@@ -234,11 +235,9 @@ function addStar(starObj) {
     const star = new Star(starObj.x, starObj.y);
     gameState.stars.push(star);
     // TODO eventually make star display larger than physics size
-    const starDispDim = 2 * star.width;
-    const offset = (star.width - starDispDim) / 2;
-    const sprite = game.add.sprite(star.x + offset, star.y + offset, 'star');
-    sprite.width = starDispDim;
-    sprite.height = starDispDim;
+    const [x,y] = star.dispPos().toTuple();
+    const sprite = game.add.sprite(x, y, 'star');
+    [sprite.width, sprite.height] = star.dispDims().toTuple();
     entToSprite.set(star, sprite);
     addBody(star, 'kinematic');
   }
@@ -533,8 +532,8 @@ function plVelFromEnt(ent) {
 
 function updateSpriteAndPlFromEnt(ent) {
   const sprite = entToSprite.get(ent);
-  sprite.x = ent.x + (ent.width - sprite.width) / 2;
-  sprite.y = ent.y + (ent.height - sprite.height) / 2;
+  [sprite.x, sprite.y] = ent.dispPos().toTuple();
+  [sprite.width, sprite.height] = ent.dispDims().toTuple();
   ent.bod.setPosition(plPosFromEnt(ent));
   ent.bod.setLinearVelocity(plVelFromEnt(ent));
 }
@@ -658,6 +657,9 @@ class Bot {
       const newPlayers = init.gameState.players.map(p => {
         const q = new Player(p.name, p.x, p.y);
         q.bod = entToNewBody.get(p);
+        q.size = p.size;
+        q.width = p.width;
+        q.height = p.height;
         setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
         return q;
       });

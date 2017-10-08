@@ -68,6 +68,7 @@ export class InputState {
 
 export function create(destroy, gameState: GameState) {
   const players = gameState.players, world = gameState.world;
+  const starToPlayer = new Map<Star, Player>();
 
   world.on('end-contact', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
@@ -109,6 +110,7 @@ export function create(destroy, gameState: GameState) {
       //  }, 0);
       //}
       if (players.includes(bA.getUserData())) {
+        const player: Player = bA.getUserData();
         if (gameState.lava === bB.getUserData() || bB.getUserData().type == 'Lava') {
           contact.setEnabled(false);
           const player = bA.getUserData();
@@ -118,11 +120,23 @@ export function create(destroy, gameState: GameState) {
             postStep(() => destroy(player));
           }
         } else if (gameState.stars.includes(bB.getUserData())) {
-          // TODO attribute the star to only one player
+          // Star may collide with multiple players simultaneously - must attribute the star to only one player.
           contact.setEnabled(false);
-          const star = bB.getUserData();
-          if (destroy) {
-            postStep(() => destroy(star));
+          const star: Star = bB.getUserData();
+          if (!starToPlayer.has(star)) {
+            starToPlayer.set(star, player);
+            postStep(() => {
+              player.size += .1;
+              [player.width, player.height] = player.baseDims.mul(player.size ** (1/3)).toTuple();
+              for (let i = 0; i < 4; i++) {
+                const v = fA.getShape().getVertex(i);
+                fA.getShape().getVertex(i).set(Pl.Vec2(
+                  player.width / 2 / ratio * Math.sign(v.x),
+                  player.height / 2 / ratio * Math.sign(v.y)
+                ));
+              }
+              destroy(star);
+            });
           }
         }
       }
@@ -184,9 +198,12 @@ export class Serializable {
 
 export class Vec2 {
   constructor(public x = 0, public y = 0) {}
-  toTuple(): [number, number] {
-    return [this.x, this.y];
-  }
+  add(v: Vec2) { return new Vec2(this.x + v.x, this.y + v.y); }
+  sub(v: Vec2) { return new Vec2(this.x - v.x, this.y - v.y); }
+  mul(x: number) { return new Vec2(this.x * x, this.y * x); }
+  div(x: number) { return new Vec2(this.x / x, this.y / x); }
+  toTuple(): [number, number] { return [this.x, this.y]; }
+  static fromObj({x, y}: {x: number, y: number}) { return new Vec2(x,y); }
 }
 
 export function entPosFromPl(ent, pos = ent.bod.getPosition(), midpoint = false) {
@@ -204,9 +221,11 @@ export class Ent extends Serializable {
   vel = new Vec2(0,0);
   id = ids.next().value;
   bod?: Pl.Body;
-  ser(): this {
-    return <this>omit(this, 'bod');
-  }
+  ser(): this { return <this>omit(this, 'bod'); }
+  pos() { return new Vec2(this.x, this.y); }
+  dims() { return new Vec2(this.width, this.height); }
+  dispDims() { return this.dims(); }
+  dispPos(): Vec2 { return this.pos().add(this.dims().sub(this.dispDims()).div(2)); }
 }
 
 export class Lava extends Ent {
@@ -218,7 +237,9 @@ export class Lava extends Ent {
 export class Player extends Ent {
   width = 24;
   height = 32;
+  baseDims = new Vec2(this.width, this.height);
   inputs = new Inputs();
+  size = 1;
   constructor(public name: string, public x: number, public y: number) {super();}
 }
 
@@ -238,6 +259,7 @@ export class Star extends Ent {
   width = 16;
   height = 16;
   constructor(public x: number, public y: number) {super();}
+  dispDims(): Vec2 { return super.dispDims().mul(2); }
 }
 
 export class Event extends Serializable {}
