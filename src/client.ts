@@ -187,19 +187,22 @@ function getEnts() {
 function addEnt(ent) {
   switch (ent.type) {
     case 'Player':
-      addPlayer(<Player>ent);
+      addPlayer(ent);
       break;
     case 'Ledge':
-      addLedge(<Ledge>ent);
+      addLedge(ent);
       break;
     case 'Star':
-      addStar(<Star>ent);
+      addStar(ent);
       break;
   }
 }
 
-function addPlayer(player) {
-  if (!players.find((p) => p.id == player.id)) {
+function addPlayer(playerObj) {
+  const found = players.find((p) => p.id == playerObj.id);
+  if (!found) {
+    const player = new Player(playerObj.name, playerObj.x, playerObj.y);
+    _.extend(player, playerObj);
     players.push(player);
     const sprite = game.add.sprite(player.x, player.y, 'dude');
     sprite.width = 24;
@@ -208,11 +211,15 @@ function addPlayer(player) {
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     entToSprite.set(player, sprite);
     addBody(player, 'dynamic');
+    return player;
   }
+  return found;
 }
 
-function addLedge(ledge) {
-  if (!ledges.find((p) => p.id == ledge.id)) {
+function addLedge(ledgeObj) {
+  if (!ledges.find((p) => p.id == ledgeObj.id)) {
+    const ledge = new Ledge(ledgeObj.x, ledgeObj.y, ledgeObj.oscPeriod);
+    _.extend(ledge, ledgeObj);
     ledges.push(ledge);
     const platform = platforms.create(ledge.x, ledge.y, 'ground');
     platform.width = ledgeWidth;
@@ -222,8 +229,9 @@ function addLedge(ledge) {
   }
 }
 
-function addStar(star) {
-  if (!gameState.stars.find(s => s.id == star.id)) {
+function addStar(starObj) {
+  if (!gameState.stars.find(s => s.id == starObj.id)) {
+    const star = new Star(starObj.x, starObj.y);
     gameState.stars.push(star);
     // TODO eventually make star display larger than physics size
     const starDispDim = 2 * star.width;
@@ -810,12 +818,11 @@ class Bot {
 }
 
 function makeBot() {
-  const player = new Player(
+  const player = addPlayer(new Player(
     name,
     ledges[2].x + ledgeWidth / 2,
     ledges[2].y - 50
-  );
-  addPlayer(player);
+  ));
   const bot = new Bot(player);
   bots.push(bot);
   return bot;
