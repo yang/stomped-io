@@ -62,6 +62,14 @@ export function clearArray(xs) {
   xs.splice(0, xs.length);
 }
 
+export function enumerate<T>(xs: T[]): [number,T][] {
+  return Array.from((function*() {
+    for (let i = 0; i < xs.length; i++) {
+      yield <[number,T]>[i, xs[i]];
+    }
+  })());
+}
+
 export class InputState {
   isDown = false;
 }

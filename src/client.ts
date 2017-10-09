@@ -31,7 +31,7 @@ import {
   Vec2,
   world,
   iterBodies,
-  iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState, Star, pushAll, getLogger
+  iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState, Star, pushAll, getLogger, enumerate
 } from './common';
 import * as _ from 'lodash';
 
@@ -272,7 +272,19 @@ const runLocally = true;
 
 function update() {
 
-  game.debug.text(game.time.fps, 2, 14, "#00ff00");
+  const debugText = `
+FPS: ${game.time.fps}
+${players.length} players
+
+Scores:
+${_(players)
+    .sort(p => -p.size)
+    .map(p => `${p.size} ${p.name}`)
+    .join('\n')}
+  `.trim();
+  for (let [i,line] of enumerate(debugText.split('\n'))) {
+    game.debug.text(line, 2, 14 * (i + 1), "#00ff00");
+  }
   const currTime = performance.now();
   let updating = false;
 
