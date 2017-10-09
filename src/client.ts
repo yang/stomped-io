@@ -829,7 +829,7 @@ class Bot {
   
   checkPlan(currTime: number) {
     const me = this.player;
-    if (meIsBot && this.target && !this.isDead() && replayMode == ReplayMode.STEPS) {
+    if (this.target && !this.isDead() && replayMode == ReplayMode.STEPS) {
       const currChunk = this.getCurrChunk(currTime);
       if (!veq(me.bod.getPosition(), currChunk.mePath[this.chunkSteps % (chunk / simDt)])) {
         console.error('diverging from predicted path!');
