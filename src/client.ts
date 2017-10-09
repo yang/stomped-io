@@ -275,6 +275,7 @@ function vecStr(v) {
 function update() {
 
   const currentPlayer = players[cp.currentPlayer];
+  const bot = bots.find(b => b.player == currentPlayer)
 
   const debugText = `
 FPS: ${game.time.fps}
@@ -282,6 +283,7 @@ ${players.length} players
 
 Current player:
 Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
+Target: ${bot ? vecStr(bot.target) : ''}
 
 Scores:
 ${_(players)
@@ -378,8 +380,9 @@ ${_(players)
   }
   gfx.lineStyle(1,defaultColor,1);
   if (game.input.activePointer.isDown) {
-    const bot = makeBot();
-    bot.target = new Vec2(game.input.worldX, game.input.worldY);
+    if (bot) {
+      bot.target = new Vec2(game.input.worldX, game.input.worldY);
+    }
   }
   for (let bot of bots) {
     bot.replayPlan(updating, currTime);
@@ -778,6 +781,8 @@ class Bot {
   drawPlan() {
     const me = this.player;
     if (drawPlans && this.target && !this.isDead()) {
+      gfx.lineStyle(1,defaultColor,1);
+
       gfx.drawCircle(this.target.x, this.target.y, 100);
 
       if (this.lastWorldStates) {
