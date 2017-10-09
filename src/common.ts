@@ -362,6 +362,7 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
     f();
   }
   for (let player of gameState.players) {
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, 9)));
     if (
       player.bod.getFixtureList().getAABB(0).lowerBound.y <=
       gameState.lava.bod.getFixtureList().getAABB(0).upperBound.y
@@ -420,4 +421,8 @@ export function iterBodies(world) {
 
 export function iterFixtures(body) {
   return iterList(body.getFixtureList());
+}
+
+export function clamp(x, bound) {
+  return Math.min(Math.abs(x), bound) * Math.sign(x);
 }

@@ -529,10 +529,6 @@ function updateSpriteAndPlFromEnt(ent) {
   ent.bod.setLinearVelocity(plVelFromEnt(ent));
 }
 
-function clamp(x, bound) {
-  return Math.min(Math.abs(x), bound) * Math.sign(x);
-}
-
 function feedInputs(player) {
   const inputs = player.inputs;
   const sprite = entToSprite.get(player);
