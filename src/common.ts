@@ -42,6 +42,8 @@ export const gameWorld = {
 
 export const oscDist = gameWorld.width / 8 * 2;
 
+export let alwaysMoveLeft = false;
+
 export class GameState {
   public time = 0;
   public players: Player[] = [];
@@ -323,7 +325,7 @@ function feedInputs(player, dt) {
 
   const inputs = player.inputs;
 
-  if (inputs.left.isDown) {
+  if (inputs.left.isDown || alwaysMoveLeft) {
     //  Move to the left
     updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel * dt, -5), y));
   } else if (inputs.right.isDown) {
