@@ -21,7 +21,7 @@ import * as Pl from 'planck-js';
 
 const io = Sio();
 
-const gameState = new GameState();
+const gameState = new GameState(undefined, destroy);
 
 const events: Event[] = [];
 const players = gameState.players;
@@ -191,7 +191,7 @@ function create() {
   setInterval(bcast, bcastPeriod * 1000);
   setInterval(update, updatePeriod * 1000);
 
-  Common.create(destroy, gameState);
+  Common.create(gameState);
 
 }
 

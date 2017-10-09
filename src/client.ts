@@ -48,7 +48,7 @@ let doCloneWorlds = true;
 
 var game;
 
-const gameState = new GameState();
+const gameState = new GameState(undefined, destroy2);
 
 let drawPlanckBoxes = true, drawAllPaths = false, drawPlans = true;
 
@@ -130,7 +130,7 @@ function create(initSnap) {
   lavaSprite.width = lava.width;
   lavaSprite.height = lava.height;
 
-  Common.create(destroy2, gameState);
+  Common.create(gameState);
 
   //  The platforms group contains the ground and the 2 ledges we can jump on
   platforms = game.add.group();
@@ -616,6 +616,7 @@ class Bot {
   runSimsClone() {
     const me = this.player;
     const initGameState = _.clone(gameState);
+    initGameState.destroy = _.noop;
     initGameState.stars = [];
     initGameState.world = cloneWorld(world);
     for (let body of Array.from(iterBodies(initGameState.world))) {
@@ -657,7 +658,7 @@ class Bot {
       newGameState.ledges = newLedges;
       newGameState.players = newPlayers;
       newGameState.world = world;
-      Common.create(null, newGameState);
+      Common.create(newGameState);
       return this.sim(dir, world, newGameState, init, world => []);
     });
   }

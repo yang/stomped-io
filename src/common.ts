@@ -48,7 +48,7 @@ export class GameState {
   public ledges: Ledge[] = [];
   public lava: Lava;
   public stars: Star[] = [];
-  constructor(public world: Pl.World = gWorld) {}
+  constructor(public world: Pl.World = gWorld, public destroy = _.noop) {}
   getEnts() {
     return (<Ent[]>this.players).concat(this.ledges).concat(this.stars);
   }
@@ -74,10 +74,11 @@ export class InputState {
   isDown = false;
 }
 
-export function create(destroy, gameState: GameState) {
+export function create(gameState: GameState) {
   const players = gameState.players, world = gameState.world;
   const starToPlayer = new Map<Star, Player>();
   const log = getLogger('jumpoff');
+  const destroy = gameState.destroy;
 
   world.on('end-contact', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
