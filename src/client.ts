@@ -415,7 +415,7 @@ ${_(players)
     // update sprites. iterate over all origEnts, including ones that may have been destroyed & removed, since we can then update their Entity positions to their final physics body positions.
     for (let ent of origEnts) {
       updateEntPhysFromPl(ent);
-      updateSpriteAndPlFromEnt(ent);
+      updateSpriteFromEnt(ent);
     }
     lastTime = currTime;
   }
@@ -547,11 +547,15 @@ function plVelFromEnt(ent) {
 }
 
 function updateSpriteAndPlFromEnt(ent) {
+  updateSpriteFromEnt(ent);
+  ent.bod.setPosition(plPosFromEnt(ent));
+  ent.bod.setLinearVelocity(plVelFromEnt(ent));
+}
+
+function updateSpriteFromEnt(ent) {
   const sprite = entToSprite.get(ent);
   [sprite.x, sprite.y] = ent.dispPos().toTuple();
   [sprite.width, sprite.height] = ent.dispDims().toTuple();
-  ent.bod.setPosition(plPosFromEnt(ent));
-  ent.bod.setLinearVelocity(plVelFromEnt(ent));
 }
 
 function feedInputs(player) {
@@ -637,8 +641,9 @@ class Bot {
       return res;
     });
     // revert bodies to their original states
-    for (let ent of getEnts()) {
-      updateSpriteAndPlFromEnt(ent);
+    for (let [ent, bodSt] of startState.plState) {
+      ent.bod.setPosition(copyVec(bodSt.pos));
+      ent.bod.setLinearVelocity(copyVec(bodSt.vel));
     }
     return res;
   }
