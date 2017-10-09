@@ -242,7 +242,7 @@ export class Player extends Ent {
   baseDims = new Vec2(this.width, this.height);
   inputs = new Inputs();
   size = 1;
-  constructor(public name: string, public x: number, public y: number) {super();}
+  constructor(public name: string, public x: number, public y: number, public style: string) {super();}
 }
 
 export const ledgeWidth = 300, ledgeHeight = 24;
@@ -428,4 +428,13 @@ export function iterFixtures(body) {
 
 export function clamp(x, bound) {
   return Math.min(Math.abs(x), bound) * Math.sign(x);
+}
+
+export function* genStyles() {
+  while (true) {
+    yield 'white';
+    yield 'red';
+    yield 'yellow';
+    yield 'green';
+  }
 }

@@ -21,7 +21,7 @@ import {
   entPosFromPl,
   enumerate,
   Event,
-  GameState,
+  GameState, genStyles,
   getLogger,
   InputEvent,
   iterBodies,
@@ -52,6 +52,8 @@ class ControlPanel {
 }
 const cp = new ControlPanel();
 
+const styleGen = genStyles();
+
 // doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
 // vs. 167ms for non-cloning - most of the time goes into _.deepClone().
 let doCloneWorlds = true;
@@ -75,7 +77,10 @@ function preload() {
   game.load.image('ground', 'assets/ledge.png');
   game.load.image('star', 'assets/star.png');
   game.load.image('lava', 'assets/lava.png');
-  game.load.spritesheet('dude', 'dist/assets/player-white.png', 567, 756);
+  game.load.spritesheet('dude-white', 'dist/assets/player-white.png', 567, 756);
+  game.load.spritesheet('dude-red', 'dist/assets/player-red.png', 567, 756);
+  game.load.spritesheet('dude-yellow', 'dist/assets/player-yellow.png', 567, 756);
+  game.load.spritesheet('dude-green', 'dist/assets/player-green.png', 567, 756);
   game.stage.disableVisibilityChange = true;
 
 }
@@ -217,11 +222,11 @@ function addEnt(ent) {
 function addPlayer(playerObj) {
   const found = players.find((p) => p.id == playerObj.id);
   if (!found) {
-    const player = new Player(playerObj.name, playerObj.x, playerObj.y);
+    const player = new Player(playerObj.name, playerObj.x, playerObj.y, playerObj.style);
     _.extend(player, playerObj);
     player.baseDims = Vec2.fromObj(player.baseDims);
     players.push(player);
-    const sprite = game.add.sprite(player.x, player.y, 'dude');
+    const sprite = game.add.sprite(player.x, player.y, `dude-${styleGen.next().value}`);
     sprite.width = player.width;
     sprite.height = player.height;
     sprite.animations.add('left', [3, 4, 3, 5], 10, true);
@@ -281,7 +286,7 @@ function vecStr(v) {
 function update() {
 
   const currentPlayer = players[cp.currentPlayer];
-  const bot = bots.find(b => b.player == currentPlayer)
+  const bot = bots.find(b => b.player == currentPlayer);
 
   const debugText = `
 FPS: ${game.time.fps}
@@ -667,7 +672,7 @@ class Bot {
         return m;
       });
       const newPlayers = init.gameState.players.map(p => {
-        const q = new Player(p.name, p.x, p.y);
+        const q = new Player(p.name, p.x, p.y, p.style);
         q.id = p.id;
         q.bod = entToNewBody.get(p);
         q.size = p.size;
@@ -837,7 +842,8 @@ function makeBot() {
   const player = addPlayer(new Player(
     'bot',
     ledges[2].x + ledgeWidth / 2,
-    ledges[2].y - 50
+    ledges[2].y - 50,
+    `dude-${styleGen.next().value}`
   ));
   const bot = new Bot(player);
   bot.target = new Vec2(0,0);

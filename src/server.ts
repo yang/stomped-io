@@ -6,7 +6,7 @@ import {
   AddEnt,
   Bcast,
   clearArray, Ent,
-  Event, GameState, getLogger,
+  Event, GameState, genStyles, getLogger,
   Lava,
   Ledge,
   ledgeHeight,
@@ -18,6 +18,8 @@ import {
   world
 } from './common';
 import * as Pl from 'planck-js';
+
+const styleGen = genStyles();
 
 const io = Sio();
 
@@ -210,7 +212,8 @@ function makePlayer(name) {
   const player = new Player(
     name,
     ledges[2].x + ledgeWidth / 2,
-    ledges[2].y - 50
+    ledges[2].y - 50,
+    `dude-${styleGen.next().value}`
   );
   addBody(player, 'dynamic');
   players.push(player);
