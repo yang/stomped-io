@@ -6,6 +6,7 @@ const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-spl
 
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
+import * as dat from 'dat.gui/build/dat.gui';
 import * as Common from './common';
 import {
   addBody,
@@ -33,6 +34,13 @@ import {
   iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState, Star, pushAll, getLogger
 } from './common';
 import * as _ from 'lodash';
+
+class ControlPanel {
+  currentPlayer = 0;
+  viewAll = false;
+  makeBot() { makeBot(); }
+}
+const cp = new ControlPanel();
 
 // doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
 // vs. 167ms for non-cloning - most of the time goes into _.deepClone().
@@ -84,6 +92,9 @@ function destroy2(ent) {
   ];
   log.log(removed.length, ent.type, ent.id);
   assert(ent.type != 'Player' || removed.length == 1);
+  if (ent instanceof Player) {
+    guiMgr.refresh();
+  }
 }
 
 const entToSprite = new Map();
@@ -129,9 +140,10 @@ function create(initSnap) {
     addEnt(ent);
   }
 
-  me = players[players.length - 1]
+  me = players[players.length - 1];
   const meSprite = entToSprite.get(me);
   game.camera.follow(meSprite, Phaser.Camera.FOLLOW_PLATFORMER);
+  guiMgr.refresh();
 
 //  //  Finally some stars to collect
 //  stars = game.add.group();
@@ -212,6 +224,7 @@ function addPlayer(playerObj) {
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     entToSprite.set(player, sprite);
     addBody(player, 'dynamic');
+    guiMgr.refresh();
     return player;
   }
   return found;
@@ -826,10 +839,44 @@ function makeBot() {
     ledges[2].y - 50
   ));
   const bot = new Bot(player);
+  bot.target = new Vec2(0,0);
   bots.push(bot);
   return bot;
 }
 
+class GuiMgr {
+  controllers = [];
+  gui = new dat.GUI();
+  add(xs) {
+    this.controllers = this.controllers.concat(xs);
+  }
+  clear() {
+    if (this.gui) this.gui.destroy();
+    this.gui = new dat.GUI();
+  }
+  refresh() {
+    guiMgr.clear();
+    const targetPlayerIndex = players.findIndex(p => entToSprite.get(p) == game.camera.target);
+    cp.currentPlayer = targetPlayerIndex >= 0 ? targetPlayerIndex : 0;
+    refollow();
+    guiMgr.add([
+      this.gui.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
+      this.gui.add(cp, 'makeBot'),
+      this.gui.add(cp, 'viewAll').onFinishChange(rescale)
+    ]);
+  }
+
+}
+const guiMgr = new GuiMgr();
+
+function refollow() {
+  if (cp.currentPlayer <= players.length) {
+    game.camera.follow(entToSprite.get(players[cp.currentPlayer]), Phaser.Camera.FOLLOW_PLATFORMER);
+  }
+}
+
+function rescale() {
+}
 const doPings = false;
 function main() {
   socket = Sio('http://localhost:3000');
