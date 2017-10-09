@@ -1,7 +1,7 @@
-import {cloneWorld} from "../src/common";
+import {cloneWorld, copyVec, iterBodies} from "../src/common";
 import * as Pl from 'planck-js';
 
-function go({cloneAtStart = false, cloneOnContact = false, dim = 1, expectMiss = false}) {
+function go({cloneAtStart = false, cloneOnContact = false, dim = 1, expectMiss = false, doCompare = false}) {
   console.log(arguments);
   let world = Pl.World(Pl.Vec2(0, -10));
   const a = world.createBody({
@@ -42,22 +42,37 @@ function go({cloneAtStart = false, cloneOnContact = false, dim = 1, expectMiss =
 
   const baseWorld = world;
   const initClone = cloneWorld(baseWorld);
-  if (cloneAtStart) {
-    world = cloneWorld(world);
-  }
-  for (let i = 0; i < 10; i++) {
-    console.log(a.getPosition(), a.getLinearVelocity(), a.getFixtureList().getAABB(0));
-    world.step(.1);
-    if (contacting && cloneOnContact) {
-      world = cloneWorld(world);
+  function sim(world, expectedPath = null) {
+    const path = [];
+    let [b,a] = Array.from(iterBodies(world));
+    for (let i = 0; i < 10; i++) {
+      console.log(a.getPosition(), a.getLinearVelocity(), a.getFixtureList().getAABB(0));
+      world.step(.1);
+      path.push(copyVec(a.getPosition()));
+      if (expectedPath) {
+        expect(path[i]).toEqual(expectedPath[i]);
+      }
+      if (contacting && cloneOnContact) {
+        world = cloneWorld(world);
+      }
+      contacting = false;
     }
-    contacting = false;
-  }
 
-  if (expectMiss) {
-    expect(a.getPosition().y).toBeLessThan(b.getPosition().y);
+    if (expectMiss) {
+      expect(a.getPosition().y).toBeLessThan(b.getPosition().y);
+    } else {
+      expect(a.getPosition().y).toBeGreaterThan(b.getPosition().y);
+    }
+
+    return path;
+  }
+  if (cloneAtStart) {
+    sim(cloneWorld(world));
+  } else if (doCompare) {
+    const path = sim(cloneWorld(world));
+    sim(world, path);
   } else {
-    expect(a.getPosition().y).toBeGreaterThan(b.getPosition().y);
+    sim(world);
   }
 }
 
@@ -75,5 +90,8 @@ describe('collisions', () => {
   });
   it('should fail (expected limitation) when velocity >> body', () => {
     go({dim: .19, expectMiss: true});
+  });
+  it('should match trajectories between orig & clone', () => {
+    go({doCompare: true});
   });
 });
