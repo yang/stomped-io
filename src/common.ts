@@ -359,6 +359,15 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
   for (let f of postSteps) {
     f();
   }
+  for (let player of gameState.players) {
+    if (
+      player.bod.getFixtureList().getAABB(0).lowerBound.y <=
+      gameState.lava.bod.getFixtureList().getAABB(0).upperBound.y
+    ) {
+      player.bod.setPosition(Pl.Vec2(player.bod.getPosition().x, -99999));
+      gameState.destroy(player);
+    }
+  }
   clearArray(postSteps);
 }
 
