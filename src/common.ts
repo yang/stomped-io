@@ -122,7 +122,7 @@ export function create(gameState: GameState) {
               destroy(player);
             }
           });
-        } else if (gameState.stars.includes(bB.getUserData())) {
+        } else if (bB.getUserData() instanceof Star) {
           // Star may collide with multiple players simultaneously - must attribute the star to only one player.
           contact.setEnabled(false);
           const star: Star = bB.getUserData();
@@ -138,7 +138,7 @@ export function create(gameState: GameState) {
                   player.height / 2 / ratio * Math.sign(v.y)
                 ));
               }
-              destroy(star);
+              if (destroy) destroy(star);
             });
           }
         }
