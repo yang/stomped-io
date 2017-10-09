@@ -106,7 +106,8 @@ export function create(gameState: GameState) {
     bounce(fB, bB, fA, bA);
   });
 
-  world.on('begin-contact', (contact, imp) => {
+  // pre-solve is the only time to cancel contacts.
+  world.on('pre-solve', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
     const fB = contact.getFixtureB(), bB = fB.getBody();
     function bounce(fA, bA, fB, bB) {

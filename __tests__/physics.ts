@@ -1,7 +1,7 @@
 import {cloneWorld, copyVec, iterBodies} from "../src/common";
 import * as Pl from 'planck-js';
 
-function go({cloneAtStart = false, cloneOnContact = false, dim = 1, expectMiss = false, doCompare = false}) {
+function go({cloneAtStart = false, cloneOnContact = false, dim = 1, expectMiss = false, doCompare = false, doPassthrough = false}) {
   console.log(arguments);
   let world = Pl.World(Pl.Vec2(0, -10));
   const a = world.createBody({
@@ -36,6 +36,15 @@ function go({cloneAtStart = false, cloneOnContact = false, dim = 1, expectMiss =
     contacting = true;
     console.log('begin-contact', a.getPosition(), a.getLinearVelocity(), b.getPosition(), b.getLinearVelocity())
   });
+  world.on('pre-solve', (contact) => {
+    console.log('pre-solve');
+    if (doPassthrough) {
+      contact.setEnabled(false);
+    }
+  });
+  world.on('post-solve', (contact) => {
+    console.log('post-solve');
+  });
   world.on('end-contact', (contact) => {
     console.log('end-contact', a.getPosition(), a.getLinearVelocity(), b.getPosition(), b.getLinearVelocity())
   });
@@ -46,7 +55,7 @@ function go({cloneAtStart = false, cloneOnContact = false, dim = 1, expectMiss =
     const path = [];
     let [b,a] = Array.from(iterBodies(world));
     for (let i = 0; i < 10; i++) {
-      console.log(a.getPosition(), a.getLinearVelocity(), a.getFixtureList().getAABB(0));
+      console.log('stepping', a.getPosition(), a.getLinearVelocity(), a.getFixtureList().getAABB(0));
       world.step(.1);
       path.push(copyVec(a.getPosition()));
       if (expectedPath) {
@@ -93,5 +102,8 @@ describe('collisions', () => {
   });
   it('should match trajectories between orig & clone', () => {
     go({doCompare: true});
+  });
+  it('should allow pass-through', () => {
+    go({doPassthrough: true, expectMiss: true});
   });
 });
