@@ -1,5 +1,6 @@
 import * as Pl from 'planck-js';
 import * as _ from 'lodash';
+import * as Signals from 'signals';
 
 export class Logger {
   constructor(public name: string, public handler: LogHandler) {}
@@ -50,6 +51,7 @@ export class GameState {
   public ledges: Ledge[] = [];
   public lava: Lava;
   public stars: Star[] = [];
+  onJumpoff = new Signals.Signal();
   constructor(public world: Pl.World = gWorld, public destroy = _.noop) {}
   getEnts() {
     return (<Ent[]>this.players).concat(this.ledges).concat(this.stars);
@@ -94,6 +96,7 @@ export function create(gameState: GameState) {
             if (fA.getAABB(0).lowerBound.y - fB.getAABB(0).upperBound.y > 1) {
               log.log('huge gap', bA.getUserData(), bB.getUserData(), fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y);
             }
+            gameState.onJumpoff.dispatch(bA.getUserData(), bB.getUserData());
             bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 8));
           }
         });

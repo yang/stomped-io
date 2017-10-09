@@ -18,6 +18,10 @@
   version "8.0.32"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.32.tgz#869a716538b6eec65ab3893f183d557be3cda206"
 
+"@types/signals@^0.0.17":
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/@types/signals/-/signals-0.0.17.tgz#93911b0f09518f314a21805420143aab0c2f7ee4"
+
 "@types/socket.io-client@^1.4.30":
   version "1.4.30"
   resolved "https://registry.yarnpkg.com/@types/socket.io-client/-/socket.io-client-1.4.30.tgz#a76d5a1738aded8889c612bfe7f53f3b5298bfc3"
@@ -3522,6 +3526,10 @@ shellwords@^0.1.0:
 signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
+
+signals@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/signals/-/signals-1.0.0.tgz#65f0c1599352b35372ecaae5a250e6107376ed69"
 
 slash@^1.0.0:
   version "1.0.0"

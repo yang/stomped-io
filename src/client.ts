@@ -59,6 +59,12 @@ let doCloneWorlds = true;
 var game;
 
 const gameState = new GameState(undefined, destroy2);
+gameState.onJumpoff.add((player, other) => {
+  const minSize = 3, maxSize = 6, slope = 0.1 / (maxSize - minSize);
+  const shake = Math.max(0, Math.min(0.01, slope * (player.size - minSize)));
+  if (shake > 0)
+    game.camera.shake(shake, 100);
+});
 
 let drawPlanckBoxes = true, drawAllPaths = false, drawPlans = true;
 
@@ -284,6 +290,7 @@ ${players.length} players
 Current player:
 Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
 Target: ${bot ? vecStr(bot.target) : ''}
+Size: ${currentPlayer ? currentPlayer.size : ''}
 
 Scores:
 ${_(players)
