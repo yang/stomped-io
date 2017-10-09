@@ -258,11 +258,20 @@ function tryRemove(id: number, ents: Ent[]) {
 // no latency/interpolation, exact same resutls between predicted and actual physics.
 const runLocally = true;
 
+function vecStr(v) {
+  return JSON.stringify([v.x, v.y]);
+}
+
 function update() {
+
+  const currentPlayer = players[cp.currentPlayer];
 
   const debugText = `
 FPS: ${game.time.fps}
 ${players.length} players
+
+Current player:
+Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
 
 Scores:
 ${_(players)
