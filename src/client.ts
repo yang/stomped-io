@@ -10,28 +10,38 @@ import * as dat from 'dat.gui/build/dat.gui';
 import * as Common from './common';
 import {
   addBody,
-  AddEnt, assert,
+  AddEnt,
+  assert,
   Bcast,
-  clearArray, cloneWorld, dt,
+  clearArray,
+  cloneWorld,
   copyVec,
+  dt,
   Ent,
-  isClose,
-  veq,
   entPosFromPl,
+  enumerate,
   Event,
+  GameState,
+  getLogger,
   InputEvent,
+  iterBodies,
+  iterFixtures,
+  Lava,
   Ledge,
+  ledgeHeight,
+  ledgeWidth,
   Player,
   plPosFromEnt,
+  pushAll,
   ratio,
   RemEnt,
+  Star,
   timeWarp,
   updateEntPhysFromPl,
   updatePeriod,
   Vec2,
-  world,
-  iterBodies,
-  iterFixtures, Lava, ledgeWidth, ledgeHeight, GameState, Star, pushAll, getLogger, enumerate
+  veq,
+  world
 } from './common';
 import * as _ from 'lodash';
 
@@ -623,9 +633,13 @@ class Bot {
     const initGameState = _.clone(gameState);
     initGameState.destroy = _.noop;
     initGameState.stars = [];
+    initGameState.players = [me];
     initGameState.world = cloneWorld(world);
     for (let body of Array.from(iterBodies(initGameState.world))) {
       if (gameState.stars.includes(body.getUserData())) {
+        initGameState.world.destroyBody(body);
+      }
+      if (body.getUserData() instanceof Player && me != body.getUserData()) {
         initGameState.world.destroyBody(body);
       }
     }
@@ -633,17 +647,18 @@ class Bot {
     return this.runSims(startState, (init, dir) => {
       const world = cloneWorld(init.gameState.world);
       world._listeners = {};
-      // TODO should IDs be copied?
       const entToNewBody = new Map(
         Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
       );
       const newLedges = init.gameState.ledges.map(l => {
         const m = new Ledge(l.x, l.y, l.oscPeriod);
+        m.id = l.id;
         m.bod = entToNewBody.get(l);
         return m;
       });
       const newPlayers = init.gameState.players.map(p => {
         const q = new Player(p.name, p.x, p.y);
+        q.id = p.id;
         q.bod = entToNewBody.get(p);
         q.size = p.size;
         q.width = p.width;
@@ -657,7 +672,7 @@ class Bot {
       // What needs to be cloned depends on how .bod is traversed in Common.update() and potentially how the collision
       // handlers use it.
       // No need to clone lava.
-      const newMe = newPlayers[players.findIndex(p => p == me)];
+      const newMe = newPlayers.find(p => p.id == me.id);
       setInputsByDir(newMe, dir);
       const newGameState = _.clone(init.gameState);
       newGameState.ledges = newLedges;
@@ -673,8 +688,7 @@ class Bot {
     const me = this.player;
     let minDistToTarget = 9999999, distance = null;
     const mePath = [], meVels = [];
-    const meBodyPos = _(Array.from(iterBodies(Common.world))).findIndex(body => body == me.bod);
-    const meBody = Array.from(iterBodies(world))[meBodyPos];
+    const meBody = Array.from(iterBodies(world)).find(b => b.getUserData().id == me.id);
     mePath.push(copyVec(meBody.getPosition()));
     meVels.push(copyVec(meBody.getLinearVelocity()));
     for (let i = 0; i < chunk / simDt; i++) {
