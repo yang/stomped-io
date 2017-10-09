@@ -875,8 +875,22 @@ function refollow() {
   }
 }
 
+let lastParentBounds = null;
 function rescale() {
+  if (lastParentBounds) {
+    const scale = cp.viewAll ?
+      Math.min(
+        lastParentBounds.width / game.world.width,
+        lastParentBounds.height / game.world.height
+      ) :
+      Math.max(
+        lastParentBounds.width / 800,
+        lastParentBounds.height / 800
+      )
+    game.world.scale.set(scale);
+  }
 }
+
 const doPings = false;
 function main() {
   socket = Sio('http://localhost:3000');
@@ -900,8 +914,8 @@ function main() {
         scaleMode: Phaser.ScaleManager.RESIZE,
         state: {
           onResize: function(scaleMgr, parentBounds) {
-            const scale = Math.max(parentBounds.width / 800, parentBounds.height / 800);
-            this.world.scale.set(scale);
+            lastParentBounds = parentBounds;
+            rescale();
             // This is needed to keep the camera on the player. Camera doesn't register game rescales.
             this.camera.follow(entToSprite.get(me), Phaser.Camera.FOLLOW_PLATFORMER);
           },
