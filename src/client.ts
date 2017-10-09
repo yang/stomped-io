@@ -145,18 +145,6 @@ function create(initSnap) {
   game.camera.follow(meSprite, Phaser.Camera.FOLLOW_PLATFORMER);
   guiMgr.refresh();
 
-//  //  Finally some stars to collect
-//  stars = game.add.group();
-//
-//  //  Here we'll create 12 of them evenly spaced apart
-//  for (var i = 0; i < 12; i++)
-//  {
-//    //  Create a star inside of the 'stars' group
-//    var star = stars.create(i * 70, 0, 'star');
-//
-//    addBody(star, 'dynamic', {restitution: 0.7 + Math.random() * 0.2});
-//  }
-
   //  The score
   scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
 
@@ -347,28 +335,6 @@ ${_(players)
     }
   }
 
-  //while (currTime - lastTime >= dt) {
-  //    world.step(dt);
-  //    lastTime += dt;
-  //}
-
-  //chars[0].inputs.left.isDown = cursors.left.isDown;
-  //chars[0].inputs.right.isDown = cursors.right.isDown;
-  //chars[0].inputs.down.isDown = cursors.down.isDown;
-  //chars[0].inputs.up.isDown = cursors.up.isDown;
-
-  //for (let chr of chars) {
-  //  feedInputs(chr);
-  //}
-
-  //for (var chr of charSprites) {
-    //updatePos(chr);
-  //}
-
-  //for (let star of stars.children) {
-    //updatePos(star);
-  //}
-
   gfx.clear();
   gfx.lineStyle(1,0x555555,1);
   function fixtureDims(fix) {
@@ -444,15 +410,6 @@ const defaultColor = 0x002244, bestColor = 0xFF0000, bestColors = [
 
 class BodyState {
   constructor(public bod: Pl.Body, public pos: Pl.Vec2, public vel: Pl.Vec2) {}
-  //shadowEnt(ent: Ent): Ent {
-  //  const shadow = new Ent();
-  //  shadow.x = this.pos.x;
-  //  shadow.y = this.pos.y;
-  //  shadow.vel = new Vec2(this.vel);
-  //  shadow.height = ent.height;
-  //  shadow.width = ent.width;
-  //  return shadow;
-  //}
 }
 
 type PlState = [Ent, BodyState][];
@@ -846,7 +803,7 @@ class Bot {
 
 function makeBot() {
   const player = addPlayer(new Player(
-    name,
+    'bot',
     ledges[2].x + ledgeWidth / 2,
     ledges[2].y - 50
   ));
@@ -892,12 +849,12 @@ function rescale() {
   if (lastParentBounds) {
     const scale = cp.viewAll ?
       Math.min(
-        lastParentBounds.width / game.world.width,
-        lastParentBounds.height / game.world.height
+        game.width / game.world.width,
+        game.height / game.world.height
       ) :
       Math.max(
-        lastParentBounds.width / 800,
-        lastParentBounds.height / 800
+        game.width / 800,
+        game.height / 800
       )
     game.world.scale.set(scale);
   }

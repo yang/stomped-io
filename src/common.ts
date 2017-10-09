@@ -77,19 +77,19 @@ export class InputState {
 export function create(destroy, gameState: GameState) {
   const players = gameState.players, world = gameState.world;
   const starToPlayer = new Map<Star, Player>();
+  const log = getLogger('jumpoff');
 
   world.on('end-contact', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
     const fB = contact.getFixtureB(), bB = fB.getBody();
     function bounce(fA, bA, fB, bB) {
       if (bA.getUserData().type == 'Player') {
-//        console.log('end-contact');
-        // only clear of each other in the next tick
+        // only clear of each other after this step
         postStep(() => {
-//          console.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
+          log.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
           if (fA.getAABB(0).lowerBound.y >= fB.getAABB(0).upperBound.y) {
             if (fA.getAABB(0).lowerBound.y - fB.getAABB(0).upperBound.y > 1) {
-              // console.log('huge gap', bA.getUserData(), bB.getUserData(), fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y);
+              log.log('huge gap', bA.getUserData(), bB.getUserData(), fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y);
             }
             bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 8));
           }
@@ -104,29 +104,17 @@ export function create(destroy, gameState: GameState) {
     const fA = contact.getFixtureA(), bA = fA.getBody();
     const fB = contact.getFixtureB(), bB = fB.getBody();
     function bounce(fA, bA, fB, bB) {
-//      if (players.includes(bA.getUserData()))
-//        console.log('begin-contact');
-      //if (players.includes(bA.getUserData()) && stars.children.includes(bB.getUserData())) {
-      //  const star = bB.getUserData();
-      //  contact.setEnabled(false);
-      //  // only clear of each other in the next tick
-      //  setTimeout(() => {
-      //    destroy(star);
-      //    //  Add and update the score
-      //    score += 10;
-      //    scoreText.text = 'Score: ' + score;
-      //  }, 0);
-      //}
       if (players.includes(bA.getUserData())) {
         const player: Player = bA.getUserData();
         if (gameState.lava === bB.getUserData() || bB.getUserData().type == 'Lava') {
           contact.setEnabled(false);
           const player = bA.getUserData();
-          postStep(() => bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999)));
-          // only clear of each other in the next tick
-          if (destroy) {
-            postStep(() => destroy(player));
-          }
+          postStep(() => {
+            bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999))
+            if (destroy) {
+              destroy(player);
+            }
+          });
         } else if (gameState.stars.includes(bB.getUserData())) {
           // Star may collide with multiple players simultaneously - must attribute the star to only one player.
           contact.setEnabled(false);
