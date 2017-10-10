@@ -1,5 +1,3 @@
-export {};
-
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
 const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-split');
@@ -816,7 +814,7 @@ class Bot {
   isDead() {
     return this.player.y >= Common.gameWorld.height;
   }
-  
+
   drawPlan() {
     const me = this.player;
     if (drawPlans && this.target && !this.isDead()) {
@@ -853,7 +851,7 @@ class Bot {
       }
     }
   }
-  
+
   checkPlan(currTime: number) {
     const me = this.player;
     if (this.target && !this.isDead() && replayMode == ReplayMode.STEPS) {
@@ -926,7 +924,7 @@ function rescale() {
 }
 
 const doPings = false;
-function main() {
+export function main() {
   socket = Sio('http://localhost:3000');
   socket.on('connect', () => {
     if (game) return;
@@ -974,5 +972,3 @@ function main() {
     socket.on('disconnect', () => console.log('disconnect'));
   });
 }
-
-main();
