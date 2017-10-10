@@ -84,26 +84,21 @@ export function create(gameState: GameState) {
   const log = getLogger('jumpoff');
   const destroy = gameState.destroy;
 
-  world.on('end-contact', (contact, imp) => {
+  world.on('post-solve', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
     const fB = contact.getFixtureB(), bB = fB.getBody();
-    function bounce(fA, bA, fB, bB) {
+    function bounce(fA, bA, fB, bB, reverse: boolean) {
       if (bA.getUserData().type == 'Player') {
-        // only clear of each other after this step
-        postStep(() => {
-          log.log(fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y, fA.getAABB(0).upperBound.y, fB.getAABB(0).lowerBound.y);
-          if (fA.getAABB(0).lowerBound.y >= fB.getAABB(0).upperBound.y) {
-            if (fA.getAABB(0).lowerBound.y - fB.getAABB(0).upperBound.y > 1) {
-              log.log('huge gap', bA.getUserData(), bB.getUserData(), fA.getAABB(0).lowerBound.y, fB.getAABB(0).upperBound.y);
-            }
-            gameState.onJumpoff.dispatch(bA.getUserData(), bB.getUserData());
-            bA.setLinearVelocity(Pl.Vec2(bA.getLinearVelocity().x, 8));
-          }
-        });
+        const m = contact.getWorldManifold();
+        if (veq(m.normal, Pl.Vec2(0,-1).mul(reverse ? -1 : 1))) {
+          log.log('jumping', bA.getUserData(), bB.getUserData());
+          gameState.onJumpoff.dispatch(bA.getUserData(), bB.getUserData());
+          postStep(() => updateVel(bA, ({x,y}) => Pl.Vec2(x,8)));
+        }
       }
     }
-    bounce(fA, bA, fB, bB);
-    bounce(fB, bB, fA, bA);
+    bounce(fA, bA, fB, bB, false);
+    bounce(fB, bB, fA, bA, true);
   });
 
   // pre-solve is the only time to cancel contacts.
