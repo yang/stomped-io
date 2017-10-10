@@ -69,7 +69,7 @@ gameState.onJumpoff.add((player, other) => {
     game.camera.shake(shake, 100);
 });
 
-let drawPlanckBoxes = true, drawAllPaths = false, drawPlans = true, simStars = true;
+let drawPlanckBoxes = true, drawAllPaths = false, drawPlans = true, simStars = true, simStarRadius = 500;
 
 function preload() {
 
@@ -653,11 +653,16 @@ class Bot {
     const me = this.player;
     const initGameState = _.clone(gameState);
     initGameState.destroy = _.noop;
-    if (!simStars) initGameState.stars = [];
+    if (!simStars) {
+      initGameState.stars = [];
+    } else if (simStarRadius) {
+      _.remove(initGameState.stars, s =>
+        s.pos().sub(me.pos()).len() >= simStarRadius);
+    }
     initGameState.players = [me];
     initGameState.world = cloneWorld(world);
     for (let body of Array.from(iterBodies(initGameState.world))) {
-      if (!simStars && gameState.stars.includes(body.getUserData())) {
+      if (body.getUserData() instanceof Star && !gameState.stars.includes(body.getUserData())) {
         initGameState.world.destroyBody(body);
       }
       if (body.getUserData() instanceof Player && me != body.getUserData()) {

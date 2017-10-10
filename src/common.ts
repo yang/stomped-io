@@ -200,6 +200,7 @@ export class Vec2 {
   sub(v: Vec2) { return new Vec2(this.x - v.x, this.y - v.y); }
   mul(x: number) { return new Vec2(this.x * x, this.y * x); }
   div(x: number) { return new Vec2(this.x / x, this.y / x); }
+  len() { return Math.sqrt(this.x**2 + this.y**2); }
   toTuple(): [number, number] { return [this.x, this.y]; }
   static fromObj({x, y}: {x: number, y: number}) { return new Vec2(x,y); }
 }
