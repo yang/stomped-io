@@ -233,13 +233,25 @@ export class Lava extends Ent {
   constructor(public x: number, public y: number) {super();}
 }
 
+export const totalSquishTime = 0.25;
 export class Player extends Ent {
   width = 24;
   height = 32;
   baseDims = new Vec2(this.width, this.height);
   inputs = new Inputs();
   size = 1;
+  currentSquishTime: number = null;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
+  dispDims() {
+    const dims = super.dispDims();
+    if (this.currentSquishTime != null) {
+      const currentSquish = 1 - 0.5 * Math.sin(this.currentSquishTime * Math.PI / totalSquishTime);
+      dims.y *= currentSquish;
+      return dims;
+    } else {
+      return dims;
+    }
+  }
 }
 
 export const ledgeWidth = 300, ledgeHeight = 24;
@@ -372,6 +384,8 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
     }
   }
   clearArray(postSteps);
+
+  return dt;
 }
 
 export function updateEntPhysFromPl(ent) {

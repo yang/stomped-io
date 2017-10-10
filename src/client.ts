@@ -36,7 +36,7 @@ import {
   ratio,
   RemEnt,
   Star,
-  timeWarp,
+  timeWarp, totalSquishTime,
   updateEntPhysFromPl,
   updatePeriod,
   Vec2,
@@ -44,6 +44,7 @@ import {
   world
 } from './common';
 import * as _ from 'lodash';
+import * as signals from 'signals';
 
 class ControlPanel {
   currentPlayer = 0;
@@ -67,6 +68,11 @@ gameState.onJumpoff.add((player, other) => {
   const shake = Math.max(0, Math.min(0.01, slope * (player.size - minSize)));
   if (shake > 0)
     game.camera.shake(shake, 100);
+
+  if (other instanceof Player) {
+    // squish the other player's sprite a bit
+    other.currentSquishTime = 0;
+  }
 });
 
 let drawPlanckBoxes = true, drawAllPaths = false, drawPlans = true, simStars = true, simStarRadius = 500;
@@ -406,7 +412,15 @@ ${_(players)
 
   if (runLocally && updating) {
     const origEnts = getEnts();
-    Common.update(gameState);
+    const totalStepTime = Common.update(gameState);
+    for (let player of gameState.players) {
+      if (player.currentSquishTime != null) {
+        player.currentSquishTime += totalStepTime;
+        if (player.currentSquishTime > totalSquishTime) {
+          player.currentSquishTime = null;
+        }
+      }
+    }
     for (let bot of bots) {
       bot.checkPlan(currTime);
     }
@@ -704,6 +718,7 @@ class Bot {
       newGameState.ledges = newLedges;
       newGameState.players = newPlayers;
       newGameState.world = world;
+      newGameState.onJumpoff = new signals.Signal();
       Common.create(newGameState);
       return this.sim(dir, world, newGameState, init, world => []);
     });

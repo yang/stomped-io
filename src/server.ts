@@ -92,7 +92,7 @@ function whichBucket(bucketStart: number, bucketSize: number, x: number) {
   return Math.floor((x - bucketStart) / bucketSize);
 }
 
-const ledgeSpacing = 200;
+const ledgeSpacing = 150;
 function updateLedges() {
   const log = getLogger('updateLedges');
   for (let ledge of ledges) {
