@@ -407,12 +407,12 @@ export function cloneWorld(world: Pl.World): Pl.World {
   return clone;
 }
 
-export function isClose(a: number, b: number) {
-  return Math.abs(a-b) <=  Math.max(1e-9 * Math.max(Math.abs(a), Math.abs(b)), 0);
+export function isClose(a: number, b: number, eps = 1e-9) {
+  return Math.abs(a-b) <=  Math.max(eps * Math.max(Math.abs(a), Math.abs(b)), 0);
 }
 
-export function veq(a,b) {
-  return isClose(a.x, b.x) && isClose(a.y, b.y);
+export function veq(a, b, eps = 1e-9) {
+  return isClose(a.x, b.x, eps) && isClose(a.y, b.y, eps);
 }
 
 function* iterList(node) {

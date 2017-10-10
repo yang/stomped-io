@@ -53,6 +53,7 @@ class ControlPanel {
 const cp = new ControlPanel();
 
 const styleGen = genStyles();
+const pathDivergenceEps = .1;
 
 // doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
 // vs. 167ms for non-cloning - most of the time goes into _.deepClone().
@@ -836,7 +837,7 @@ class Bot {
     const me = this.player;
     if (this.target && !this.isDead() && replayMode == ReplayMode.STEPS) {
       const currChunk = this.getCurrChunk(currTime);
-      if (!veq(me.bod.getPosition(), currChunk.mePath[this.chunkSteps % (chunk / simDt)])) {
+      if (!veq(me.bod.getPosition(), currChunk.mePath[this.chunkSteps % (chunk / simDt)], pathDivergenceEps)) {
         console.error('diverging from predicted path!');
       }
     }
