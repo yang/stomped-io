@@ -133,6 +133,12 @@ export function create(gameState: GameState) {
                   player.height / 2 / ratio * Math.sign(v.y)
                 ));
               }
+              // Mass is computed based on fixture size and density. 2D fixture size only accounts for two of the three
+              // dimensions that are assumed to contribute to the mass.  Adjust the density accordingly - it is then the
+              // third dimension.  All dimensions are multiplied by the cube root of the `size` multiple, since `size`
+              // *is* the mass.
+              fA.setDensity(player.size ** (1/3));
+              bA.resetMassData();
               if (destroy) destroy(star);
             });
           }

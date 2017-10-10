@@ -303,6 +303,7 @@ Current player:
 Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
 Target: ${bot ? vecStr(bot.target) : ''}
 Size: ${currentPlayer ? currentPlayer.size : ''}
+Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
 
 Scores:
 ${_(players)
