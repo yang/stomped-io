@@ -404,7 +404,15 @@ export function copyVec(v: Pl.Vec2): Pl.Vec2 {
   return Pl.Vec2(v.x, v.y);
 }
 
-export function cloneWorld(world: Pl.World): Pl.World {
+export function time(f) {
+  const start = performance.now();
+  const res = f();
+  const end = performance.now();
+  console.log(end - start);
+  return res;
+}
+
+function deepCloneWorld(world: Pl.World): Pl.World {
   // Temporarily clear the user data, since the user data has reverse links pointing back into the
   // (original) world, which would cause cloning to unnecessarily also clone the original world
   // (along with the passed-in world). This drops the time from 500ms to 300ms.
@@ -421,6 +429,23 @@ export function cloneWorld(world: Pl.World): Pl.World {
     b.setUserData(u);
   }
   return clone;
+}
+
+function manuallyCloneWorld(world: Pl.World): Pl.World {
+  const newWorld = Pl.World(Pl.Vec2(0, gravity));
+  for (let body of Array.from(iterBodies(world)).reverse()) {
+    const clone = createBody(newWorld, body.getUserData(), body.getType());
+    clone.setLinearVelocity(copyVec(body.getLinearVelocity()));
+    clone.setPosition(copyVec(body.getPosition()));
+  }
+  assert(_.isEqual(
+    Array.from(iterBodies(world)).map(body => body.getUserData()),
+    Array.from(iterBodies(newWorld)).map(body => body.getUserData())));
+  return newWorld;
+}
+
+export function cloneWorld(world: Pl.World): Pl.World {
+  return 1/1 ? manuallyCloneWorld(world) : deepCloneWorld(world);
 }
 
 export function isClose(a: number, b: number, eps = 1e-9) {

@@ -28,3 +28,23 @@ Misc
 
 - `moduleResolution: node` is from
   https://github.com/Microsoft/TypeScript/issues/8189
+
+Performance
+===========
+
+The first few `runSims` run times when using `deepCloneWorld`:
+
+- 3363.185
+- 3166.084999999999
+- 2408.605000000003
+- 1400.454999999998
+- 1011.4200000000019
+
+The first few `runSims` run times when using `manuallyCloneWorld`:
+
+- 1597.4000000000005
+- 1660.640000000003
+- 869.0249999999978
+- 762.75
+- 850.2850000000108
+- 376.13500000000204

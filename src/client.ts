@@ -629,14 +629,16 @@ class Bot {
   }
 
   runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) => WorldState) {
-    const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
-      start: startState,
-      edges: (worldState) => worldState.elapsed < horizon ?
-        [Dir.Left, Dir.Right] : [],
-      traverseEdge: simFunc,
-      cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
+    return Common.time(() => {
+      const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
+        start: startState,
+        edges: (worldState) => worldState.elapsed < horizon ?
+          [Dir.Left, Dir.Right] : [],
+        traverseEdge: simFunc,
+        cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
+      });
+      return {bestWorldState, bestPath, worldStates};
     });
-    return {bestWorldState, bestPath, worldStates};
   }
 
   runSimsReuse() {
