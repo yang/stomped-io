@@ -41,6 +41,14 @@ export const gameWorld = {
   height: 1600
 };
 
+export function* cumsum(xs: number[]) {
+  let sum = 0;
+  for (let x of xs) {
+    sum += x;
+    yield sum;
+  }
+}
+
 export const oscDist = gameWorld.width / 8 * 2;
 
 export let alwaysMoveLeft = false;

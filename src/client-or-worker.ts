@@ -2,7 +2,7 @@ const isWebWorker = typeof WorkerGlobalScope !== 'undefined' &&
   self instanceof WorkerGlobalScope;
 
 function werk(x) {
-  throw new Error();
+  //throw new Error();
 }
 
 function pRun(f) {
@@ -18,7 +18,7 @@ if (!isWebWorker) {
     .then(x => console.log(x))
     .catch(e => console.error(e));
 
-  // require("./client").main();
+  require("./client").main();
 } else {
   const workerpool = require('workerpool/dist/workerpool');
   workerpool.worker({werk: () => pRun(werk)});

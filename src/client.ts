@@ -53,6 +53,7 @@ const cp = new ControlPanel();
 
 const styleGen = genStyles();
 const pathDivergenceEps = .1;
+const simComputeTimeAllowance = .5;
 
 // doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
 // vs. 167ms for non-cloning - most of the time goes into _.deepClone().
@@ -612,28 +613,44 @@ class Bot {
     );
   }
 
-  getCurrChunk(currTime: number): WorldState {
-    let currChunk;
-    assert(this.chunkSteps <= chunk / simDt);
+  getCurrChunk(currTime: number): [WorldState, number] {
     if (replayMode == ReplayMode.TIME) {
-      currChunk = this.lastBestSeq[1 + Math.floor((currTime - this.lastSimTime) / (1000 * chunk / timeWarp))];
+      let currChunk;
+      const elapsed = (currTime - this.lastSimTime) / 1000;
+      for (let i = 0; elapsed >= this.lastBestSeq[i].elapsed; i++) {
+        currChunk = this.lastBestSeq[i + 1];
+      }
+      return [currChunk, 0];
     } else if (replayMode == ReplayMode.STEPS) {
-      const index = this.lastBestSeq.indexOf(this.lastChunk); // 0 if not found, i.e. new path
-      currChunk = index < 0 ? this.lastBestSeq[1] :
-        this.chunkSteps == chunk / simDt ? this.lastBestSeq[index + 1] :
-          this.lastChunk;
+      const cumsum = Array.from(Common.cumsum(this.lastBestSeq.map(s => s.mePath.length - 1)));
+      let i = 1;
+      let currChunk;
+      const chunkSteps = this.chunkSteps || 0;
+      while (true) {
+        currChunk = this.lastBestSeq[i];
+        if (cumsum[i] <= chunkSteps) {
+          i++;
+          continue;
+        } else {
+          return [currChunk, chunkSteps - (i == 0 ? 0 : cumsum[i - 1])];
+        }
+      }
     } else {
       throw new Error();
     }
-    return currChunk;
   }
 
-  runSims(startState: WorldState, simFunc: (node: WorldState, dir: Dir) => WorldState) {
+  runSims(startState: WorldState, simFunc: (node: WorldState, edge: [Dir, number]) => WorldState) {
+    const me = this.player;
     return Common.time(() => {
-      const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, Dir>({
+      const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, [Dir, number]>({
         start: startState,
-        edges: (worldState) => worldState.elapsed < horizon ?
-          [Dir.Left, Dir.Right] : [],
+        edges: (worldState) =>
+          worldState.elapsed == 0 ?
+            [[getDir(me), simComputeTimeAllowance]] :
+            worldState.elapsed < horizon ?
+              [[Dir.Left, chunk], [Dir.Right, chunk]] :
+              [],
         traverseEdge: simFunc,
         cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
       });
@@ -644,14 +661,14 @@ class Bot {
   runSimsReuse() {
     const me = this.player;
     const startState = this.getWorldState(capturePlState(), gameState);
-    const res = this.runSims(startState, (init, dir) => {
+    const res = this.runSims(startState, (init, [dir, chunk]) => {
       // restore world state
       for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
       const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
       setInputsByDir(me, dir);
       const stars = gameState.stars;
       clearArray(gameState.stars);
-      const res = this.sim(dir, world, gameState, init, world => capturePlState());
+      const res = this.sim(dir, chunk, world, gameState, init, world => capturePlState());
       setInputs(me, origInputs);
       pushAll(gameState.stars, stars);
       return res;
@@ -685,7 +702,7 @@ class Bot {
       }
     }
     const startState = this.getWorldState([], initGameState);
-    return this.runSims(startState, (init, dir) => {
+    return this.runSims(startState, (init, [dir, chunk]) => {
       const world = cloneWorld(init.gameState.world);
       world._listeners = {};
       const entToNewBody = new Map(
@@ -721,12 +738,12 @@ class Bot {
       newGameState.world = world;
       newGameState.onJumpoff = new signals.Signal();
       Common.create(newGameState);
-      return this.sim(dir, world, newGameState, init, world => []);
+      return this.sim(dir, chunk, world, newGameState, init, world => []);
     });
   }
 
   // simulate core logic
-  sim(dir: Dir, world: Pl.World, gameState: GameState, init: WorldState, capturePlState: (world: Pl.World) => PlState) {
+  sim(dir: Dir, chunk: number, world: Pl.World, gameState: GameState, init: WorldState, capturePlState: (world: Pl.World) => PlState) {
     const me = this.player;
     let minDistToTarget = 9999999, distance = null;
     const mePath = [], meVels = [];
@@ -765,12 +782,11 @@ class Bot {
   replayChunkStep(currTime: number) {
     const me = this.player;
     const log = getLogger('replay');
-    const currChunk = this.getCurrChunk(currTime);
+    const [currChunk, steps] = this.getCurrChunk(currTime);
     if (this.lastChunk != currChunk) {
       if (this.chunkSteps && this.chunkSteps < chunk / simDt) {
         log.log('switching from old chunk ', this.lastChunk && this.lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
       }
-      this.chunkSteps = 0;
     }
     this.chunkSteps += 1;
     this.lastChunk = currChunk;
@@ -791,8 +807,8 @@ class Bot {
       if (replayMode == ReplayMode.TIME) {
         doSim = this.lastSimTime == null || currTime - this.lastSimTime > simPeriod / timeWarp;
       } else if (replayMode == ReplayMode.STEPS) {
-        log.log(this.lastChunk && this.lastChunk.elapsed - chunk, this.chunkSteps, this.lastChunk && (this.lastChunk.elapsed + this.chunkSteps * simDt / chunk) * 1000);
-        doSim = !this.lastChunk || (this.lastChunk.elapsed - chunk + this.chunkSteps * simDt / chunk) * 1000 > simPeriod;
+        log.log(this.lastChunk && this.lastChunk.elapsed - chunk, this.chunkSteps, this.lastChunk && (this.chunkSteps * simDt / chunk) * 1000);
+        doSim = !this.lastChunk || (this.chunkSteps * simDt / chunk) * 1000 > simPeriod;
       } else {
         throw new Error();
       }
@@ -857,8 +873,8 @@ class Bot {
   checkPlan(currTime: number) {
     const me = this.player;
     if (this.target && !this.isDead() && replayMode == ReplayMode.STEPS) {
-      const currChunk = this.getCurrChunk(currTime);
-      if (!veq(me.bod.getPosition(), currChunk.mePath[this.chunkSteps % (chunk / simDt)], pathDivergenceEps)) {
+      const [currChunk, steps] = this.getCurrChunk(currTime);
+      if (!veq(me.bod.getPosition(), currChunk.mePath[steps], pathDivergenceEps)) {
         console.error('diverging from predicted path!');
       }
     }
@@ -872,6 +888,7 @@ function makeBot() {
     ledges[2].y - 50,
     `dude-${styleGen.next().value}`
   ));
+  player.inputs.left.isDown = true;
   const bot = new Bot(player);
   bot.target = new Vec2(0,0);
   bots.push(bot);
