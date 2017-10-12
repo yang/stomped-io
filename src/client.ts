@@ -74,7 +74,7 @@ gameState.onJumpoff.add((player, other) => {
   }
 });
 
-let drawPlanckBoxes = true, drawAllPaths = false, drawPlans = true, simStars = true, simStarRadius = 500;
+let drawPlanckBoxes = true, drawAllPaths = false, drawPlans = true, simStars = true, simStarRadius = 500, drawAllPathsIfBestPathDies = true;
 
 function preload() {
 
@@ -843,7 +843,9 @@ class Bot {
       if (this.lastWorldStates) {
         const poly = [{x: -1,y: -1}, {x: -1, y: 1}, {x: 1, y: 0}, {x: -1, y: -1}].map(({x,y}) => ({x: 5*x, y: 5*y}));
         const bcolors = bestColors.concat(bestColors).concat(bestColors)[Symbol.iterator]();
-        const pathsToDraw = (drawAllPaths ? this.lastWorldStates : []).concat(this.lastBestSeq);
+        const bestPathDies = this.lastBestSeq.find(s => s.finalDistToTarget > 9999);
+        const doDrawAllPaths = drawAllPaths || drawAllPathsIfBestPathDies && bestPathDies;
+        const pathsToDraw = (doDrawAllPaths ? this.lastWorldStates : []).concat(this.lastBestSeq);
         for (let worldState of pathsToDraw) {
           gfx.lineStyle(1, this.lastBestSeq.includes(worldState) ? bcolors.next().value : defaultColor, 1);
           const startPos = entPosFromPl(me, worldState.mePath[0], true).toTuple();
@@ -865,6 +867,9 @@ class Bot {
             const entPos = entPosFromPl(me, pos, true);
             gfx.drawPolygon(poly.map(({x,y}) => ({x: dirSign*x+entPos.x, y: y+entPos.y})));
           }
+        }
+        if (bestPathDies && this.chunkSteps == 1) {
+          console.error('best path dies!');
         }
       }
     }
