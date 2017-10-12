@@ -453,8 +453,58 @@ function manuallyCloneWorld(world: Pl.World): Pl.World {
   return newWorld;
 }
 
+interface BodyData {
+  userData: Ent;
+  type: string;
+  vel: Pl.Vec2;
+  pos: Pl.Vec2;
+}
+
+interface WorldData {
+  bodyData: [BodyData];
+}
+
+export function saveWorld(world: Pl.World): WorldData {
+  const worldData = <WorldData> {
+    bodyData: Array.from(iterBodies(world)).reverse().map(body => ({
+      userData: body.getUserData(),
+      type: body.getType(),
+      vel: body.getLinearVelocity(),
+      pos: body.getPosition()
+    }))
+  };
+  return worldData;
+}
+
+export function restoreWorld(worldData: WorldData) {
+  const newWorld = Pl.World(Pl.Vec2(0, gravity));
+  for (let bodyData of worldData.bodyData) {
+    const clone = createBody(newWorld, bodyData.userData, bodyData.type);
+    clone.setLinearVelocity(copyVec(bodyData.vel));
+    clone.setPosition(copyVec(bodyData.pos));
+  }
+  return newWorld;
+}
+
+function saveRestoreWorld(world: Pl.World) {
+  for (let body of Array.from(iterBodies(world))) {
+    body.getUserData().bod = null;
+  }
+  const newWorld = restoreWorld(_.cloneDeep(saveWorld(world)));
+  for (let body of Array.from(iterBodies(world))) {
+    body.getUserData().bod = body;
+  }
+  for (let body of Array.from(iterBodies(newWorld))) {
+    body.getUserData().bod = body;
+  }
+  assert(_.isEqual(
+    Array.from(iterBodies(world)).map(body => body.getUserData().id),
+    Array.from(iterBodies(newWorld)).map(body => body.getUserData().id)));
+  return newWorld;
+}
+
 export function cloneWorld(world: Pl.World): Pl.World {
-  return 1/1 ? manuallyCloneWorld(world) : deepCloneWorld(world);
+  return 1/1 ? saveRestoreWorld(world) : 1/1 ? manuallyCloneWorld(world) : deepCloneWorld(world);
 }
 
 export function isClose(a: number, b: number, eps = 1e-9) {
@@ -728,11 +778,12 @@ export class Bot {
     }
     initGameState.players = [me];
     initGameState.world = cloneWorld(world);
+    const starIds = new Set(gameState.stars.map(s => s.id));
     for (let body of Array.from(iterBodies(initGameState.world))) {
-      if (body.getUserData() instanceof Star && !gameState.stars.includes(body.getUserData())) {
+      if (body.getUserData() instanceof Star && !starIds.has(body.getUserData().id)) {
         initGameState.world.destroyBody(body);
       }
-      if (body.getUserData() instanceof Player && me != body.getUserData()) {
+      if (body.getUserData() instanceof Player && me.id != body.getUserData().id) {
         initGameState.world.destroyBody(body);
       }
     }
@@ -740,27 +791,41 @@ export class Bot {
     return this.runSims(startState, (init, [dir, chunk]) => {
       const world = cloneWorld(init.gameState.world);
       world._listeners = {};
-      const entToNewBody = new Map(
-        Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
-      );
-      const newLedges = init.gameState.ledges.map(l => {
-        const m = new Ledge(l.x, l.y, l.oscPeriod);
-        m.id = l.id;
-        m.bod = entToNewBody.get(l);
-        return m;
-      });
-      const newPlayers = init.gameState.players.map(p => {
-        const q = new Player(p.name, p.x, p.y, p.style);
-        q.id = p.id;
-        q.bod = entToNewBody.get(p);
-        q.size = p.size;
-        q.width = p.width;
-        q.height = p.height;
-        setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
-        return q;
-      });
-      for (let ent of [].concat(newLedges).concat(newPlayers)) {
-        ent.bod.setUserData(ent);
+      let newPlayers, newLedges;
+      if (0/1) {
+        const entToNewBody = new Map(
+          Array.from(iterBodies(world)).map<[Ent, Pl.Body]>(b => [b.getUserData(), b])
+        );
+        newLedges = init.gameState.ledges.map(l => {
+          const m = new Ledge(l.x, l.y, l.oscPeriod);
+          m.id = l.id;
+          m.bod = entToNewBody.get(l);
+          return m;
+        });
+        newPlayers = init.gameState.players.map(p => {
+          const q = new Player(p.name, p.x, p.y, p.style);
+          q.id = p.id;
+          q.bod = entToNewBody.get(p);
+          q.size = p.size;
+          q.width = p.width;
+          q.height = p.height;
+          setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
+          return q;
+        });
+        for (let ent of [].concat(newLedges).concat(newPlayers)) {
+          ent.bod.setUserData(ent);
+        }
+      } else {
+        const typeToInstances = new Map();
+        for (let body of Array.from(iterBodies(world))) {
+          const ent = body.getUserData();
+          if (!typeToInstances.has(ent.constructor)) {
+            typeToInstances.set(ent.constructor, []);
+          }
+          typeToInstances.get(ent.constructor).push(ent);
+        }
+        newLedges = typeToInstances.get(Ledge);
+        newPlayers = typeToInstances.get(Player);
       }
       // What needs to be cloned depends on how .bod is traversed in Common.update() and potentially how the collision
       // handlers use it.
