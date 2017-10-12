@@ -906,6 +906,7 @@ export class Bot {
         }
         if (bestPathDies && this.chunkSteps == 1) {
           console.error('best path dies!');
+          throw new Error();
         }
       }
     }
