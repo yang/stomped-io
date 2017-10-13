@@ -206,7 +206,11 @@ function getEnts() {
 }
 
 class EntMgr {
-  constructor(public world: Pl.World, public gameState: GameState) {}
+  constructor(
+    public world: Pl.World,
+    public gameState: GameState,
+    public onEntAdded: (ent: Ent) => void
+  ) {}
 
   addEnt(ent) {
     switch (ent.type) {
@@ -235,14 +239,8 @@ class EntMgr {
       _.extend(player, playerObj);
       player.baseDims = Vec2.fromObj(player.baseDims);
       players.push(player);
-      const sprite = game.add.sprite(player.x, player.y, `dude-${styleGen.next().value}`);
-      sprite.width = player.width;
-      sprite.height = player.height;
-      sprite.animations.add('left', [3, 4, 3, 5], 10, true);
-      sprite.animations.add('right', [0, 1, 0, 2], 10, true);
-      entToSprite.set(player, sprite);
       this.addBody(player, 'dynamic');
-      guiMgr.refresh();
+      this.onEntAdded(player);
       return player;
     }
     return found;
@@ -254,11 +252,8 @@ class EntMgr {
       const ledge = new Ledge(ledgeObj.x, ledgeObj.y, ledgeObj.oscPeriod);
       _.extend(ledge, ledgeObj);
       ledges.push(ledge);
-      const platform = platforms.create(ledge.x, ledge.y, 'ground');
-      platform.width = ledgeWidth;
-      platform.height = ledgeHeight;
-      entToSprite.set(ledge, platform);
       this.addBody(ledge, 'kinematic');
+      this.onEntAdded(ledge);
     }
   }
 
@@ -267,17 +262,34 @@ class EntMgr {
     if (!gameState.stars.find(s => s.id == starObj.id)) {
       const star = new Star(starObj.x, starObj.y);
       gameState.stars.push(star);
-      // TODO eventually make star display larger than physics size
-      const [x,y] = star.dispPos().toTuple();
-      const sprite = game.add.sprite(x, y, 'star');
-      [sprite.width, sprite.height] = star.dispDims().toTuple();
-      entToSprite.set(star, sprite);
       this.addBody(star, 'kinematic');
+      this.onEntAdded(star);
     }
+  }
+
+}
+
+function onEntAdded(ent: Ent) {
+  function mkSprite(spriteArt: string) {
+    const [x, y] = ent.dispPos().toTuple();
+    const sprite = game.add.sprite(x, y, spriteArt);
+    [sprite.width, sprite.height] = ent.dispDims().toTuple();
+    entToSprite.set(ent, sprite);
+    return sprite;
+  }
+  if (ent instanceof Player) {
+    const sprite = mkSprite(`dude-${styleGen.next().value}`);
+    sprite.animations.add('left', [3, 4, 3, 5], 10, true);
+    sprite.animations.add('right', [0, 1, 0, 2], 10, true);
+    guiMgr.refresh();
+  } else if (ent instanceof Ledge) {
+    mkSprite('ground');
+  } else if (ent instanceof Star) {
+    mkSprite('star');
   }
 }
 
-const entMgr = new EntMgr(world, gameState);
+const entMgr = new EntMgr(world, gameState, onEntAdded);
 
 function tryRemove(id: number, ents: Ent[]) {
   const i = _(ents).findIndex((p) => p.id == id);
