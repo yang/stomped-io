@@ -16,6 +16,7 @@ import {
   copyVec, createBody, defaultColor,
   dt,
   Ent,
+  EntMgr,
   entPosFromPl,
   enumerate,
   Event,
@@ -42,7 +43,6 @@ import {
   world
 } from './common';
 import * as _ from 'lodash';
-import * as signals from 'signals';
 
 class ControlPanel {
   currentPlayer = 0;
@@ -203,70 +203,6 @@ function lerp(a,b,alpha) {
 
 function getEnts() {
   return gameState.getEnts();
-}
-
-class EntMgr {
-  constructor(
-    public world: Pl.World,
-    public gameState: GameState,
-    public onEntAdded: (ent: Ent) => void
-  ) {}
-
-  addEnt(ent) {
-    switch (ent.type) {
-      case 'Player':
-        this.addPlayer(ent);
-        break;
-      case 'Ledge':
-        this.addLedge(ent);
-        break;
-      case 'Star':
-        this.addStar(ent);
-        break;
-    }
-  }
-
-  addBody(ent, type, fixtureOpts = {}) {
-    ent.bod = createBody(this.world, ent, type, fixtureOpts);
-    return ent.bod;
-  }
-
-  addPlayer(playerObj) {
-    const players = this.gameState.players;
-    const found = players.find((p) => p.id == playerObj.id);
-    if (!found) {
-      const player = new Player(playerObj.name, playerObj.x, playerObj.y, playerObj.style);
-      _.extend(player, playerObj);
-      player.baseDims = Vec2.fromObj(player.baseDims);
-      players.push(player);
-      this.addBody(player, 'dynamic');
-      this.onEntAdded(player);
-      return player;
-    }
-    return found;
-  }
-
-  addLedge(ledgeObj) {
-    const ledges = this.gameState.ledges;
-    if (!ledges.find((p) => p.id == ledgeObj.id)) {
-      const ledge = new Ledge(ledgeObj.x, ledgeObj.y, ledgeObj.oscPeriod);
-      _.extend(ledge, ledgeObj);
-      ledges.push(ledge);
-      this.addBody(ledge, 'kinematic');
-      this.onEntAdded(ledge);
-    }
-  }
-
-  addStar(starObj) {
-    const gameState = this.gameState;
-    if (!gameState.stars.find(s => s.id == starObj.id)) {
-      const star = new Star(starObj.x, starObj.y);
-      gameState.stars.push(star);
-      this.addBody(star, 'kinematic');
-      this.onEntAdded(star);
-    }
-  }
-
 }
 
 function onEntAdded(ent: Ent) {
