@@ -13,7 +13,7 @@ import {
   Bcast, Bot,
   clearArray,
   cloneWorld,
-  copyVec, defaultColor,
+  copyVec, createBody, defaultColor,
   dt,
   Ent,
   entPosFromPl,
@@ -158,7 +158,7 @@ function create(initSnap) {
 
   const {ents} = initSnap;
   for (let ent of ents) {
-    addEnt(ent);
+    entMgr.addEnt(ent);
   }
 
   me = players[players.length - 1];
@@ -205,65 +205,79 @@ function getEnts() {
   return gameState.getEnts();
 }
 
-function addEnt(ent) {
-  switch (ent.type) {
-    case 'Player':
-      addPlayer(ent);
-      break;
-    case 'Ledge':
-      addLedge(ent);
-      break;
-    case 'Star':
-      addStar(ent);
-      break;
+class EntMgr {
+  constructor(public world: Pl.World, public gameState: GameState) {}
+
+  addEnt(ent) {
+    switch (ent.type) {
+      case 'Player':
+        this.addPlayer(ent);
+        break;
+      case 'Ledge':
+        this.addLedge(ent);
+        break;
+      case 'Star':
+        this.addStar(ent);
+        break;
+    }
+  }
+
+  addBody(ent, type, fixtureOpts = {}) {
+    ent.bod = createBody(this.world, ent, type, fixtureOpts);
+    return ent.bod;
+  }
+
+  addPlayer(playerObj) {
+    const players = this.gameState.players;
+    const found = players.find((p) => p.id == playerObj.id);
+    if (!found) {
+      const player = new Player(playerObj.name, playerObj.x, playerObj.y, playerObj.style);
+      _.extend(player, playerObj);
+      player.baseDims = Vec2.fromObj(player.baseDims);
+      players.push(player);
+      const sprite = game.add.sprite(player.x, player.y, `dude-${styleGen.next().value}`);
+      sprite.width = player.width;
+      sprite.height = player.height;
+      sprite.animations.add('left', [3, 4, 3, 5], 10, true);
+      sprite.animations.add('right', [0, 1, 0, 2], 10, true);
+      entToSprite.set(player, sprite);
+      this.addBody(player, 'dynamic');
+      guiMgr.refresh();
+      return player;
+    }
+    return found;
+  }
+
+  addLedge(ledgeObj) {
+    const ledges = this.gameState.ledges;
+    if (!ledges.find((p) => p.id == ledgeObj.id)) {
+      const ledge = new Ledge(ledgeObj.x, ledgeObj.y, ledgeObj.oscPeriod);
+      _.extend(ledge, ledgeObj);
+      ledges.push(ledge);
+      const platform = platforms.create(ledge.x, ledge.y, 'ground');
+      platform.width = ledgeWidth;
+      platform.height = ledgeHeight;
+      entToSprite.set(ledge, platform);
+      this.addBody(ledge, 'kinematic');
+    }
+  }
+
+  addStar(starObj) {
+    const gameState = this.gameState;
+    if (!gameState.stars.find(s => s.id == starObj.id)) {
+      const star = new Star(starObj.x, starObj.y);
+      gameState.stars.push(star);
+      // TODO eventually make star display larger than physics size
+      const [x,y] = star.dispPos().toTuple();
+      const sprite = game.add.sprite(x, y, 'star');
+      [sprite.width, sprite.height] = star.dispDims().toTuple();
+      entToSprite.set(star, sprite);
+      this.addBody(star, 'kinematic');
+    }
   }
 }
 
-function addPlayer(playerObj) {
-  const found = players.find((p) => p.id == playerObj.id);
-  if (!found) {
-    const player = new Player(playerObj.name, playerObj.x, playerObj.y, playerObj.style);
-    _.extend(player, playerObj);
-    player.baseDims = Vec2.fromObj(player.baseDims);
-    players.push(player);
-    const sprite = game.add.sprite(player.x, player.y, `dude-${styleGen.next().value}`);
-    sprite.width = player.width;
-    sprite.height = player.height;
-    sprite.animations.add('left', [3, 4, 3, 5], 10, true);
-    sprite.animations.add('right', [0, 1, 0, 2], 10, true);
-    entToSprite.set(player, sprite);
-    addBody(player, 'dynamic');
-    guiMgr.refresh();
-    return player;
-  }
-  return found;
-}
-
-function addLedge(ledgeObj) {
-  if (!ledges.find((p) => p.id == ledgeObj.id)) {
-    const ledge = new Ledge(ledgeObj.x, ledgeObj.y, ledgeObj.oscPeriod);
-    _.extend(ledge, ledgeObj);
-    ledges.push(ledge);
-    const platform = platforms.create(ledge.x, ledge.y, 'ground');
-    platform.width = ledgeWidth;
-    platform.height = ledgeHeight;
-    entToSprite.set(ledge, platform);
-    addBody(ledge, 'kinematic');
-  }
-}
-
-function addStar(starObj) {
-  if (!gameState.stars.find(s => s.id == starObj.id)) {
-    const star = new Star(starObj.x, starObj.y);
-    gameState.stars.push(star);
-    // TODO eventually make star display larger than physics size
-    const [x,y] = star.dispPos().toTuple();
-    const sprite = game.add.sprite(x, y, 'star');
-    [sprite.width, sprite.height] = star.dispDims().toTuple();
-    entToSprite.set(star, sprite);
-    addBody(star, 'kinematic');
-  }
-}
+const entMgr = new EntMgr(world, gameState);
 
 function tryRemove(id: number, ents: Ent[]) {
   const i = _(ents).findIndex((p) => p.id == id);
@@ -336,7 +350,7 @@ ${_(players)
       switch (ev.type) {
         case 'AddEnt':
           const ent: Ent = (<AddEnt>ev).ent;
-          addEnt(ent);
+          entMgr.addEnt(ent);
           break;
         case 'RemEnt':
           const id = (<RemEnt>ev).id;
@@ -460,7 +474,7 @@ function feedInputs(player) {
 const bots: Bot[] = [];
 
 function makeBot() {
-  const player = addPlayer(new Player(
+  const player = entMgr.addPlayer(new Player(
     'bot',
     ledges[2].x + ledgeWidth / 2,
     ledges[2].y - 50,
