@@ -1,7 +1,6 @@
 import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 import * as Signals from 'signals';
-import * as signals from 'signals';
 
 export class Logger {
   constructor(public name: string, public handler: LogHandler) {}
@@ -559,7 +558,7 @@ export class WorldState {
   ) {}
 }
 
-export const enum Dir { Left, Right };
+export const enum Dir { Left, Right }
 
 function restoreBody(ent, bodyState) {
   ent.bod.setPosition(copyVec(bodyState.pos));
@@ -854,7 +853,7 @@ export class Bot {
       newGameState.ledges = newLedges;
       newGameState.players = newPlayers;
       newGameState.world = world;
-      newGameState.onJumpoff = new signals.Signal();
+      newGameState.onJumpoff = new Signals.Signal();
       create(newGameState);
       return this.sim(dir, chunk, world, newGameState, init, world => []);
     });
