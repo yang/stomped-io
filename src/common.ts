@@ -64,6 +64,32 @@ export class GameState {
   getEnts() {
     return (<Ent[]>this.players).concat(this.ledges).concat(this.stars);
   }
+  ser() {
+    for (let body of Array.from(iterBodies(world))) {
+      body.getUserData().bod = null;
+    }
+    const res = {
+//      ents: this.players.map(p => p.ser()),
+//      lava: this.lava.ser(),
+      time: this.time,
+      world: saveWorldWithoutBackRef(this.world)
+    };
+    for (let body of Array.from(iterBodies(world))) {
+      body.getUserData().bod = body;
+    }
+    return res;
+  }
+  deser(data) {
+    this.time = data.time;
+    this.world = restoreWorldWithBackRef(data.world);
+    this.lava = new Lava(0,0);
+    this.lava.deser(data.lava);
+    const t2bs = bodiesByType(this.world);
+    this.players = t2bs.get(Player);
+    this.ledges = t2bs.get(Ledge);
+    this.stars = t2bs.get(Star);
+    [this.lava] = t2bs.get(Lava);
+  }
 }
 
 export function pushAll(xs, ys) {
@@ -179,18 +205,6 @@ export interface Bcast {
   ents: Ent[];
 }
 
-var omit = function(obj, key) {
-    var newObj = {};
-
-    for (var name in obj){
-        if (name !== key) {
-            newObj[name] = obj[name];
-        }
-    }
-
-    return newObj;
-};
-
 function* genIds() {
   let i = 0;
   while (true) {
@@ -200,12 +214,13 @@ function* genIds() {
 }
 const ids = genIds();
 
-export class Serializable {
+export abstract class Serializable {
   type: string;
   constructor() {
     this.type = this.constructor.name;
   }
   ser(): this { return this; }
+  deser(data) { _.merge(this, data); }
 }
 
 export class Vec2 {
@@ -234,7 +249,7 @@ export class Ent extends Serializable {
   vel = new Vec2(0,0);
   id = ids.next().value;
   bod?: Pl.Body;
-  ser(): this { return <this>omit(this, 'bod'); }
+  ser(): this { return <this>_.omit(this, 'bod', 'stack'); }
   pos() { return new Vec2(this.x, this.y); }
   dims() { return new Vec2(this.width, this.height); }
   dispDims() { return this.dims(); }
@@ -563,6 +578,18 @@ export class WorldState {
     public meVels: Pl.Vec2[],
     public gameState: GameState
   ) {}
+
+  ser() {
+    const clone = _(this).clone();
+    clone.gameState = null;
+    return clone;
+  }
+
+  deser(data) {
+    _.merge(this, data);
+    this.mePath = data.mePath.map(({x,y}) => Pl.Vec2(x,y));
+    this.meVels = data.mePath.map(({x,y}) => Pl.Vec2(x,y));
+  }
 }
 
 export const enum Dir { Left, Right }
@@ -655,11 +682,11 @@ if (replayMode == ReplayMode.STEPS)
   assert(runLocally && simDt == dt);
 
 const pathDivergenceEps = .1;
-const simComputeTimeAllowance = .5;
+const simComputeTimeAllowance = 1.5;
 
 // doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
 // vs. 167ms for non-cloning - most of the time goes into _.deepClone().
-let doCloneWorlds = true;
+let doSimInWorker = true, doCloneWorlds = true;
 
 let drawAllPaths = false, drawPlans = true, simStars = true, simStarRadius = 500, drawAllPathsIfBestPathDies = true
 
@@ -672,6 +699,18 @@ export const defaultColor = 0x002244, bestColor = 0xFF0000, bestColors = [
   0xffffff
 ];
 
+let bodiesByType = function (world: Pl.World) {
+  const typeToInstances = new Map();
+  for (let body of Array.from(iterBodies(world))) {
+    const ent = body.getUserData();
+    if (!typeToInstances.has(ent.constructor)) {
+      typeToInstances.set(ent.constructor, []);
+    }
+    typeToInstances.get(ent.constructor).push(ent);
+  }
+  return typeToInstances;
+};
+
 export class Bot {
   target: Vec2;
   lastSimTime = null;
@@ -679,8 +718,24 @@ export class Bot {
   lastBestSeq: WorldState[];
   lastChunk: WorldState;
   chunkSteps: number;
+  simRunning = false;
 
-  constructor(public player: Player, public gameState: GameState, public socket) {}
+  constructor(
+    public player: Player,
+    public gameState: GameState,
+    public socket,
+    public pool
+  ) {}
+
+  ser() {
+    return {
+      playerId: this.player.id,
+      target: this.target
+    };
+  }
+  deser(botData) {
+    this.target = Vec2.fromObj(botData);
+  }
 
   capturePlState(): PlState {
     return this.gameState.getEnts().map((ent) => <[Ent, BodyState]> [
@@ -772,22 +827,34 @@ export class Bot {
     return res;
   }
 
-  ser() { return {target: this.target}; }
-  deser(botData) {
-    this.target = Vec2.fromObj(targetData);
-  }
-
   runSimsInWorker() {
+    const log = getLogger('worker');
+    const startTime = performance.now();
     const gameStateData = this.gameState.ser();
     const botData = this.ser();
-    const {bestWorldStateIndex, bestPath, worldStatesData} =
-      this.pool.exec('sim', [botData, gameStateData]);
-    const worldStates = worldStatesData.deser();
-    return {
-      bestWorldState: worldStates[bestWorldStateIndex],
-      bestPath: bestPath.map(([wsi, [dir, dur]]) => [worldStates[wsi], [dir, dur]]),
-      worldStates: worldStates
-    };
+    this.simRunning = true;
+    log.log('spawning worker for player', this.player.id);
+    const promise = this.pool.exec('sim', [botData, gameStateData]);
+    return new Promise((resolve, reject) =>
+      promise.then(({bestWorldStateIndex, bestPath, worldStatesData}) =>
+        setImmediate(() => {
+          log.log('returned from worker for player', this.player.id, 'in', performance.now() - startTime, ', chunkSteps =', this.chunkSteps);
+          this.simRunning = false;
+          const worldStates = worldStatesData.map(data => {
+            const ws = new WorldState(null,null,null,null,null,null,null,null);
+            ws.deser(data);
+            return ws;
+          });
+          resolve({
+            bestWorldState: worldStates[bestWorldStateIndex],
+            bestPath: bestPath.map(([wsi, [dir, dur]]) => [worldStates[wsi], [dir, dur]]),
+            worldStates: worldStates
+          });
+        })
+      ).catch(err => {
+        console.error(err);
+      })
+    );
   }
 
   runSimsClone() {
@@ -801,7 +868,7 @@ export class Bot {
         s.pos().sub(me.pos()).len() >= simStarRadius);
     }
     initGameState.players = [me];
-    initGameState.world = cloneWorld(world);
+    initGameState.world = cloneWorld(gameState.world);
     const starIds = new Set(gameState.stars.map(s => s.id));
     for (let body of Array.from(iterBodies(initGameState.world))) {
       if (body.getUserData() instanceof Star && !starIds.has(body.getUserData().id)) {
@@ -840,14 +907,7 @@ export class Bot {
           ent.bod.setUserData(ent);
         }
       } else {
-        const typeToInstances = new Map();
-        for (let body of Array.from(iterBodies(world))) {
-          const ent = body.getUserData();
-          if (!typeToInstances.has(ent.constructor)) {
-            typeToInstances.set(ent.constructor, []);
-          }
-          typeToInstances.get(ent.constructor).push(ent);
-        }
+        const typeToInstances = bodiesByType(world);
         newLedges = typeToInstances.get(Ledge);
         newPlayers = typeToInstances.get(Player);
       }
@@ -904,16 +964,15 @@ export class Bot {
       this.socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
   }
 
-  replayChunkStep(currTime: number) {
+  replayChunkStep(currTime: number, resetting: boolean) {
     const me = this.player;
     const log = getLogger('replay');
     const [currChunk, steps] = this.getCurrChunk(currTime);
     if (this.lastChunk != currChunk) {
-      if (this.chunkSteps && this.chunkSteps < chunk / simDt) {
+      if (!resetting && this.chunkSteps && this.chunkSteps < chunk / simDt) {
         log.log('switching from old chunk ', this.lastChunk && this.lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
       }
     }
-    this.chunkSteps += 1;
     this.lastChunk = currChunk;
 //  console.log(currChunk.dir, this.chunkSteps, (currTime - this.lastSimTime) / (1000 * chunk / timeWarp), currTime - this.lastSimTime, 1000 * chunk / timeWarp, currTime, this.lastSimTime);
     if (currChunk && getDir(me) != currChunk.dir) {
@@ -925,31 +984,38 @@ export class Bot {
   replayPlan(updating: boolean, currTime: number) {
     const log = getLogger('replay');
     if (!this.isDead() && (!runLocally || updating)) {
-      if (this.lastBestSeq) {
-        this.replayChunkStep(currTime);
+      if (this.lastBestSeq && !this.simRunning) {
+        this.replayChunkStep(currTime, false);
       }
+      this.chunkSteps += 1;
       let doSim = false;
       if (replayMode == ReplayMode.TIME) {
         doSim = this.lastSimTime == null || currTime - this.lastSimTime > simPeriod / timeWarp;
       } else if (replayMode == ReplayMode.STEPS) {
         log.log(this.lastChunk && this.lastChunk.elapsed - chunk, this.chunkSteps, this.lastChunk && (this.chunkSteps * simDt / chunk) * 1000);
-        doSim = !this.lastChunk || (this.chunkSteps * simDt / chunk) * 1000 > simPeriod;
+        doSim = !this.simRunning && (!this.lastChunk || (this.chunkSteps * simDt / chunk) * 1000 > simPeriod);
       } else {
         throw new Error();
       }
       if (doSim) {
-        this.lastSimTime = currTime;
-        const {worldStates, bestPath, bestWorldState} =
-          doCloneWorlds ? this.runSimsClone() : this.runSimsReuse();
-        this.lastWorldStates = worldStates;
-        this.lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
-        log.log('simulated');
-        if (this.lastBestSeq.length > 1) {
-          this.chunkSteps = null;
-          this.replayChunkStep(currTime);
+        const handleRes = ({worldStates, bestPath, bestWorldState}) => {
+          this.lastWorldStates = worldStates;
+          this.lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
+          log.log('simulated');
+          if (this.lastBestSeq.length > 1 && !doSimInWorker) {
+            this.replayChunkStep(currTime, true);
 //          reallySetInput(this.lastBestSeq[1].dir, currTime);
 //          console.log('switching to brand new path ');
+          }
+        };
+        this.lastSimTime = currTime;
+        this.chunkSteps = 0;
+        if (doSimInWorker) {
+          this.runSimsInWorker().then(handleRes);
+        } else {
+          handleRes(doCloneWorlds ? this.runSimsClone() : this.runSimsReuse());
         }
+        this.chunkSteps += 1;
       }
     }
   }
@@ -1002,7 +1068,7 @@ export class Bot {
 
   checkPlan(currTime: number) {
     const me = this.player;
-    if (this.target && !this.isDead() && replayMode == ReplayMode.STEPS) {
+    if (this.target && !this.isDead() && replayMode == ReplayMode.STEPS && this.lastBestSeq) {
       const [currChunk, steps] = this.getCurrChunk(currTime);
       if (!veq(me.bod.getPosition(), currChunk.mePath[steps], pathDivergenceEps)) {
         console.error('diverging from predicted path!');

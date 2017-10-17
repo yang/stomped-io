@@ -53,7 +53,7 @@ const cp = new ControlPanel();
 
 const styleGen = genStyles();
 
-var game;
+var game, gPool;
 
 const gameState = new GameState(undefined, destroy2);
 gameState.onJumpoff.add((player, other) => {
@@ -427,9 +427,9 @@ function makeBot() {
     ledges[2].x + ledgeWidth / 2,
     ledges[2].y - 50,
     `dude-${styleGen.next().value}`
-  ));
+  )));
   player.inputs.left.isDown = true;
-  const bot = new Bot(player, gameState, socket);
+  const bot = new Bot(player, gameState, socket, gPool);
   bot.target = new Vec2(0,0);
   bots.push(bot);
   return bot;
@@ -483,7 +483,8 @@ function rescale() {
 }
 
 const doPings = false;
-export function main() {
+export function main(pool) {
+  gPool = pool;
   socket = Sio('http://localhost:3000');
   socket.on('connect', () => {
     if (game) return;
@@ -523,6 +524,7 @@ export function main() {
       timeline.push(initSnap);
       delta = initSnap.time - performance.now();
 
+      setTimeout(makeBot, 1000);
       socket.on('bcast', (bcast) => {
         timeline.push(bcast);
       });
