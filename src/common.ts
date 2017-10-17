@@ -569,8 +569,10 @@ type PlState = [Ent, BodyState][];
 
 export class WorldState {
   constructor(
-    public elapsed: number,
+    public endTime: number,
     public dir: Dir,
+    public dur: number,
+    public startTime: number,
     public minDistToTarget: number,
     public finalDistToTarget: number,
     public plState: PlState,
@@ -750,6 +752,8 @@ export class Bot {
     return new WorldState(
       0,
       null,
+      0,
+      0,
       dist(entPosFromPl(me), this.target),
       dist(entPosFromPl(me), this.target),
       plState,
@@ -763,7 +767,7 @@ export class Bot {
     if (replayMode == ReplayMode.TIME) {
       let currChunk;
       const elapsed = (currTime - this.lastSimTime) / 1000;
-      for (let i = 0; elapsed >= this.lastBestSeq[i].elapsed; i++) {
+      for (let i = 0; elapsed >= this.lastBestSeq[i].endTime; i++) {
         currChunk = this.lastBestSeq[i + 1];
       }
       return [currChunk, 0];
@@ -792,13 +796,13 @@ export class Bot {
       const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, [Dir, number]>({
         start: startState,
         edges: (worldState) =>
-          worldState.elapsed == 0 ?
+          worldState.endTime < simComputeTimeAllowance ?
             [[getDir(me), simComputeTimeAllowance]] :
-            worldState.elapsed < horizon ?
+            worldState.endTime < horizon ?
               [[Dir.Left, chunk], [Dir.Right, chunk]] :
               [],
         traverseEdge: simFunc,
-        cost: (worldState) => worldState.elapsed < horizon ? 9999999 : worldState.finalDistToTarget
+        cost: (worldState) => worldState.endTime < horizon ? 9999999 : worldState.finalDistToTarget
       });
       return {bestWorldState, bestPath, worldStates};
     });
@@ -841,7 +845,7 @@ export class Bot {
           log.log('returned from worker for player', this.player.id, 'in', performance.now() - startTime, ', chunkSteps =', this.chunkSteps);
           this.simRunning = false;
           const worldStates = worldStatesData.map(data => {
-            const ws = new WorldState(null,null,null,null,null,null,null,null);
+            const ws = new WorldState(null,null,null,null,null,null,null,null,null,null);
             ws.deser(data);
             return ws;
           });
@@ -946,8 +950,10 @@ export class Bot {
       minDistToTarget = Math.min(minDistToTarget, distance);
     }
     return new WorldState(
-      init.elapsed + chunk,
+      init.endTime + chunk,
       dir,
+      chunk,
+      init.endTime,
       minDistToTarget,
       distance,
       capturePlState(world),
@@ -970,7 +976,7 @@ export class Bot {
     const [currChunk, steps] = this.getCurrChunk(currTime);
     if (this.lastChunk != currChunk) {
       if (!resetting && this.chunkSteps && this.chunkSteps < chunk / simDt) {
-        log.log('switching from old chunk ', this.lastChunk && this.lastChunk.elapsed, ' to new chunk ', currChunk.elapsed, ', but did not execute all steps in last chunk!');
+        log.log('switching from old chunk ', this.lastChunk && this.lastChunk.endTime, ' to new chunk ', currChunk.endTime, ', but did not execute all steps in last chunk!');
       }
     }
     this.lastChunk = currChunk;
@@ -992,7 +998,7 @@ export class Bot {
       if (replayMode == ReplayMode.TIME) {
         doSim = this.lastSimTime == null || currTime - this.lastSimTime > simPeriod / timeWarp;
       } else if (replayMode == ReplayMode.STEPS) {
-        log.log(this.lastChunk && this.lastChunk.elapsed - chunk, this.chunkSteps, this.lastChunk && (this.chunkSteps * simDt / chunk) * 1000);
+        log.log(this.lastChunk && this.lastChunk.endTime - chunk, this.chunkSteps, this.lastChunk && (this.chunkSteps * simDt / chunk) * 1000);
         doSim = !this.simRunning && (!this.lastChunk || (this.chunkSteps * simDt / chunk) * 1000 > simPeriod);
       } else {
         throw new Error();
