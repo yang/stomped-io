@@ -463,10 +463,10 @@ interface WorldData {
   bodyData: [BodyData];
 }
 
-export function saveWorld(world: Pl.World): WorldData {
+export function saveWorldWithoutBackRef(world: Pl.World): WorldData {
   const worldData = <WorldData> {
     bodyData: Array.from(iterBodies(world)).reverse().map(body => ({
-      userData: body.getUserData(),
+      userData: _(body.getUserData()).chain().clone().extend({bod: null}).value(),
       type: body.getType(),
       vel: body.getLinearVelocity(),
       pos: body.getPosition()
@@ -485,17 +485,24 @@ export function restoreWorld(worldData: WorldData) {
   return newWorld;
 }
 
-function saveRestoreWorld(world: Pl.World) {
-  for (let body of Array.from(iterBodies(world))) {
-    body.getUserData().bod = null;
-  }
-  const newWorld = restoreWorld(_.cloneDeep(saveWorld(world)));
-  for (let body of Array.from(iterBodies(world))) {
-    body.getUserData().bod = body;
-  }
+function restoreWorldWithBackRef(worldData: WorldData): Pl.World {
+  const newWorld = restoreWorld(worldData);
   for (let body of Array.from(iterBodies(newWorld))) {
+    body.setUserData(restoreEnt(body.getUserData()));
     body.getUserData().bod = body;
   }
+  return newWorld;
+}
+
+function restoreEnt(entData) {
+  const entTypes = {Player, Ledge, Lava, Star};
+  const ent = new entTypes[entData.type]();
+  _.merge(ent, entData);
+  return ent;
+}
+
+function saveRestoreWorld(world: Pl.World) {
+  const newWorld = restoreWorldWithBackRef(_.cloneDeep(saveWorldWithoutBackRef(world)));
   assert(_.isEqual(
     Array.from(iterBodies(world)).map(body => body.getUserData().id),
     Array.from(iterBodies(newWorld)).map(body => body.getUserData().id)));
