@@ -763,14 +763,16 @@ export class Bot {
     );
   }
 
-  getCurrChunk(currTime: number): [WorldState, number] {
+  getCurrChunk(currTime: number): [WorldState, number, number] {
     if (replayMode == ReplayMode.TIME) {
       let currChunk;
       const elapsed = (currTime - this.lastSimTime) / 1000;
+      let index;
       for (let i = 0; elapsed >= this.lastBestSeq[i].endTime; i++) {
         currChunk = this.lastBestSeq[i + 1];
+        index = i;
       }
-      return [currChunk, 0];
+      return [currChunk, index, 0];
     } else if (replayMode == ReplayMode.STEPS) {
       const cumsums = Array.from(cumsum(this.lastBestSeq.map(s => s.mePath.length - 1)));
       let i = 1;
@@ -782,7 +784,7 @@ export class Bot {
           i++;
           continue;
         } else {
-          return [currChunk, chunkSteps - (i == 0 ? 0 : cumsums[i - 1])];
+          return [currChunk, i, chunkSteps - (i == 0 ? 0 : cumsums[i - 1])];
         }
       }
     } else {
@@ -973,7 +975,7 @@ export class Bot {
   replayChunkStep(currTime: number, resetting: boolean) {
     const me = this.player;
     const log = getLogger('replay');
-    const [currChunk, steps] = this.getCurrChunk(currTime);
+    const [currChunk, idx, steps] = this.getCurrChunk(currTime);
     if (this.lastChunk != currChunk) {
       if (!resetting && this.chunkSteps && this.chunkSteps < chunk / simDt) {
         log.log('switching from old chunk ', this.lastChunk && this.lastChunk.endTime, ' to new chunk ', currChunk.endTime, ', but did not execute all steps in last chunk!');
@@ -1075,7 +1077,7 @@ export class Bot {
   checkPlan(currTime: number) {
     const me = this.player;
     if (this.target && !this.isDead() && replayMode == ReplayMode.STEPS && this.lastBestSeq) {
-      const [currChunk, steps] = this.getCurrChunk(currTime);
+      const [currChunk, idx, steps] = this.getCurrChunk(currTime);
       if (!veq(me.bod.getPosition(), currChunk.mePath[steps], pathDivergenceEps)) {
         console.error('diverging from predicted path!');
       }
