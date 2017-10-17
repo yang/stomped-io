@@ -422,7 +422,7 @@ function feedInputs(player) {
 const bots: Bot[] = [];
 
 function makeBot() {
-  const player = entMgr.addPlayer(new Player(
+  const player = entMgr.addPlayer(_.assign({}, new Player(
     'bot',
     ledges[2].x + ledgeWidth / 2,
     ledges[2].y - 50,
