@@ -590,7 +590,7 @@ export class WorldState {
   deser(data) {
     _.merge(this, data);
     this.mePath = data.mePath.map(({x,y}) => Pl.Vec2(x,y));
-    this.meVels = data.mePath.map(({x,y}) => Pl.Vec2(x,y));
+    this.meVels = data.meVels.map(({x,y}) => Pl.Vec2(x,y));
   }
 }
 
