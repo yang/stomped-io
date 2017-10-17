@@ -13,7 +13,7 @@ export class LogHandler {
   log(name, msg) {
     this.buffer.push([name, msg]);
     if (this.enabled.has(name)) {
-      console.log(`#{name}:`, ...msg);
+      console.log(`${name}:`, ...msg);
     }
   }
 }
