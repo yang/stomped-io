@@ -29,6 +29,8 @@ const events: Event[] = [];
 const players = gameState.players;
 const ledges = gameState.ledges;
 
+const doRun = false, doAddPlayers = false; // doRun = save-batteries mode
+
 let lastBcastTime = null;
 const bcastPeriod = 1 / 10;
 let tick = 0, bcastNum = 0;
@@ -190,8 +192,10 @@ function create() {
     schedRandInputs(player);
   }
 
-  setInterval(bcast, bcastPeriod * 1000);
-  setInterval(update, updatePeriod * 1000);
+  if (doRun) {
+    setInterval(bcast, bcastPeriod * 1000);
+    setInterval(update, updatePeriod * 1000);
+  }
 
   Common.create(gameState);
 
@@ -209,6 +213,9 @@ function destroy(ent) {
 }
 
 function makePlayer(name) {
+  if (!doAddPlayers && players.length > 0) {
+    return players[0];
+  }
   const player = new Player(
     name,
     ledges[2].x + ledgeWidth / 2,
