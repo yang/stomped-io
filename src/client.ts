@@ -9,7 +9,7 @@ import * as Common from './common';
 import {
   addBody,
   AddEnt,
-  assert,
+  assert, baseHandler,
   Bcast, Bot,
   clearArray,
   cloneWorld,
@@ -123,7 +123,7 @@ const events: Event[] = [];
 
 let gfx;
 
-(<any>window).dbg = {platforms, cursors, gameWorld: world, players, ledges, entToSprite};
+(<any>window).dbg = {platforms, cursors, baseHandler, gameWorld: world, players, ledges, entToSprite};
 
 function create(initSnap) {
 
