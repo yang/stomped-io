@@ -736,7 +736,7 @@ export class Bot {
     };
   }
   deser(botData) {
-    this.target = Vec2.fromObj(botData);
+    this.target = Vec2.fromObj(botData.target);
   }
 
   capturePlState(): PlState {
