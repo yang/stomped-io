@@ -255,6 +255,15 @@ Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
 Target: ${bot ? vecStr(bot.target) : ''}
 Size: ${currentPlayer ? currentPlayer.size : ''}
 Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
+Step: ${bot ?
+    `${bot.chunkSteps} total ${bot.lastBestSeq ?
+      JSON.stringify((([chunk, index, steps]) =>
+        _(chunk)
+          .pick('startTime', 'endTime', 'dur')
+          .extend({index, steps})
+          .value()
+      )(bot.getCurrChunk(-1))) : ''
+}` : ''}
 
 Scores:
 ${_(players)
