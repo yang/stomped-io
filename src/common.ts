@@ -487,8 +487,9 @@ export function saveWorldWithoutBackRef(world: Pl.World): WorldData {
     bodyData: Array.from(iterBodies(world)).reverse().map(body => ({
       userData: _(body.getUserData()).chain().clone().extend({bod: null}).value(),
       type: body.getType(),
-      vel: body.getLinearVelocity(),
-      pos: body.getPosition()
+      // Must snapshot these because vectors can be mutated before postMessage.
+      vel: copyVec(body.getLinearVelocity()),
+      pos: copyVec(body.getPosition())
     }))
   };
   return worldData;
@@ -845,6 +846,11 @@ export class Bot {
     this.simRunning = true;
     log.log('spawning worker for player', this.player.id);
     const promise = this.pool.exec('sim', [botData, gameStateData]);
+    getLogger('worker.consistency').log(
+      'from outside worker:',
+      plPosFromEnt(this.player),
+      copyVec(this.player.bod.getPosition())
+    );
     return new Promise((resolve, reject) =>
       promise.then(({bestWorldStateIndex, bestPath, worldStatesData}) =>
         setImmediate(() => {
@@ -889,6 +895,12 @@ export class Bot {
       }
     }
     const startState = this.getWorldState([], initGameState);
+    getLogger('worker.consistency').log(
+      'from in worker:',
+      plPosFromEnt(this.player),
+      copyVec(this.player.bod.getPosition())
+    );
+    assert(veq(plPosFromEnt(this.player), this.player.bod.getPosition()));
     return this.runSims(startState, (init, [dir, chunk]) => {
       const world = cloneWorld(init.gameState.world);
       world._listeners = {};
