@@ -1011,7 +1011,6 @@ export class Bot {
       if (this.lastBestSeq && !this.simRunning) {
         this.replayChunkStep(currTime, false);
       }
-      this.chunkSteps += 1;
       let doSim = false;
       if (replayMode == ReplayMode.TIME) {
         doSim = this.lastSimTime == null || currTime - this.lastSimTime > simPeriod / timeWarp;
@@ -1039,8 +1038,8 @@ export class Bot {
         } else {
           handleRes(doCloneWorlds ? this.runSimsClone() : this.runSimsReuse());
         }
-        this.chunkSteps += 1;
       }
+      this.chunkSteps += 1;
     }
   }
 
