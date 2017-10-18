@@ -1078,7 +1078,7 @@ export class Bot {
     const me = this.player;
     if (this.target && !this.isDead() && replayMode == ReplayMode.STEPS && this.lastBestSeq) {
       const [currChunk, idx, steps] = this.getCurrChunk(currTime);
-      if (!veq(me.bod.getPosition(), currChunk.mePath[steps], pathDivergenceEps)) {
+      if (currChunk && !veq(me.bod.getPosition(), currChunk.mePath[steps], pathDivergenceEps)) {
         console.error('diverging from predicted path!');
       }
     }
