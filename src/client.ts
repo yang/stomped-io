@@ -47,7 +47,7 @@ import * as _ from 'lodash';
 class ControlPanel {
   currentPlayer = 0;
   viewAll = false;
-  makeBot() { makeBot(); }
+  makeBot() { makeBot(entMgr, gameState); }
 }
 const cp = new ControlPanel();
 
@@ -432,11 +432,11 @@ function feedInputs(player) {
 
 const bots: Bot[] = [];
 
-function makeBot() {
+function makeBot(entMgr: EntMgr, gameState: GameState) {
   const player = entMgr.addPlayer(_.assign({}, new Player(
     'bot',
-    ledges[2].x + ledgeWidth / 2,
-    ledges[2].y - 50,
+    gameState.ledges[2].x + ledgeWidth / 2,
+    gameState.ledges[2].y - 50,
     `dude-${styleGen.next().value}`
   )));
   player.inputs.left.isDown = true;
@@ -535,7 +535,7 @@ export function main(pool) {
       timeline.push(initSnap);
       delta = initSnap.time - performance.now();
 
-      setTimeout(makeBot, 1000);
+      setTimeout((() => makeBot(entMgr, gameState)), 3000);
       socket.on('bcast', (bcast) => {
         timeline.push(bcast);
       });
