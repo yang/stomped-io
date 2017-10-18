@@ -49,7 +49,8 @@ export function* cumsum(xs: number[]) {
   }
 }
 
-export const oscDist = gameWorld.width / 8 * 2;
+export const debugMode = true;
+export const oscDist = debugMode ? 0 : gameWorld.width / 8 * 2;
 
 export let alwaysMoveLeft = false;
 
