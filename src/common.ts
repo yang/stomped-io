@@ -18,6 +18,15 @@ export class LogHandler {
   }
 }
 
+export function ensureOne(xs) {
+  assert(xs.length == 1);
+  return xs[0];
+}
+
+export function fixed(x) {
+  return +x.toPrecision(12);
+}
+
 export const baseHandler = new LogHandler();
 const nameToLogger = new Map<string, Logger>();
 export function getLogger(name: string) {
@@ -690,7 +699,9 @@ if (replayMode == ReplayMode.STEPS)
   assert(runLocally && simDt == dt);
 
 const pathDivergenceEps = .1;
-const simComputeTimeAllowance = 1.5;
+const steadySimComputeTimeAllowance = 1;
+const initSimComputeTimeAllowance = 1.5;
+const simComputeTimeAllowance = initSimComputeTimeAllowance; // this.lastBestSeq ? steadySimComputeTimeAllowance : initSimComputeTimeAllowance;
 
 // doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
 // vs. 167ms for non-cloning - most of the time goes into _.deepClone().
@@ -725,8 +736,10 @@ export class Bot {
   lastWorldStates;
   lastBestSeq: WorldState[];
   lastChunk: WorldState;
-  chunkSteps: number;
+  chunkSteps: number = 0;
+  chunkStepsAtStartOfSim = 0;
   simRunning = false;
+  initPlan: [Dir, number][];
 
   constructor(
     public player: Player,
@@ -738,11 +751,13 @@ export class Bot {
   ser() {
     return {
       playerId: this.player.id,
-      target: this.target
+      target: this.target,
+      initPlan: this.initPlan
     };
   }
   deser(botData) {
     this.target = Vec2.fromObj(botData.target);
+    this.initPlan = botData.initPlan;
   }
 
   capturePlState(): PlState {
@@ -798,14 +813,51 @@ export class Bot {
     }
   }
 
+  getInitPlan(): [Dir, number][] {
+    const me = this.player;
+    if (this.lastBestSeq) {
+      const [currChunk, idx, steps] = this.getCurrChunk(-1);
+      const startTimeInCurrentPlan = fixed(currChunk.startTime + steps * simDt);
+      const simEndTimeInCurrentPlan = fixed(startTimeInCurrentPlan + simComputeTimeAllowance);
+      // simPeriod = 2 steps:
+      //
+      // L L R R L L R R
+      // 0 1 0 1 0 1 0 1
+      //       [____) simtime = 1.5: R L L
+      //       [__) simtime = 1.0: R L
+      //       ^ chunkSteps
+      return _(this.lastBestSeq)
+        .dropWhile(c => c != currChunk)
+        .takeWhile(c => c.startTime < simEndTimeInCurrentPlan)
+        .map<[Dir, number]>(c => [
+          c.dir,
+          fixed(
+            c == currChunk ? c.dur - steps * simDt :
+              c.endTime < simEndTimeInCurrentPlan ? c.dur :
+                simEndTimeInCurrentPlan - c.startTime
+          )
+        ])
+        .value();
+    } else {
+      return [[getDir(me), simComputeTimeAllowance]];
+    }
+  }
+
   runSims(startState: WorldState, simFunc: (node: WorldState, edge: [Dir, number]) => WorldState) {
     const me = this.player;
+    const initPlan: [Dir, number][] = this.initPlan;
+    const sums = [0].concat(Array.from(cumsum(initPlan.map(([dir, dur]) => fixed(dur)))));
+    assert(_(sums).last() == simComputeTimeAllowance);
+    const initPlanMap = new Map<number, [Dir, number]>(
+      _.zip<[Dir, number]|number>(initPlan, sums)
+        .map(([edge, sum]) => <[number, [Dir, number]]> [sum, edge])
+    );
     return time(() => {
       const {bestNode: bestWorldState, bestCost, bestPath, visitedNodes: worldStates} = bfs<WorldState, [Dir, number]>({
         start: startState,
         edges: (worldState) =>
           worldState.endTime < simComputeTimeAllowance ?
-            [[getDir(me), simComputeTimeAllowance]] :
+            [initPlanMap.get(worldState.endTime)] :
             worldState.endTime < horizon ?
               [[Dir.Left, chunk], [Dir.Right, chunk]] :
               [],
@@ -847,6 +899,7 @@ export class Bot {
     this.simRunning = true;
     log.log('spawning worker for player', this.player.id);
     const promise = this.pool.exec('sim', [botData, gameStateData]);
+    this.chunkStepsAtStartOfSim = this.chunkSteps;
     getLogger('worker.consistency').log(
       'from outside worker:',
       plPosFromEnt(this.player),
@@ -857,6 +910,7 @@ export class Bot {
         setImmediate(() => {
           log.log('returned from worker for player', this.player.id, 'in', performance.now() - startTime, ', chunkSteps =', this.chunkSteps);
           this.simRunning = false;
+          this.chunkSteps -= this.chunkStepsAtStartOfSim;
           const worldStates = worldStatesData.map(data => {
             const ws = new WorldState(null,null,null,null,null,null,null,null,null,null);
             ws.deser(data);
@@ -994,6 +1048,9 @@ export class Bot {
     const log = getLogger('replay');
     const [currChunk, idx, steps] = this.getCurrChunk(currTime);
     if (this.lastChunk != currChunk) {
+      log.log('switching from old chunk to new chunk',
+        (this.lastChunk || <any>{}).startTime,
+        (currChunk || <any>{}).startTime);
       if (!resetting && this.chunkSteps && this.chunkSteps < chunk / simDt) {
         log.log('switching from old chunk ', this.lastChunk && this.lastChunk.endTime, ' to new chunk ', currChunk.endTime, ', but did not execute all steps in last chunk!');
       }
@@ -1007,9 +1064,13 @@ export class Bot {
   }
 
   replayPlan(updating: boolean, currTime: number) {
+    // High-level structure:
+    // Replay existing plan step
+    // If simming: sim, then replay that first plan step
+    // Finally, increment step counter, to keep pace with later Common.update() call
     const log = getLogger('replay');
     if (!this.isDead() && (!runLocally || updating)) {
-      if (this.lastBestSeq && !this.simRunning) {
+      if (this.lastBestSeq) {
         this.replayChunkStep(currTime, false);
       }
       let doSim = false;
@@ -1025,19 +1086,18 @@ export class Bot {
         const handleRes = ({worldStates, bestPath, bestWorldState}) => {
           this.lastWorldStates = worldStates;
           this.lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
-          log.log('simulated');
-          if (this.lastBestSeq.length > 1 && !doSimInWorker) {
-            this.replayChunkStep(currTime, true);
-//          reallySetInput(this.lastBestSeq[1].dir, currTime);
-//          console.log('switching to brand new path ');
-          }
+          getLogger('sim-res').log('simulated', this.lastBestSeq);
         };
         this.lastSimTime = currTime;
-        this.chunkSteps = 0;
+        this.initPlan = this.getInitPlan();
         if (doSimInWorker) {
           this.runSimsInWorker().then(handleRes);
         } else {
           handleRes(doCloneWorlds ? this.runSimsClone() : this.runSimsReuse());
+          this.chunkSteps = 0;
+          if (this.lastBestSeq.length > 1 && !doSimInWorker) {
+            this.replayChunkStep(currTime, true);
+          }
         }
       }
       this.chunkSteps += 1;
