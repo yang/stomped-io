@@ -698,7 +698,7 @@ let doSimInWorker = true, doCloneWorlds = true;
 
 let drawAllPaths = false, drawPlans = true, simStars = true, simStarRadius = 500, drawAllPathsIfBestPathDies = true
 
-export const defaultColor = 0x002244, bestColor = 0xFF0000, bestColors = [
+export const defaultColor = 0xffffff, bestColor = 0xFF0000, bestColors = [
   0xff0000,
   0xffff00,
   0x00ff00,
