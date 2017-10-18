@@ -205,11 +205,15 @@ export interface Bcast {
   ents: Ent[];
 }
 
+// simple container so that client can reach in and bump this
+class IdState {
+  nextId = 0;
+}
+export const idState = new IdState();
 function* genIds() {
-  let i = 0;
   while (true) {
-    yield i;
-    i += 1;
+    yield idState.nextId;
+    idState.nextId += 1;
   }
 }
 const ids = genIds();

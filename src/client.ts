@@ -177,6 +177,8 @@ function create(initSnap) {
     key.onUp.add(() => events.push(new InputEvent(updateInputs())));
   }
 
+  Common.idState.nextId = _.max(getEnts().map(e => e.id)) + 1;
+
 }
 
 function trace(x) {
