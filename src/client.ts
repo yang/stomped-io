@@ -123,7 +123,7 @@ const events: Event[] = [];
 
 let gfx;
 
-(<any>window).dbg = {platforms, cursors, baseHandler, gameWorld: world, players, ledges, entToSprite};
+(<any>window).dbg = {platforms, cursors, baseHandler, gameWorld: world, players, ledges, entToSprite, Common};
 
 function create(initSnap) {
 
