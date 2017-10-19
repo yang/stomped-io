@@ -13,7 +13,7 @@ import {
   Bcast, Bot, BotMgr,
   clearArray,
   cloneWorld,
-  copyVec, createBody, defaultColor,
+  copyVec, createBody, defaultColor, deserSimResults,
   dt,
   Ent,
   EntMgr,
@@ -122,6 +122,7 @@ function destroy2(ent) {
 
 const entToSprite = new Map();
 const events: Event[] = [];
+let onNextBcastPersistentCallbacks = [];
 
 let gfx;
 
@@ -321,6 +322,7 @@ ${_(players)
           break;
       }
     }
+    onNextBcastPersistentCallbacks = onNextBcastPersistentCallbacks.filter(f => !f());
     for (let ent of getEnts()) {
       const [a, b] = [aMap.get(ent.id), bMap.get(ent.id)];
       if (a && b) {
@@ -368,8 +370,10 @@ ${_(players)
       bot.target = new Vec2(game.input.worldX, game.input.worldY);
     }
   }
-  for (let bot of botMgr.bots) {
-    bot.replayPlan(updating, currTime);
+  if (runLocally) {
+    for (let bot of botMgr.bots) {
+      bot.replayPlan(updating, currTime);
+    }
   }
   for (let bot of botMgr.bots) {
     bot.drawPlan(gfx);
@@ -526,6 +530,29 @@ export function main(pool) {
 
       socket.on('bcast', (bcast) => {
         timeline.push(bcast);
+      });
+
+      socket.on('botProxy', (botData) => {
+        onNextBcastPersistentCallbacks.push(() => botMgr.maybeAddProxy(botData));
+      });
+
+      socket.on('botPlan', ({botData, bestWorldStateIndex, bestPath, worldStatesData}) => {
+        onNextBcastPersistentCallbacks.push(() => {
+          const bot = botMgr.bots.find(b => b.player.id == botData.playerId);
+          if (bot) {
+            const {worldStates, bestPath: realBestPath, bestWorldState} = deserSimResults({
+              bestWorldStateIndex,
+              bestPath,
+              worldStatesData
+            });
+            bot.deser(botData);
+            bot.lastWorldStates = worldStates;
+            bot.lastBestSeq = realBestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
+            return true;
+          } else {
+            return false;
+          }
+        });
       });
     });
 

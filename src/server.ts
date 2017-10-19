@@ -12,7 +12,7 @@ import {
   ledgeHeight,
   ledgeWidth, oscDist,
   Player,
-  RemEnt, runLocally, Star,
+  RemEnt, runLocally, serSimResults, Star,
   updateEntPhysFromPl,
   updatePeriod,
   world
@@ -70,16 +70,6 @@ function update() {
   for (let ent of getEnts()) {
     updateEntPhysFromPl(ent);
   }
-  for (let ent of toRemove) {
-    world.destroyBody(ent.bod);
-    if (ent instanceof Player) {
-      _.remove(players, e => e == ent);
-    }
-    if (ent instanceof Ledge) {
-      _.remove(ledges, e => e == ent);
-    }
-    events.push(new RemEnt(ent.id));
-  }
   updateLedges();
   tick += 1;
 }
@@ -96,7 +86,19 @@ function bcast() {
   // }
   //if (lastBcastTime == null) lastBcastTime = Date.now() / 1000;
   //if (currTime - lastBcastTime >= bcastPeriod) {
-    // snapshot world
+  for (let ent of toRemove) {
+    world.destroyBody(ent.bod);
+    if (ent instanceof Player) {
+      _.remove(players, e => e == ent);
+    }
+    if (ent instanceof Ledge) {
+      _.remove(ledges, e => e == ent);
+    }
+    events.push(new RemEnt(ent.id));
+  }
+  clearArray(toRemove);
+
+  // snapshot world
     const snapshot: Bcast = ({
       time: Date.now(),
       tick: tick,
@@ -272,7 +274,15 @@ io.on('connection', (socket: SocketIO.Socket) => {
       player.inputs = data.events[data.events.length - 1].inputs;
     });
 
-    socket.on('makeBot', () => botMgr.makeBot());
+    socket.on('makeBot', () => {
+      const bot = botMgr.makeBot();
+      socket.emit('botProxy', bot.ser());
+      bot.onSim.add(({worldStates, bestPath, bestWorldState}) => {
+        const botData = bot.ser();
+        const resultsData = serSimResults({worldStates, bestPath, bestWorldState});
+        socket.emit('botPlan', {botData, ...resultsData});
+      });
+    });
 
     socket.on('disconnect', () => {
       console.log(`player ${player.name} disconnected`);

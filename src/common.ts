@@ -732,6 +732,29 @@ let bodiesByType = function (world: Pl.World) {
   return typeToInstances;
 };
 
+export function serSimResults({worldStates, bestWorldState, bestPath}) {
+  const wsToIndex = new Map(worldStates.map((x, i) => [x, i]));
+  return {
+    bestWorldStateIndex: wsToIndex.get(bestWorldState),
+    bestPath: bestPath.map(([ws, [dir, dur]]) => [wsToIndex.get(ws), [dir, dur]]),
+    worldStatesData: worldStates.map(s => s.ser())
+  };
+};
+
+export function deserSimResults({worldStatesData, bestWorldStateIndex, bestPath}) {
+  const worldStates = worldStatesData.map(data => {
+    const ws = new WorldState(null, null, null, null, null, null, null, null, null, null);
+    ws.deser(data);
+    return ws;
+  });
+  const results = {
+    bestWorldState: worldStates[bestWorldStateIndex],
+    bestPath: bestPath.map(([wsi, [dir, dur]]) => [worldStates[wsi], [dir, dur]]),
+    worldStates: worldStates
+  };
+  return results;
+};
+
 export class Bot {
   target: Vec2;
   lastSimTime = null;
@@ -742,6 +765,7 @@ export class Bot {
   chunkStepsAtStartOfSim = 0;
   simRunning = false;
   initPlan: [Dir, number][];
+  onSim = new Signals.Signal();
 
   constructor(
     public player: Player,
@@ -913,16 +937,7 @@ export class Bot {
           log.log('returned from worker for player', this.player.id, 'in', now() - startTime, ', chunkSteps =', this.chunkSteps);
           this.simRunning = false;
           this.chunkSteps -= this.chunkStepsAtStartOfSim;
-          const worldStates = worldStatesData.map(data => {
-            const ws = new WorldState(null,null,null,null,null,null,null,null,null,null);
-            ws.deser(data);
-            return ws;
-          });
-          resolve({
-            bestWorldState: worldStates[bestWorldStateIndex],
-            bestPath: bestPath.map(([wsi, [dir, dur]]) => [worldStates[wsi], [dir, dur]]),
-            worldStates: worldStates
-          });
+          resolve(deserSimResults({worldStatesData, bestWorldStateIndex, bestPath}));
         })
       ).catch(err => {
         console.error(err);
@@ -1089,6 +1104,7 @@ export class Bot {
           this.lastWorldStates = worldStates;
           this.lastBestSeq = bestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
           getLogger('sim-res').log('simulated', this.lastBestSeq);
+          this.onSim.dispatch({worldStates, bestPath, bestWorldState});
         };
         this.lastSimTime = currTime;
         this.initPlan = this.getInitPlan();
@@ -1237,6 +1253,22 @@ export class BotMgr {
     public socket,
     public pool
   ) {}
+
+  maybeAddProxy(botData) {
+    const player = this.gameState.players.find(p => p.id == botData.playerId);
+    if (player) {
+      const bot = new Bot(
+        player,
+        this.gameState,
+        this.socket,
+        this.pool
+      );
+      this.bots.push(bot);
+      return bot;
+    } else {
+      return null;
+    }
+  }
 
   makeBot() {
     const entMgr = this.entMgr, gameState = this.gameState;

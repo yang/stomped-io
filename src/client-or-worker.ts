@@ -1,4 +1,4 @@
-import {Bot, GameState, getLogger} from "./common";
+import {Bot, GameState, getLogger, serSimResults} from "./common";
 
 const isWebWorker = typeof WorkerGlobalScope !== 'undefined' &&
   self instanceof WorkerGlobalScope;
@@ -17,13 +17,8 @@ function sim(botData?, gameStateData?) {
   );
   bot.deser(botData);
   const {bestWorldState, bestPath, worldStates} = bot.runSimsClone();
-  const wsToIndex = new Map(worldStates.map((x, i) => [x, i]));
   log.log('ending job for player', botData.playerId, 'of time', gameState.time, 'in', performance.now() - startTime);
-  return {
-    bestWorldStateIndex: wsToIndex.get(bestWorldState),
-    bestPath: bestPath.map(([ws, [dir, dur]]) => [wsToIndex.get(ws), [dir, dur]]),
-    worldStatesData: worldStates.map(s => s.ser())
-  };
+  return serSimResults({worldStates, bestWorldState, bestPath});
 }
 
 function pRun(f) {
