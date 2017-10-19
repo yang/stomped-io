@@ -133,11 +133,20 @@ export function create(gameState: GameState) {
     const fB = contact.getFixtureB(), bB = fB.getBody();
     function bounce(fA, bA, fB, bB, reverse: boolean) {
       if (bA.getUserData().type == 'Player') {
+        const playerA: Player = bA.getUserData();
         const m = contact.getWorldManifold();
         if (veq(m.normal, Pl.Vec2(0,-1).mul(reverse ? -1 : 1))) {
-          log.log('jumping', bA.getUserData(), bB.getUserData());
-          gameState.onJumpoff.dispatch(bA.getUserData(), bB.getUserData());
-          postStep(() => updateVel(bA, ({x,y}) => Pl.Vec2(x,8)));
+          log.log('jumping', playerA, bB.getUserData());
+          gameState.onJumpoff.dispatch(playerA, bB.getUserData());
+          postStep(() => {
+            updateVel(bA, ({x,y}) => Pl.Vec2(x,8));
+            if (bB.getUserData() instanceof Player) {
+              const playerB: Player = bB.getUserData();
+              destroy(playerB);
+              playerB.dead = true;
+              playerA.grow(playerB.size);
+            }
+          });
         }
       }
     }
@@ -158,6 +167,7 @@ export function create(gameState: GameState) {
           postStep(() => {
             bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999))
             if (destroy) {
+              player.dead = true;
               destroy(player);
             }
           });
@@ -168,21 +178,7 @@ export function create(gameState: GameState) {
           if (!starToPlayer.has(star)) {
             starToPlayer.set(star, player);
             postStep(() => {
-              player.size += .1;
-              [player.width, player.height] = player.baseDims.mul(player.size ** (1/3)).toTuple();
-              for (let i = 0; i < 4; i++) {
-                const v = fA.getShape().getVertex(i);
-                fA.getShape().getVertex(i).set(Pl.Vec2(
-                  player.width / 2 / ratio * Math.sign(v.x),
-                  player.height / 2 / ratio * Math.sign(v.y)
-                ));
-              }
-              // Mass is computed based on fixture size and density. 2D fixture size only accounts for two of the three
-              // dimensions that are assumed to contribute to the mass.  Adjust the density accordingly - it is then the
-              // third dimension.  All dimensions are multiplied by the cube root of the `size` multiple, since `size`
-              // *is* the mass.
-              fA.setDensity(player.size ** (1/3));
-              bA.resetMassData();
+              player.grow(.1);
               if (destroy) destroy(star);
             });
           }
@@ -284,6 +280,7 @@ export class Player extends Ent {
   inputs = new Inputs();
   size = 1;
   currentSquishTime: number = null;
+  dead = false;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
   dispDims() {
     const dims = super.dispDims();
@@ -294,6 +291,27 @@ export class Player extends Ent {
     } else {
       return dims;
     }
+  }
+
+  grow(incSize: number) {
+    const player = this;
+    const bA = player.bod;
+    const fA = bA.getFixtureList();
+    player.size += incSize;
+    [player.width, player.height] = player.baseDims.mul(player.size ** (1 / 3)).toTuple();
+    for (let i = 0; i < 4; i++) {
+      const v = fA.getShape().getVertex(i);
+      fA.getShape().getVertex(i).set(Pl.Vec2(
+        player.width / 2 / ratio * Math.sign(v.x),
+        player.height / 2 / ratio * Math.sign(v.y)
+      ));
+    }
+    // Mass is computed based on fixture size and density. 2D fixture size only accounts for two of the three
+    // dimensions that are assumed to contribute to the mass.  Adjust the density accordingly - it is then the
+    // third dimension.  All dimensions are multiplied by the cube root of the `size` multiple, since `size`
+    // *is* the mass.
+    fA.setDensity(player.size ** (1 / 3));
+    bA.resetMassData();
   }
 }
 
@@ -1141,7 +1159,7 @@ export class Bot {
   }
 
   isDead() {
-    return this.player.y >= gameWorld.height;
+    return this.player.dead;
   }
 
   drawPlan(gfx) {
