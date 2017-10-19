@@ -12,7 +12,7 @@ import {
   ledgeHeight,
   ledgeWidth, oscDist,
   Player,
-  RemEnt, Star,
+  RemEnt, runLocally, Star,
   updateEntPhysFromPl,
   updatePeriod,
   world
@@ -29,7 +29,7 @@ const events: Event[] = [];
 const players = gameState.players;
 const ledges = gameState.ledges;
 
-const doRun = false, doAddPlayers = false; // doRun = save-batteries mode
+const doRun = !runLocally, doAddPlayers = !runLocally; // doRun = save-batteries mode
 
 let lastBcastTime = null;
 const bcastPeriod = 1 / 10;
