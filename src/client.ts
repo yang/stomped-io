@@ -10,7 +10,7 @@ import {
   addBody,
   AddEnt,
   assert, baseHandler,
-  Bcast, Bot,
+  Bcast, Bot, BotMgr,
   clearArray,
   cloneWorld,
   copyVec, createBody, defaultColor,
@@ -47,7 +47,7 @@ import * as _ from 'lodash';
 class ControlPanel {
   currentPlayer = 0;
   viewAll = false;
-  makeBot() { makeBot(entMgr, gameState); }
+  makeBot() { botMgr.makeBot(); }
 }
 const cp = new ControlPanel();
 
@@ -69,6 +69,8 @@ gameState.onJumpoff.add((player, other) => {
 });
 
 let drawPlanckBoxes = true;
+
+let botMgr;
 
 function preload() {
 
@@ -246,7 +248,7 @@ function vecStr(v) {
 function update() {
 
   const currentPlayer = players[cp.currentPlayer];
-  const bot = bots.find(b => b.player == currentPlayer);
+  const bot = botMgr.bots.find(b => b.player == currentPlayer);
 
   const debugText = `
 FPS: ${game.time.fps}
@@ -366,10 +368,10 @@ ${_(players)
       bot.target = new Vec2(game.input.worldX, game.input.worldY);
     }
   }
-  for (let bot of bots) {
+  for (let bot of botMgr.bots) {
     bot.replayPlan(updating, currTime);
   }
-  for (let bot of bots) {
+  for (let bot of botMgr.bots) {
     bot.drawPlan(gfx);
   }
 
@@ -384,7 +386,7 @@ ${_(players)
         }
       }
     }
-    for (let bot of bots) {
+    for (let bot of botMgr.bots) {
       bot.checkPlan(currTime);
     }
     for (let player of players) {
@@ -428,22 +430,6 @@ function feedInputs(player) {
     if (sprite.frame < 3) sprite.frame = 0;
     else sprite.frame = 3;
   }
-}
-
-const bots: Bot[] = [];
-
-function makeBot(entMgr: EntMgr, gameState: GameState) {
-  const player = entMgr.addPlayer(_.assign({}, new Player(
-    'bot',
-    gameState.ledges[2].x + ledgeWidth / 2,
-    gameState.ledges[2].y - 50,
-    `dude-${styleGen.next().value}`
-  )));
-  player.inputs.left.isDown = true;
-  const bot = new Bot(player, gameState, socket, gPool);
-  bot.target = new Vec2(0,0);
-  bots.push(bot);
-  return bot;
 }
 
 class GuiMgr {
@@ -497,6 +483,7 @@ const doPings = false;
 export function main(pool) {
   gPool = pool;
   socket = Sio('http://localhost:3000');
+  botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool);
   socket.on('connect', () => {
     if (game) return;
 
@@ -535,7 +522,8 @@ export function main(pool) {
       timeline.push(initSnap);
       delta = initSnap.time - performance.now();
 
-      setTimeout((() => makeBot(entMgr, gameState)), 3000);
+      setTimeout((() => botMgr.makeBot()), 3000);
+
       socket.on('bcast', (bcast) => {
         timeline.push(bcast);
       });

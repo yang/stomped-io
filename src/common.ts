@@ -1225,3 +1225,29 @@ export class EntMgr {
 
 }
 
+export class BotMgr {
+  bots: Bot[] = [];
+
+  constructor(
+    public styleGen,
+    public entMgr: EntMgr,
+    public gameState: GameState,
+    public socket,
+    public pool
+  ) {}
+
+  makeBot() {
+    const entMgr = this.entMgr, gameState = this.gameState;
+    const player = entMgr.addPlayer(_.assign({}, new Player(
+      'bot',
+      gameState.ledges[2].x + ledgeWidth / 2,
+      gameState.ledges[2].y - 50,
+      `dude-${this.styleGen.next().value}`
+    )));
+    player.inputs.left.isDown = true;
+    const bot = new Bot(player, gameState, this.socket, this.pool);
+    bot.target = new Vec2(0,0);
+    this.bots.push(bot);
+    return bot;
+  }
+}
