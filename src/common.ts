@@ -441,10 +441,12 @@ export function copyVec(v: Pl.Vec2): Pl.Vec2 {
   return Pl.Vec2(v.x, v.y);
 }
 
+export const now = typeof performance == 'undefined' ? Date.now : () => performance.now();
+
 export function time(f) {
-  const start = performance.now();
+  const start = now();
   const res = f();
-  const end = performance.now();
+  const end = now();
   console.log(end - start);
   return res;
 }
@@ -893,7 +895,7 @@ export class Bot {
 
   runSimsInWorker() {
     const log = getLogger('worker');
-    const startTime = performance.now();
+    const startTime = now();
     const gameStateData = this.gameState.ser();
     const botData = this.ser();
     this.simRunning = true;
@@ -908,7 +910,7 @@ export class Bot {
     return new Promise((resolve, reject) =>
       promise.then(({bestWorldStateIndex, bestPath, worldStatesData}) =>
         setImmediate(() => {
-          log.log('returned from worker for player', this.player.id, 'in', performance.now() - startTime, ', chunkSteps =', this.chunkSteps);
+          log.log('returned from worker for player', this.player.id, 'in', now() - startTime, ', chunkSteps =', this.chunkSteps);
           this.simRunning = false;
           this.chunkSteps -= this.chunkStepsAtStartOfSim;
           const worldStates = worldStatesData.map(data => {
