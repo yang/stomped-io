@@ -22,7 +22,7 @@ import {
   Event, fixtureDims,
   GameState, genStyles,
   getLogger,
-  InputEvent,
+  InputEvent, Inputs,
   iterBodies,
   iterFixtures,
   Lava,
@@ -47,6 +47,8 @@ import * as _ from 'lodash';
 class ControlPanel {
   currentPlayer = 0;
   viewAll = false;
+  // hide latency when turning sprite around
+  instantTurn = true;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
@@ -101,8 +103,6 @@ const players = gameState.players;
 const ledges = gameState.ledges;
 
 const timeline: Bcast[] = [];
-
-const meIsBot = false;
 
 // This may get called multiple times on same object in a single frame when multiple entities collide with something.
 function destroy2(ent) {
@@ -190,16 +190,20 @@ function trace(x) {
 }
 
 function updateInputs() {
-  me.inputs.left.isDown = cursors.left.isDown;
-  me.inputs.right.isDown = cursors.right.isDown;
-  me.inputs.down.isDown = cursors.down.isDown;
-  me.inputs.up.isDown = cursors.up.isDown;
-  return me.inputs;
+  const inputs = new Inputs();
+  inputs.left.isDown = cursors.left.isDown;
+  inputs.right.isDown = cursors.right.isDown;
+  inputs.down.isDown = cursors.down.isDown;
+  inputs.up.isDown = cursors.up.isDown;
+  if (cp.instantTurn) {
+    me.inputs = inputs;
+  }
+  return inputs;
 }
 
 let lastTime = 0;
 
-const timeBuffer = 50;
+const timeBuffer = 200;
 let delta = null;
 
 function lerp(a,b,alpha) {
@@ -326,7 +330,9 @@ ${_(players)
     for (let ent of getEnts()) {
       const [a, b] = [aMap.get(ent.id), bMap.get(ent.id)];
       if (a && b) {
-        if (ent instanceof Player && a instanceof Player) ent.inputs = a.inputs;
+        if (!cp.instantTurn && ent instanceof Player && a.type == 'Player') {
+          ent.inputs = (<Player>a).inputs;
+        }
         ent.height = lerp(a.height, b.height, alpha);
         ent.width = lerp(a.width, b.width, alpha);
         ent.x = lerp(a.x, b.x, alpha);
@@ -446,7 +452,8 @@ class GuiMgr {
     guiMgr.add([
       this.gui.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
       this.gui.add(cp, 'makeBot'),
-      this.gui.add(cp, 'viewAll').onFinishChange(rescale)
+      this.gui.add(cp, 'viewAll').onFinishChange(rescale),
+      this.gui.add(cp, 'instantTurn')
     ]);
   }
 
