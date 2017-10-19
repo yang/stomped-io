@@ -19,7 +19,7 @@ import {
   EntMgr,
   entPosFromPl,
   enumerate,
-  Event,
+  Event, fixtureDims,
   GameState, genStyles,
   getLogger,
   InputEvent,
@@ -327,6 +327,8 @@ ${_(players)
       const [a, b] = [aMap.get(ent.id), bMap.get(ent.id)];
       if (a && b) {
         if (ent instanceof Player && a instanceof Player) ent.inputs = a.inputs;
+        ent.height = lerp(a.height, b.height, alpha);
+        ent.width = lerp(a.width, b.width, alpha);
         ent.x = lerp(a.x, b.x, alpha);
         ent.y = lerp(a.y, b.y, alpha);
         ent.vel.x = lerp(a.vel.x, b.vel.x, alpha);
@@ -344,16 +346,6 @@ ${_(players)
 
   gfx.clear();
   gfx.lineStyle(1,0x555555,1);
-  function fixtureDims(fix) {
-    const v = [0,1,2,3].map(i => fix.getShape().getVertex(i)),
-      xs = v.map(p => p.x),
-      ys = v.map(p => p.y),
-      xmax = _(xs).max(),
-      xmin = _(xs).min(),
-      ymax = _(ys).max(),
-      ymin = _(ys).min();
-    return {width: xmax - xmin, height: ymax - ymin};
-  }
   if (drawPlanckBoxes) {
     for (let body of Array.from(iterBodies(world))) {
       const [fix] = Array.from(iterFixtures(body)), dims = fixtureDims(fix);

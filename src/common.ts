@@ -432,7 +432,24 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
   return dt;
 }
 
+// Cannot use getAABB(0) because that is the collision detection box, which stretches based on the velocity!
+export function fixtureDims(fix) {
+  const v = [0,1,2,3].map(i => fix.getShape().getVertex(i)),
+    xs = v.map(p => p.x),
+    ys = v.map(p => p.y),
+    xmax = _(xs).max(),
+    xmin = _(xs).min(),
+    ymax = _(ys).max(),
+    ymin = _(ys).min();
+  return {width: xmax - xmin, height: ymax - ymin};
+}
+
 export function updateEntPhysFromPl(ent) {
+  // Destroyed objects have no fixtures
+  if (ent.bod.getFixtureList()) {
+    const d = fixtureDims(ent.bod.getFixtureList());
+    [ent.width, ent.height] = [d.width * ratio, d.height * ratio];
+  }
   [ent.x, ent.y] = entPosFromPl(ent).toTuple();
   ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
   ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;
