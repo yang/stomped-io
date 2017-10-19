@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
-    "lib": ["es7", "dom", "webworker"]
+    "lib": ["es7", "dom", "webworker"],
+    // Following is for the compiler invoked by webstorm
+    "outDir": "build",
+    "sourceMap": true
   }
 }
