@@ -39,7 +39,7 @@ const botMgr = new BotMgr(styleGen, entMgr, gameState, null, null);
 const doRun = !runLocally, doAddPlayers = !runLocally; // doRun = save-batteries mode
 
 let lastBcastTime = null;
-const bcastPeriod = 1 / 10;
+const bcastPeriod = 1 / 20;
 let tick = 0, bcastNum = 0;
 
 function getRandomInt(min: number, max: number) {

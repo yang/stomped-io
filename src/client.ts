@@ -203,7 +203,7 @@ function updateInputs() {
 
 let lastTime = 0;
 
-const timeBuffer = 200;
+const timeBuffer = 100;
 let delta = null;
 
 function lerp(a,b,alpha) {
