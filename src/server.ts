@@ -4,8 +4,8 @@ import * as Common from './common';
 import {
   addBody,
   AddEnt,
-  Bcast,
-  clearArray, Ent,
+  Bcast, BotMgr,
+  clearArray, Ent, EntMgr,
   Event, GameState, genStyles, getLogger,
   Lava,
   Ledge,
@@ -28,6 +28,13 @@ const gameState = new GameState(undefined, destroy);
 const events: Event[] = [];
 const players = gameState.players;
 const ledges = gameState.ledges;
+
+function onEntAdded(ent: Ent) {
+  events.push(new AddEnt(ent).ser());
+}
+
+const entMgr = new EntMgr(world, gameState, onEntAdded);
+const botMgr = new BotMgr(styleGen, entMgr, gameState, null, null);
 
 const doRun = !runLocally, doAddPlayers = !runLocally; // doRun = save-batteries mode
 
@@ -52,7 +59,27 @@ function initSnap() {
 }
 
 function update() {
+  const currTime = Date.now();
+  for (let bot of botMgr.bots) {
+    bot.replayPlan(true, currTime);
+  }
+  for (let bot of botMgr.bots) {
+    bot.checkPlan(currTime);
+  }
   Common.update(gameState);
+  for (let ent of getEnts()) {
+    updateEntPhysFromPl(ent);
+  }
+  for (let ent of toRemove) {
+    world.destroyBody(ent.bod);
+    if (ent instanceof Player) {
+      _.remove(players, e => e == ent);
+    }
+    if (ent instanceof Ledge) {
+      _.remove(ledges, e => e == ent);
+    }
+    events.push(new RemEnt(ent.id));
+  }
   updateLedges();
   tick += 1;
 }
@@ -64,9 +91,9 @@ function getEnts(): Ent[] {
 }
 
 function bcast() {
-  for (let ent of getEnts()) {
-    updateEntPhysFromPl(ent);
-  }
+  // for (let ent of getEnts()) {
+  //   updateEntPhysFromPl(ent);
+  // }
   //if (lastBcastTime == null) lastBcastTime = Date.now() / 1000;
   //if (currTime - lastBcastTime >= bcastPeriod) {
     // snapshot world
@@ -201,15 +228,10 @@ function create() {
 
 }
 
+const toRemove: Ent[] = [];
+
 function destroy(ent) {
-  world.destroyBody(ent.bod);
-  if (ent instanceof Player) {
-    _.remove(players, e => e == ent);
-  }
-  if (ent instanceof Ledge) {
-   _.remove(ledges, e => e == ent);
-  }
-  events.push(new RemEnt(ent.id));
+  toRemove.push(ent);
 }
 
 function makePlayer(name) {
@@ -250,12 +272,16 @@ io.on('connection', (socket: SocketIO.Socket) => {
       player.inputs = data.events[data.events.length - 1].inputs;
     });
 
+    socket.on('makeBot', () => botMgr.makeBot());
+
     socket.on('disconnect', () => {
       console.log(`player ${player.name} disconnected`);
     });
   });
 
 });
+
+(<any>global).dbg = {Common, gameState, botMgr};
 
 create();
 

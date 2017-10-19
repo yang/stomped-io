@@ -695,7 +695,7 @@ const simDt = 1/20;
 
 // This enables easier debugging---no runaway server-side simulation while setting breakpoints, no skipped frames,
 // no latency/interpolation, exact same resutls between predicted and actual physics.
-export const runLocally = true;
+export const runLocally = false;
 
 if (replayMode == ReplayMode.STEPS)
   assert(simDt == dt);
@@ -707,7 +707,7 @@ const simComputeTimeAllowance = initSimComputeTimeAllowance; // this.lastBestSeq
 
 // doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
 // vs. 167ms for non-cloning - most of the time goes into _.deepClone().
-let doSimInWorker = true, doCloneWorlds = true;
+let doSimInWorker = false, doCloneWorlds = true;
 
 let drawAllPaths = false, drawPlans = true, simStars = true, simStarRadius = 500, drawAllPathsIfBestPathDies = true
 

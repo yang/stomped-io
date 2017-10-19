@@ -47,7 +47,7 @@ import * as _ from 'lodash';
 class ControlPanel {
   currentPlayer = 0;
   viewAll = false;
-  makeBot() { botMgr.makeBot(); }
+  makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
 
@@ -522,7 +522,7 @@ export function main(pool) {
       timeline.push(initSnap);
       delta = initSnap.time - performance.now();
 
-      setTimeout((() => botMgr.makeBot()), 3000);
+      // setTimeout((() => botMgr.makeBot()), 3000);
 
       socket.on('bcast', (bcast) => {
         timeline.push(bcast);
