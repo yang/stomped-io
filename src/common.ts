@@ -152,7 +152,7 @@ export function create(gameState: GameState) {
     function bounce(fA, bA, fB, bB) {
       if (players.includes(bA.getUserData())) {
         const player: Player = bA.getUserData();
-        if (gameState.lava === bB.getUserData() || bB.getUserData().type == 'Lava') {
+        if (doLava && (gameState.lava === bB.getUserData() || bB.getUserData().type == 'Lava')) {
           contact.setEnabled(false);
           const player = bA.getUserData();
           postStep(() => {
@@ -419,6 +419,7 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
   for (let player of gameState.players) {
     updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, 9)));
     if (
+      doLava &&
       player.bod.getFixtureList().getAABB(0).lowerBound.y <=
       gameState.lava.bod.getFixtureList().getAABB(0).upperBound.y
     ) {
@@ -707,7 +708,7 @@ const simComputeTimeAllowance = initSimComputeTimeAllowance; // this.lastBestSeq
 
 // doCloneWorlds is necessary for accurate prediction (proper cloning of collision state), but currently takes 307ms
 // vs. 167ms for non-cloning - most of the time goes into _.deepClone().
-let doSimInWorker = false, doCloneWorlds = true;
+export let doSimInWorker = false, doCloneWorlds = true, doLava = false;
 
 let drawAllPaths = false, drawPlans = true, simStars = true, simStarRadius = 500, drawAllPathsIfBestPathDies = true
 

@@ -13,7 +13,7 @@ import {
   Bcast, Bot, BotMgr,
   clearArray,
   cloneWorld,
-  copyVec, createBody, defaultColor, deserSimResults,
+  copyVec, createBody, defaultColor, deserSimResults, doLava,
   dt,
   Ent,
   EntMgr,
@@ -149,7 +149,7 @@ function create(initSnap) {
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
   gameState.lava = lava;
-  const lavaSprite = game.add.sprite(0, Common.gameWorld.height - 64, 'lava');
+  const lavaSprite = game.add.sprite(0, Common.gameWorld.height - 64, doLava ? 'lava' : 'ground');
   entToSprite.set(lava, lavaSprite);
   lavaSprite.width = lava.width;
   lavaSprite.height = lava.height;
