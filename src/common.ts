@@ -696,7 +696,7 @@ const simDt = 1/20;
 export const runLocally = true;
 
 if (replayMode == ReplayMode.STEPS)
-  assert(runLocally && simDt == dt);
+  assert(simDt == dt);
 
 const pathDivergenceEps = .1;
 const steadySimComputeTimeAllowance = 1;
