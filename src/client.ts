@@ -204,7 +204,7 @@ function updateInputs() {
 let lastTime = 0;
 
 const timeBuffer = 100;
-let delta = null;
+let delta = 0;
 
 function lerp(a,b,alpha) {
   return a + alpha * (b - a);
@@ -530,11 +530,12 @@ export function main(pool) {
       });
 
       timeline.push(initSnap);
-      delta = initSnap.time - now();
 
       // setTimeout((() => botMgr.makeBot()), 3000);
 
       socket.on('bcast', (bcast) => {
+        // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
+        delta = delta * .9 + (bcast.time - now()) * (timeline.length == 0 ? 1 : .1);
         timeline.push(bcast);
       });
 
