@@ -51,6 +51,7 @@ class ControlPanel {
   instantTurn = true;
   drawPlanckBoxes = false;
   showDebug = true;
+  doShake = false;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
@@ -64,9 +65,11 @@ var game, gPool;
 const gameState = new GameState(undefined, destroy2);
 gameState.onJumpoff.add((player, other) => {
   const minSize = 10, maxSize = 15, slope = 0.1 / (maxSize - minSize);
-  const shake = Math.max(0, Math.min(0.01, slope * (player.size - minSize)));
-  if (shake > 0)
-    game.camera.shake(shake, 100);
+  if (cp.doShake) {
+    const shake = Math.max(0, Math.min(0.01, slope * (player.size - minSize)));
+    if (shake > 0)
+      game.camera.shake(shake, 100);
+  }
 
   if (other instanceof Player) {
     // squish the other player's sprite a bit
@@ -463,6 +466,7 @@ class GuiMgr {
       this.gui.add(cp, 'viewAll').onFinishChange(rescale),
       this.gui.add(cp, 'instantTurn'),
       this.gui.add(cp, 'drawPlanckBoxes'),
+      this.gui.add(cp, 'doShake'),
       this.gui.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
     ]);
   }
