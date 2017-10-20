@@ -10,8 +10,11 @@ export class Logger {
 export class LogHandler {
   buffer = [];
   enabled = new Set<string>();
+  doBuffer = true;
   log(name, msg) {
-    this.buffer.push([name, msg]);
+    if (this.doBuffer) {
+      this.buffer.push([name, msg]);
+    }
     if (this.enabled.has(name)) {
       console.log(`${name}:`, ...msg);
     }
