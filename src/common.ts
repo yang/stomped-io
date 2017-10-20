@@ -477,7 +477,9 @@ export function copyVec(v: Pl.Vec2): Pl.Vec2 {
   return Pl.Vec2(v.x, v.y);
 }
 
-export const now = typeof performance == 'undefined' ? Date.now : () => performance.now();
+// For smaller delta between client & server.
+let forceDateNow = false;
+export const now = forceDateNow || typeof performance == 'undefined' ? Date.now : () => performance.now();
 
 export function time(f) {
   const start = now();
