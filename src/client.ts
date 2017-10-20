@@ -52,7 +52,7 @@ class ControlPanel {
   drawPlanckBoxes = false;
   showDebug = true;
   doShake = false;
-  doBuffer = false;
+  doBuffer = baseHandler.doBuffer;
   runLocally = false;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
