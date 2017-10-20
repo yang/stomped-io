@@ -180,8 +180,8 @@ function schedRandInputs(player) {
   setTimeout(() => schedRandInputs(player), getRandomInt(1000, 3000));
 }
 
+const doStars = false, gridDim = 200, expPerGrid = doStars ? 10 : 0;
 function updateStars(gameState: GameState) {
-  const gridDim = 200, expPerGrid = 10;
   const gridCounts = [];
   for (let x = 0; x < Common.gameWorld.width / gridDim; x++) {
     gridCounts.push([]);
