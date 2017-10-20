@@ -28,7 +28,7 @@ import {
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth,
+  ledgeWidth, now,
   Player,
   plPosFromEnt,
   pushAll,
@@ -255,6 +255,11 @@ function update() {
   const currentPlayer = players[cp.currentPlayer];
   const bot = botMgr.bots.find(b => b.player == currentPlayer);
 
+  const currTime = now();
+  // if (delta == null && timeline.length > 0)
+  //   delta = timeline[0].time - currTime;
+  const targetTime = currTime + delta - timeBuffer;
+
   if (cp.showDebug) {
     const debugText = `
   FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
@@ -285,7 +290,6 @@ function update() {
     }
   }
 
-  const currTime = performance.now();
   let updating = false;
 
   if (runLocally) {
@@ -301,7 +305,6 @@ function update() {
       clearArray(events);
     }
 
-    const targetTime = currTime + delta - timeBuffer;
     // console.log(currTime, delta, timeBuffer, currTime + delta - timeBuffer);
     const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
     if (nextBcastIdx <= 0) {
@@ -501,10 +504,10 @@ export function main(pool) {
     if (doPings) {
       setInterval(() => {
         console.log('pinging');
-        socket.emit('ding', {pingTime: performance.now()})
+        socket.emit('ding', {pingTime: now()})
       }, 1000);
     }
-    socket.on('dong', ({pingTime}) => console.log('ping', performance.now() - pingTime));
+    socket.on('dong', ({pingTime}) => console.log('ping', now() - pingTime));
 
     socket.on('joined', (initSnap) => {
       game = new Phaser.Game({
@@ -527,7 +530,7 @@ export function main(pool) {
       });
 
       timeline.push(initSnap);
-      delta = initSnap.time - performance.now();
+      delta = initSnap.time - now();
 
       // setTimeout((() => botMgr.makeBot()), 3000);
 
