@@ -49,6 +49,8 @@ class ControlPanel {
   viewAll = false;
   // hide latency when turning sprite around
   instantTurn = true;
+  drawPlanckBoxes = false;
+  showDebug = true;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
@@ -69,8 +71,6 @@ gameState.onJumpoff.add((player, other) => {
     other.currentSquishTime = 0;
   }
 });
-
-let drawPlanckBoxes = true;
 
 let botMgr;
 
@@ -255,34 +255,36 @@ function update() {
   const currentPlayer = players[cp.currentPlayer];
   const bot = botMgr.bots.find(b => b.player == currentPlayer);
 
-  const debugText = `
-FPS: ${game.time.fps}
-${players.length} players
-
-Current player:
-Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
-Target: ${bot ? vecStr(bot.target) : ''}
-Size: ${currentPlayer ? currentPlayer.size : ''}
-Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
-Step: ${bot ?
-    `${bot.chunkSteps} total ${bot.lastBestSeq ?
-      JSON.stringify((([chunk, index, steps]) =>
-        _(chunk)
-          .pick('startTime', 'endTime', 'dur')
-          .extend({index, steps})
-          .value()
-      )(bot.getCurrChunk(-1))) : ''
-}` : ''}
-
-Scores:
-${_(players)
-    .sort(p => -p.size)
-    .map(p => `${p.size} ${p.name}`)
-    .join('\n')}
-  `.trim();
-  for (let [i,line] of enumerate(debugText.split('\n'))) {
-    game.debug.text(line, 2, 14 * (i + 1), "#00ff00");
+  if (cp.showDebug) {
+    const debugText = `
+  FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
+  ${players.length} players
+  
+  Current player:
+  Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
+  Target: ${bot ? vecStr(bot.target) : ''}
+  Size: ${currentPlayer ? currentPlayer.size : ''}
+  Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
+  Step: ${bot ?
+      `${bot.chunkSteps} total ${bot.lastBestSeq ?
+        JSON.stringify((([chunk, index, steps]) =>
+            _(chunk)
+              .pick('startTime', 'endTime', 'dur')
+              .extend({index, steps})
+              .value())(bot.getCurrChunk(-1))) : ''
+        }` : ''}
+  
+  Scores:
+  ${_(players)
+      .sort(p => -p.size)
+      .map(p => `${p.size} ${p.name}`)
+      .join('\n')}
+    `.trim();
+    for (let [i, line] of enumerate(debugText.split('\n'))) {
+      game.debug.text(line, 2, 14 * (i + 1), "#00ff00");
+    }
   }
+
   const currTime = performance.now();
   let updating = false;
 
@@ -352,7 +354,7 @@ ${_(players)
 
   gfx.clear();
   gfx.lineStyle(1,0x555555,1);
-  if (drawPlanckBoxes) {
+  if (cp.drawPlanckBoxes) {
     for (let body of Array.from(iterBodies(world))) {
       const [fix] = Array.from(iterFixtures(body)), dims = fixtureDims(fix);
       gfx.drawRect(
@@ -453,7 +455,9 @@ class GuiMgr {
       this.gui.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
       this.gui.add(cp, 'makeBot'),
       this.gui.add(cp, 'viewAll').onFinishChange(rescale),
-      this.gui.add(cp, 'instantTurn')
+      this.gui.add(cp, 'instantTurn'),
+      this.gui.add(cp, 'drawPlanckBoxes'),
+      this.gui.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
     ]);
   }
 
