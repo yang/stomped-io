@@ -736,7 +736,10 @@ const simDt = dt;
 
 // This enables easier debugging---no runaway server-side simulation while setting breakpoints, no skipped frames,
 // no latency/interpolation, exact same resutls between predicted and actual physics.
-export const runLocally = false;
+export let runLocally = false;
+export function setRunLocally(x: boolean) {
+  runLocally = x;
+}
 
 if (replayMode == ReplayMode.STEPS)
   assert(simDt == dt);

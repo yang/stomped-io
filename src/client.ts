@@ -53,6 +53,7 @@ class ControlPanel {
   showDebug = true;
   doShake = false;
   doBuffer = false;
+  runLocally = false;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
@@ -463,6 +464,7 @@ class GuiMgr {
     refollow();
     guiMgr.add([
       this.gui.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
+      this.gui.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
       this.gui.add(cp, 'makeBot'),
       this.gui.add(cp, 'viewAll').onFinishChange(rescale),
       this.gui.add(cp, 'instantTurn'),
