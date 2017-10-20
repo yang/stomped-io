@@ -314,7 +314,14 @@ ${_(players)
 
     // console.log(currTime, delta, timeBuffer, currTime + delta - timeBuffer);
     const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
-    getLogger('timeline').log(`time: ${currTime}, delta: ${delta}, target time: ${targetTime}, timeline: ${timeline.length > 0 ? `[${timeline[0].time} .. ${_(timeline).last().time}]` : ''}`);
+    if (timeline.length > 0)
+      getLogger('timeline').log(
+        'time', currTime,
+        'delta', delta,
+        'targetTime', targetTime,
+        't0', timeline[0].time,
+        't1', _(timeline).last().time
+      );
     if (nextBcastIdx <= 0) {
       console.warn('off end of timeline');
       return;
