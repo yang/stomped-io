@@ -3,7 +3,7 @@ import * as Sio from 'socket.io';
 import * as Common from './common';
 import {
   addBody,
-  AddEnt,
+  AddEnt, baseHandler,
   Bcast, BotMgr,
   clearArray, Ent, EntMgr,
   Event, GameState, genStyles, getLogger,
@@ -18,6 +18,9 @@ import {
   world
 } from './common';
 import * as Pl from 'planck-js';
+import * as fs from 'fs';
+
+baseHandler.file = fs.createWriteStream('log');
 
 const styleGen = genStyles();
 

@@ -11,12 +11,16 @@ export class LogHandler {
   buffer = [];
   enabled = new Set<string>();
   doBuffer = false;
+  file;
   log(name, msg) {
     if (this.doBuffer) {
       this.buffer.push([name, msg]);
     }
     if (this.enabled.has(name)) {
       console.log(`${name}:`, ...msg);
+    }
+    if (this.file) {
+      this.file.write(`${name}: ${msg.join(' ')}\n`);
     }
   }
 }
