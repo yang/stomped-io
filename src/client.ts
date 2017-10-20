@@ -271,6 +271,7 @@ function update() {
     const debugText = `
 FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
 ${players.length} players
+Delta: ${delta}
 
 Current player:
 Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
@@ -558,7 +559,7 @@ export function main(pool) {
         // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
         const currTime = now();
         const thisDelta = bcast.time - currTime;
-        delta = delta * .9 + thisDelta * (timeline.length == 0 ? 1 : .1);
+        delta = delta * .9 + thisDelta * (timeline.length == 1 ? 1 : .1);
         getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta);
         timeline.push(bcast);
         if (timeline.length > timelineLimit) {
