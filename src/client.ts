@@ -57,6 +57,8 @@ const cp = new ControlPanel();
 
 const styleGen = genStyles();
 
+const timelineLimit = 5;
+
 var game, gPool;
 
 const gameState = new GameState(undefined, destroy2);
@@ -307,6 +309,7 @@ function update() {
 
     // console.log(currTime, delta, timeBuffer, currTime + delta - timeBuffer);
     const nextBcastIdx = timeline.findIndex((snap) => snap.time > targetTime);
+    getLogger('timeline').log(`time: ${currTime}, delta: ${delta}, target time: ${targetTime}, timeline: ${timeline.length > 0 ? `[${timeline[0].time} .. ${_(timeline).last().time}]` : ''}`);
     if (nextBcastIdx <= 0) {
       console.warn('off end of timeline');
       return;
@@ -537,6 +540,9 @@ export function main(pool) {
         // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
         delta = delta * .9 + (bcast.time - now()) * (timeline.length == 0 ? 1 : .1);
         timeline.push(bcast);
+        if (timeline.length > timelineLimit) {
+          timeline.shift();
+        }
       });
 
       socket.on('botProxy', (botData) => {
