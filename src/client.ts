@@ -414,6 +414,9 @@ ${_(players)
     }
     lastTime = currTime;
   }
+
+  const endTime = now();
+  getLogger('client-jank').log('start', currTime, 'end', endTime, 'elapsed', endTime - currTime);
 }
 
 function plVelFromEnt(ent) {

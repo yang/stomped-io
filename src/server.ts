@@ -10,7 +10,7 @@ import {
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth, oscDist,
+  ledgeWidth, now, oscDist,
   Player,
   RemEnt, runLocally, serSimResults, Star,
   updateEntPhysFromPl,
@@ -62,7 +62,7 @@ function initSnap() {
 }
 
 function update() {
-  const currTime = Date.now();
+  const currTime = now();
   for (let bot of botMgr.bots) {
     bot.replayPlan(true, currTime);
   }
@@ -75,6 +75,8 @@ function update() {
   }
   updateLedges();
   tick += 1;
+  const endTime = now();
+  getLogger('server-jank').log('start', currTime, 'end', endTime, 'elapsed', endTime - currTime);
 }
 
 const playerToSocket = new Map();
