@@ -23,6 +23,10 @@ export class LogHandler {
       this.file.write(`${name}: ${msg.join(' ')}\n`);
     }
   }
+  // For convenient copy(baseHandler.toText()) in browser console
+  toText() {
+    return this.buffer.map(([tag, msg]) => `${tag}: ${msg.join(' ')}`).join('\n');
+  }
 }
 
 export function ensureOne(xs) {
