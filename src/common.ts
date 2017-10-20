@@ -10,7 +10,7 @@ export class Logger {
 export class LogHandler {
   buffer = [];
   enabled = new Set<string>();
-  doBuffer = true;
+  doBuffer = false;
   log(name, msg) {
     if (this.doBuffer) {
       this.buffer.push([name, msg]);

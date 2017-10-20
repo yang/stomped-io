@@ -52,6 +52,7 @@ class ControlPanel {
   drawPlanckBoxes = false;
   showDebug = true;
   doShake = false;
+  doBuffer = false;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
@@ -467,6 +468,7 @@ class GuiMgr {
       this.gui.add(cp, 'instantTurn'),
       this.gui.add(cp, 'drawPlanckBoxes'),
       this.gui.add(cp, 'doShake'),
+      this.gui.add(cp, 'doBuffer').onFinishChange(() => baseHandler.doBuffer = cp.doBuffer),
       this.gui.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
     ]);
   }
