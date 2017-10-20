@@ -732,7 +732,7 @@ const simPeriod = 3000;
 
 //const chunk = 1 / 5, horizon = 6 / 5;
 const chunk = 1, horizon = 6;
-const simDt = 1/20;
+const simDt = dt;
 
 // This enables easier debugging---no runaway server-side simulation while setting breakpoints, no skipped frames,
 // no latency/interpolation, exact same resutls between predicted and actual physics.
