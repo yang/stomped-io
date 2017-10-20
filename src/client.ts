@@ -556,7 +556,10 @@ export function main(pool) {
 
       socket.on('bcast', (bcast) => {
         // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
-        delta = delta * .9 + (bcast.time - now()) * (timeline.length == 0 ? 1 : .1);
+        const currTime = now();
+        const thisDelta = bcast.time - currTime;
+        delta = delta * .9 + thisDelta * (timeline.length == 0 ? 1 : .1);
+        getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta);
         timeline.push(bcast);
         if (timeline.length > timelineLimit) {
           timeline.shift();

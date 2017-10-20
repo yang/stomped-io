@@ -104,8 +104,9 @@ function bcast() {
   clearArray(toRemove);
 
   // snapshot world
+    const currTime = now();
     const snapshot: Bcast = ({
-      time: Date.now(),
+      time: currTime,
       tick: tick,
       bcastNum: bcastNum,
       events: events,
@@ -116,6 +117,7 @@ function bcast() {
       const socket = playerToSocket.get(player);
       if (socket) {
         socket.emit('bcast', snapshot);
+        getLogger('bcast').log('tick', tick, 'player', player.id, 'snap time', currTime, 'send done time', now());
       }
     }
     clearArray(events);
