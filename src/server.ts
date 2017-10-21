@@ -99,6 +99,9 @@ function bcast() {
     if (ent instanceof Ledge) {
       _.remove(ledges, e => e == ent);
     }
+    if (ent instanceof Star) {
+      _.remove(gameState.stars, e => e == ent);
+    }
     events.push(new RemEnt(ent.id));
   }
   clearArray(toRemove);
@@ -187,7 +190,7 @@ function schedRandInputs(player) {
   setTimeout(() => schedRandInputs(player), getRandomInt(1000, 3000));
 }
 
-const doStars = false, gridDim = 200, expPerGrid = doStars ? 10 : 0;
+const doStars = true, gridDim = 200, expPerGrid = doStars ? 10 : 0;
 function updateStars(gameState: GameState) {
   const gridCounts = [];
   for (let x = 0; x < Common.gameWorld.width / gridDim; x++) {
