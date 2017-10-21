@@ -47,7 +47,7 @@ import * as _ from 'lodash';
 const searchParams = new URLSearchParams(window.location.search);
 
 // For debugging GPU pressure in WebGL canvas.
-let ultraSlim = true;
+let ultraSlim = searchParams.get('ultraSlim');
 
 // For debugging jank when not runLocally.
 let localBcast = !!searchParams.get('localBcast');
@@ -619,7 +619,7 @@ export function main(pool) {
 
     socket.on('joined', (initSnap) => {
       game = new Phaser.Game({
-        scaleMode: false && ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
+        scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
         renderer: selectEnum(renderer, Phaser, [Phaser.AUTO, Phaser.CANVAS, Phaser.WEBGL]),
         state: {
           onResize: function(scaleMgr, parentBounds) {
@@ -630,7 +630,7 @@ export function main(pool) {
           },
           preload: preload,
           create: function() {
-            if (true || !ultraSlim) {
+            if (!ultraSlim) {
               this.scale.setResizeCallback(this.onResize, this);
               this.scale.refresh();
             }
