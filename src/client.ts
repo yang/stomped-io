@@ -277,7 +277,7 @@ function tryRemove(id: number, ents: Ent[]) {
   if (i >= 0) {
     const ent = ents[i];
     ents.splice(i, 1);
-    entToSprite.get(ent).kill();
+    entToSprite.get(ent).destroy();
     entToSprite.delete(ent);
   }
 }
