@@ -2,4 +2,5 @@ build/
 node_modules/
 dist/
 .idea/workspace.xml
-log
+*log
+.ipynb_checkpoints/
