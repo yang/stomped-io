@@ -52,6 +52,7 @@ let ultraSlim = true;
 // For debugging jank when not runLocally.
 let localBcast = !!searchParams.get('localBcast');
 let localBcastDur = +searchParams.get('localBcastDur') || 5;
+let localBcastDisconnects = !!searchParams.get('localBcastDisconnects');
 const bcastsPerSec = 20, bcastBuffer = [], bcastPeriodMs = 1000 / bcastsPerSec;
 let localBcastIndex = 0;
 
@@ -583,6 +584,8 @@ export function main(pool) {
       // setTimeout((() => botMgr.makeBot()), 3000);
 
       socket.on('bcast', (bcast) => {
+        if (localBcast && bcastBuffer.length == localBcastDur * bcastsPerSec)
+          return;
         // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
         const currTime = now();
         const thisDelta = bcast.time - currTime;
@@ -595,7 +598,7 @@ export function main(pool) {
         if (localBcast) {
           bcastBuffer.push(bcast);
           if (bcastBuffer.length == localBcastDur * bcastsPerSec) {
-            socket.disconnect();
+            if (localBcastDisconnects) socket.disconnect();
             setInterval(() => {
               const bcast = bcastBuffer[localBcastIndex];
               bcast.time = now() + delta;
