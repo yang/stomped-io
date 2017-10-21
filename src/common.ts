@@ -1287,6 +1287,7 @@ export class EntMgr {
     const gameState = this.gameState;
     if (!gameState.stars.find(s => s.id == starObj.id)) {
       const star = new Star(starObj.x, starObj.y);
+      _.extend(star, starObj);
       gameState.stars.push(star);
       this.addBody(star, 'kinematic');
       this.onEntAdded(star);
