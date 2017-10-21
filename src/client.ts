@@ -327,6 +327,10 @@ let showDebugText = function () {
 
 function update() {
 
+  if (rootComponent.state.shown) {
+    rootComponent.hide();
+  }
+
   const currentPlayer = players[cp.currentPlayer];
   const bot = botMgr.bots.find(b => b.player == currentPlayer);
 
@@ -703,6 +707,7 @@ function startGame(name: string) {
 }
 
 const doPings = false;
+let rootComponent;
 export function main(pool) {
   gPool = pool;
   socket = Sio('http://localhost:3000');
@@ -712,7 +717,7 @@ export function main(pool) {
     pRootComponent = renderSplash({
       onSubmit: !autoStartName ? resolveSubmit : _.noop,
       shown: !autoStartName
-    });
+    }).then(root => rootComponent = root);
     if (autoStartName) { resolveSubmit(autoStartName); }
   });
   const pConnected = new Promise((resolve) => socket.on('connect', resolve));

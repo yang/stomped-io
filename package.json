@@ -12,6 +12,7 @@
     "@types/react": "^16.0.16",
     "@types/react-dom": "^16.0.2",
     "@types/signals": "^0.0.17",
+    "classnames": "^2.2.5",
     "dat.gui": "^0.6.1",
     "flatbuffers": "^1.7.0",
     "lodash": "^4.17.4",
