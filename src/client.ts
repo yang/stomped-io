@@ -56,6 +56,17 @@ let localBcastDisconnects = !!searchParams.get('localBcastDisconnects');
 const bcastsPerSec = 20, bcastBuffer = [], bcastPeriodMs = 1000 / bcastsPerSec;
 let localBcastIndex = 0;
 
+let renderer = searchParams.get('renderer');
+
+function selectEnum(value, enumObj, enums) {
+  if (value === null || value === undefined) {
+    return enums[0];
+  } else {
+    assert(enums.includes(enumObj[value]));
+    return enumObj[value];
+  }
+}
+
 class ControlPanel {
   currentPlayer = 0;
   viewAll = false;
@@ -293,9 +304,17 @@ const entToLabel = new Map<Ent, any>();
 
 class ClientState {
   lastBcastNum = 0;
+  debugText = '';
 }
 
 const clientState = new ClientState();
+
+
+let showDebugText = function () {
+  for (let [i, line] of enumerate(clientState.debugText.split('\n'))) {
+    game.debug.text(line, 2, 14 * (i + 1), "#00ff00");
+  }
+};
 
 function update() {
 
@@ -308,7 +327,7 @@ function update() {
   const targetTime = currTime + delta - timeBuffer;
 
   if (cp.showDebug) {
-    const debugText = `
+    clientState.debugText = `
 FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
 ${players.length} players
 Delta: ${delta}
@@ -333,9 +352,7 @@ ${_(players)
       .map(p => `${p.size} ${p.name}`)
       .join('\n')}
     `.trim();
-    for (let [i, line] of enumerate(debugText.split('\n'))) {
-      game.debug.text(line, 2, 14 * (i + 1), "#00ff00");
-    }
+    showDebugText();
   }
 
   let updating = false;
@@ -575,6 +592,11 @@ function rescale() {
   }
 }
 
+function render() {
+  if (cp.showDebug)
+    showDebugText();
+}
+
 const doPings = false;
 export function main(pool) {
   gPool = pool;
@@ -597,7 +619,8 @@ export function main(pool) {
 
     socket.on('joined', (initSnap) => {
       game = new Phaser.Game({
-        scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
+        scaleMode: false && ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
+        renderer: selectEnum(renderer, Phaser, [Phaser.AUTO, Phaser.CANVAS, Phaser.WEBGL]),
         state: {
           onResize: function(scaleMgr, parentBounds) {
             lastParentBounds = parentBounds;
@@ -607,13 +630,14 @@ export function main(pool) {
           },
           preload: preload,
           create: function() {
-            if (!ultraSlim) {
+            if (true || !ultraSlim) {
               this.scale.setResizeCallback(this.onResize, this);
               this.scale.refresh();
             }
             create(initSnap);
           },
-          update: update
+          update: update,
+          render: render
         }
       });
 
