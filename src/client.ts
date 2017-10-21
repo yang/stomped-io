@@ -44,6 +44,9 @@ import {
 } from './common';
 import * as _ from 'lodash';
 
+// For debugging GPU pressure in WebGL canvas.
+let ultraSlim = true;
+
 class ControlPanel {
   currentPlayer = 0;
   viewAll = false;
@@ -84,17 +87,29 @@ let botMgr;
 
 function preload() {
 
-  game.load.image('bg', 'assets/bg.png');
-  game.load.image('sky', 'assets/bg-grad.png');
-  game.load.image('ground', 'assets/ledge.png');
-  game.load.image('star', 'assets/star.png');
-  game.load.image('lava', 'assets/lava.png');
-  game.load.spritesheet('dude-white', 'dist/assets/player-white.png', 567, 756);
-  game.load.spritesheet('dude-red', 'dist/assets/player-red.png', 567, 756);
-  game.load.spritesheet('dude-yellow', 'dist/assets/player-yellow.png', 567, 756);
-  game.load.spritesheet('dude-green', 'dist/assets/player-green.png', 567, 756);
-  game.stage.disableVisibilityChange = true;
-
+  if (!ultraSlim) {
+    game.load.image('bg', 'assets/bg.png');
+    game.load.image('sky', 'assets/bg-grad.png');
+    game.load.image('ground', 'assets/ledge.png');
+    game.load.image('star', 'assets/star.png');
+    game.load.image('lava', 'assets/lava.png');
+    game.load.spritesheet('dude-white', 'dist/assets/player-white.png', 567, 756);
+    game.load.spritesheet('dude-red', 'dist/assets/player-red.png', 567, 756);
+    game.load.spritesheet('dude-yellow', 'dist/assets/player-yellow.png', 567, 756);
+    game.load.spritesheet('dude-green', 'dist/assets/player-green.png', 567, 756);
+    game.stage.disableVisibilityChange = true;
+  } else {
+    game.load.image('bg', 'assets/ledge.png');
+    game.load.image('sky', 'assets/ledge.png');
+    game.load.image('ground', 'assets/ledge.png');
+    game.load.image('star', 'assets/ledge.png');
+    game.load.image('lava', 'assets/ledge.png');
+    game.load.spritesheet('dude-white', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('dude-red', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('dude-yellow', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('dude-green', 'assets/dude.png', 32, 48);
+    game.stage.disableVisibilityChange = true;
+  }
 }
 
 var platforms;
@@ -147,12 +162,14 @@ function create(initSnap) {
   gfx.lineStyle(1,0x0088FF,1);
 
   //  A simple background for our game
-  game.add.sprite(0, 0, 'sky');
+  if (!ultraSlim) {
+    game.add.sprite(0, 0, 'sky');
 
-  const bg = game.add.tileSprite(0,0,Common.gameWorld.width,Common.gameWorld.height,'bg');
-  bg.tileScale.x = 1/4;
-  bg.tileScale.y = 1/4;
-  bg.alpha = .05;
+    const bg = game.add.tileSprite(0, 0, Common.gameWorld.width, Common.gameWorld.height, 'bg');
+    bg.tileScale.x = 1 / 4;
+    bg.tileScale.y = 1 / 4;
+    bg.alpha = .05
+  }
 
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
@@ -533,7 +550,7 @@ export function main(pool) {
 
     socket.on('joined', (initSnap) => {
       game = new Phaser.Game({
-        scaleMode: Phaser.ScaleManager.RESIZE,
+        scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
         state: {
           onResize: function(scaleMgr, parentBounds) {
             lastParentBounds = parentBounds;
@@ -543,8 +560,10 @@ export function main(pool) {
           },
           preload: preload,
           create: function() {
-            this.scale.setResizeCallback(this.onResize, this);
-            this.scale.refresh();
+            if (!ultraSlim) {
+              this.scale.setResizeCallback(this.onResize, this);
+              this.scale.refresh();
+            }
             create(initSnap);
           },
           update: update
