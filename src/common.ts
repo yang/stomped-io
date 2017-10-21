@@ -392,8 +392,8 @@ export function createBody(world: Pl.World, ent, type, fixtureOpts = {}) {
 }
 
 let lastTime = null;
-export const dt = 1 / 20 / 3;
-export const updatePeriod = 1 / 20 / 3;
+export const dt = 1 / 20 / 1;
+export const updatePeriod = 1 / 20 / 1;
 // physics timestep per real timestep
 export const timeWarp = dt / updatePeriod;
 
@@ -744,7 +744,7 @@ const simDt = dt;
 
 // This enables easier debugging---no runaway server-side simulation while setting breakpoints, no skipped frames,
 // no latency/interpolation, exact same resutls between predicted and actual physics.
-export let runLocally = true;
+export let runLocally = false;
 export function setRunLocally(x: boolean) {
   runLocally = x;
 }
