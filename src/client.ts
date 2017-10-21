@@ -1,3 +1,5 @@
+import {renderSplash} from "./components";
+
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
 const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-split');
@@ -43,6 +45,7 @@ import {
   world
 } from './common';
 import * as _ from 'lodash';
+import {Component} from "react";
 
 const searchParams = new URLSearchParams(window.location.search);
 
@@ -55,6 +58,8 @@ let localBcastDur = +searchParams.get('localBcastDur') || 5;
 let localBcastDisconnects = !!searchParams.get('localBcastDisconnects');
 const bcastsPerSec = 20, bcastBuffer = [], bcastPeriodMs = 1000 / bcastsPerSec;
 let localBcastIndex = 0;
+
+let autoStartName = searchParams.get('autoStartName');
 
 let renderer = searchParams.get('renderer');
 
@@ -601,106 +606,115 @@ function render() {
     showDebugText();
 }
 
+function startGame(name: string) {
+  if (game) return;
+
+  socket.emit('join', {name});
+
+  if (doPings) {
+    setInterval(() => {
+      console.log('pinging');
+      socket.emit('ding', {pingTime: now()})
+    }, 1000);
+  }
+  socket.on('dong', ({pingTime}) => console.log('ping', now() - pingTime));
+
+  socket.on('joined', (initSnap) => {
+    game = new Phaser.Game({
+      scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
+      renderer: selectEnum(renderer, Phaser, [Phaser.AUTO, Phaser.CANVAS, Phaser.WEBGL]),
+      state: {
+        onResize: function(scaleMgr, parentBounds) {
+          lastParentBounds = parentBounds;
+          rescale();
+          // This is needed to keep the camera on the player. Camera doesn't register game rescales.
+          this.camera.follow(entToSprite.get(me), Phaser.Camera.FOLLOW_PLATFORMER);
+        },
+        preload: preload,
+        create: function() {
+          if (!ultraSlim) {
+            this.scale.setResizeCallback(this.onResize, this);
+            this.scale.refresh();
+          }
+          create(initSnap);
+        },
+        update: update,
+        render: render
+      }
+    });
+
+    timeline.push(initSnap);
+
+    // setTimeout((() => botMgr.makeBot()), 3000);
+
+    socket.on('bcast', (bcast) => {
+      const currTime = now();
+      getLogger('bcast.data').log(currTime, bcast);
+      if (localBcast && bcastBuffer.length == localBcastDur * bcastsPerSec)
+        return;
+      // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
+      const thisDelta = bcast.time - currTime;
+      delta = delta * .9 + thisDelta * (timeline.length == 1 ? 1 : .1);
+      getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta);
+      timeline.push(bcast);
+      if (timeline.length > timelineLimit) {
+        timeline.shift();
+      }
+      if (localBcast) {
+        bcastBuffer.push(bcast);
+        if (bcastBuffer.length == localBcastDur * bcastsPerSec) {
+          if (localBcastDisconnects) socket.disconnect();
+          setInterval(() => {
+            const bcast = bcastBuffer[localBcastIndex];
+            bcast.time = now() + delta;
+            timeline.push(bcast);
+            localBcastIndex = (localBcastIndex + 1) % bcastBuffer.length;
+            timeline.shift();
+          }, bcastPeriodMs);
+        }
+      }
+    });
+
+    socket.on('botProxy', (botData) => {
+      onNextBcastPersistentCallbacks.push(() => botMgr.maybeAddProxy(botData));
+    });
+
+    socket.on('botPlan', ({botData, bestWorldStateIndex, bestPath, worldStatesData}) => {
+      onNextBcastPersistentCallbacks.push(() => {
+        const bot = botMgr.bots.find(b => b.player.id == botData.playerId);
+        if (bot) {
+          const {worldStates, bestPath: realBestPath, bestWorldState} = deserSimResults({
+            bestWorldStateIndex,
+            bestPath,
+            worldStatesData
+          });
+          bot.deser(botData);
+          bot.lastWorldStates = worldStates;
+          bot.lastBestSeq = realBestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
+          return true;
+        } else {
+          return false;
+        }
+      });
+    });
+  });
+
+  socket.on('disconnect', () => console.log('disconnect'));
+}
+
 const doPings = false;
 export function main(pool) {
   gPool = pool;
   socket = Sio('http://localhost:3000');
   botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool);
-  socket.on('connect', () => {
-    if (game) return;
-
-    console.log('connect')
-
-    socket.emit('join', {name: 'z'});
-
-    if (doPings) {
-      setInterval(() => {
-        console.log('pinging');
-        socket.emit('ding', {pingTime: now()})
-      }, 1000);
-    }
-    socket.on('dong', ({pingTime}) => console.log('ping', now() - pingTime));
-
-    socket.on('joined', (initSnap) => {
-      game = new Phaser.Game({
-        scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
-        renderer: selectEnum(renderer, Phaser, [Phaser.AUTO, Phaser.CANVAS, Phaser.WEBGL]),
-        state: {
-          onResize: function(scaleMgr, parentBounds) {
-            lastParentBounds = parentBounds;
-            rescale();
-            // This is needed to keep the camera on the player. Camera doesn't register game rescales.
-            this.camera.follow(entToSprite.get(me), Phaser.Camera.FOLLOW_PLATFORMER);
-          },
-          preload: preload,
-          create: function() {
-            if (!ultraSlim) {
-              this.scale.setResizeCallback(this.onResize, this);
-              this.scale.refresh();
-            }
-            create(initSnap);
-          },
-          update: update,
-          render: render
-        }
-      });
-
-      timeline.push(initSnap);
-
-      // setTimeout((() => botMgr.makeBot()), 3000);
-
-      socket.on('bcast', (bcast) => {
-        const currTime = now();
-        getLogger('bcast.data').log(currTime, bcast);
-        if (localBcast && bcastBuffer.length == localBcastDur * bcastsPerSec)
-          return;
-        // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
-        const thisDelta = bcast.time - currTime;
-        delta = delta * .9 + thisDelta * (timeline.length == 1 ? 1 : .1);
-        getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta);
-        timeline.push(bcast);
-        if (timeline.length > timelineLimit) {
-          timeline.shift();
-        }
-        if (localBcast) {
-          bcastBuffer.push(bcast);
-          if (bcastBuffer.length == localBcastDur * bcastsPerSec) {
-            if (localBcastDisconnects) socket.disconnect();
-            setInterval(() => {
-              const bcast = bcastBuffer[localBcastIndex];
-              bcast.time = now() + delta;
-              timeline.push(bcast);
-              localBcastIndex = (localBcastIndex + 1) % bcastBuffer.length;
-              timeline.shift();
-            }, bcastPeriodMs);
-          }
-        }
-      });
-
-      socket.on('botProxy', (botData) => {
-        onNextBcastPersistentCallbacks.push(() => botMgr.maybeAddProxy(botData));
-      });
-
-      socket.on('botPlan', ({botData, bestWorldStateIndex, bestPath, worldStatesData}) => {
-        onNextBcastPersistentCallbacks.push(() => {
-          const bot = botMgr.bots.find(b => b.player.id == botData.playerId);
-          if (bot) {
-            const {worldStates, bestPath: realBestPath, bestWorldState} = deserSimResults({
-              bestWorldStateIndex,
-              bestPath,
-              worldStatesData
-            });
-            bot.deser(botData);
-            bot.lastWorldStates = worldStates;
-            bot.lastBestSeq = realBestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
-            return true;
-          } else {
-            return false;
-          }
-        });
-      });
+  let pRootComponent;
+  const pName = new Promise<string>((resolveSubmit) => {
+    pRootComponent = renderSplash({
+      onSubmit: !autoStartName ? resolveSubmit : _.noop,
+      shown: !autoStartName
     });
-
-    socket.on('disconnect', () => console.log('disconnect'));
+    if (autoStartName) { resolveSubmit(autoStartName); }
   });
+  const pConnected = new Promise((resolve) => socket.on('connect', resolve));
+  Promise.all([pName, pConnected]).then(([name, _]) => startGame(name as string));
 }
