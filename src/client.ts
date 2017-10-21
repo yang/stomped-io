@@ -53,7 +53,7 @@ class ControlPanel {
   showDebug = true;
   doShake = false;
   doBuffer = baseHandler.doBuffer;
-  runLocally = false;
+  runLocally = runLocally;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
