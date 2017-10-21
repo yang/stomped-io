@@ -67,6 +67,7 @@ class ControlPanel {
   doBuffer = baseHandler.doBuffer;
   runLocally = runLocally;
   alwaysStep = true;
+  showIds = false;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
@@ -279,12 +280,16 @@ function tryRemove(id: number, ents: Ent[]) {
     ents.splice(i, 1);
     entToSprite.get(ent).destroy();
     entToSprite.delete(ent);
+    const label = entToLabel.get(ent);
+    if (label) label.destroy();
   }
 }
 
 function vecStr(v) {
   return JSON.stringify([v.x, v.y]);
 }
+
+const entToLabel = new Map<Ent, any>();
 
 function update() {
 
@@ -450,6 +455,17 @@ ${_(players)
     lastTime = currTime;
   }
 
+  if (cp.showIds) {
+    const style = { font: "12px Arial", fill: "#ff0044", wordWrap: true, align: "center"};
+    for (let ent of getEnts()) {
+      let label = entToLabel.get(ent);
+      if (!label) {
+        entToLabel.set(ent, label = game.add.text(ent.x, ent.y, ""+ent.id, style));
+      }
+      [label.x, label.y] = [ent.x, ent.y];
+    }
+  }
+
   const endTime = now();
   getLogger('client-jank').log('start', currTime, 'end', endTime, 'elapsed', endTime - currTime);
 }
@@ -509,6 +525,8 @@ class GuiMgr {
       this.gui.add(cp, 'drawPlanckBoxes'),
       this.gui.add(cp, 'doShake'),
       this.gui.add(cp, 'alwaysStep'),
+      this.gui.add(cp, 'showIds').onFinishChange(() =>
+        cp.showIds ? 0 : Array.from(entToLabel.values()).map(t => t.destroy())),
       this.gui.add(cp, 'doBuffer').onFinishChange(() => baseHandler.doBuffer = cp.doBuffer),
       this.gui.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
     ]);
