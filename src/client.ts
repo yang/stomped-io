@@ -10,7 +10,7 @@ import {
   addBody,
   AddEnt,
   assert, baseHandler,
-  Bcast, Bot, BotMgr,
+  Bcast, Block, Bot, BotMgr,
   clearArray,
   cloneWorld,
   copyVec, createBody, defaultColor, deserSimResults, doLava,
@@ -279,6 +279,10 @@ function onEntAdded(ent: Ent) {
     mkSprite('ground');
   } else if (ent instanceof Star) {
     mkSprite('star');
+  } else if (ent instanceof Block) {
+    mkSprite('ground');
+  } else {
+    throw new Error();
   }
 }
 

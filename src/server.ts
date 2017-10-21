@@ -4,7 +4,7 @@ import * as Common from './common';
 import {
   addBody,
   AddEnt, baseHandler,
-  Bcast, BotMgr,
+  Bcast, Block, BotMgr,
   clearArray, Ent, EntMgr,
   Event, GameState, genStyles, getLogger,
   Lava,
@@ -225,6 +225,12 @@ function create() {
 
   updateStars(gameState);
   updateLedges();
+
+  for (let i = 0; i < 2; i++) {
+    const wall = new Block(i == 0 ? -10 : Common.gameWorld.width, 0, 10, Common.gameWorld.height);
+    addBody(wall, 'kinematic');
+    gameState.blocks.push(wall);
+  }
 
   for (let i = 0; i < initPlayers; i++) {
     const player = makePlayer(`bot${i}`);

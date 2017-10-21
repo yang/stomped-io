@@ -80,10 +80,11 @@ export class GameState {
   public ledges: Ledge[] = [];
   public lava: Lava;
   public stars: Star[] = [];
+  public blocks: Block[] = [];
   onJumpoff = new Signals.Signal();
   constructor(public world: Pl.World = gWorld, public destroy = _.noop) {}
   getEnts() {
-    return (<Ent[]>this.players).concat(this.ledges).concat(this.stars);
+    return (<Ent[]>this.players).concat(this.ledges).concat(this.stars).concat(this.blocks);
   }
   ser() {
     for (let body of Array.from(iterBodies(world))) {
@@ -335,6 +336,12 @@ export class Ledge extends Ent {
   constructor(public x: number, public y: number, public oscPeriod: number) {
     super();
     this.initPos = new Vec2(x,y);
+  }
+}
+
+export class Block extends Ent {
+  constructor(public x: number, public y: number, public width: number, public height: number) {
+    super();
   }
 }
 
@@ -1249,6 +1256,11 @@ export class EntMgr {
       case 'Star':
         this.addStar(ent);
         break;
+      case 'Block':
+        this.addBlock(ent);
+        break;
+      default:
+        throw new Error();
     }
   }
 
@@ -1291,6 +1303,16 @@ export class EntMgr {
       gameState.stars.push(star);
       this.addBody(star, 'kinematic');
       this.onEntAdded(star);
+    }
+  }
+
+  addBlock(blockObj) {
+    if (!this.gameState.blocks.find(block => block.id == blockObj.id)) {
+      const block = new Block(blockObj.x, blockObj.y, blockObj.width, blockObj.height);
+      _.extend(block, blockObj);
+      this.gameState.blocks.push(block);
+      this.addBody(block, 'kinematic');
+      this.onEntAdded(block);
     }
   }
 
