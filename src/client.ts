@@ -44,8 +44,16 @@ import {
 } from './common';
 import * as _ from 'lodash';
 
+const searchParams = new URLSearchParams(window.location.search);
+
 // For debugging GPU pressure in WebGL canvas.
 let ultraSlim = true;
+
+// For debugging jank when not runLocally.
+let localBcast = !!searchParams.get('localBcast');
+let localBcastDur = +searchParams.get('localBcastDur') || 5;
+const bcastsPerSec = 20, bcastBuffer = [], bcastPeriodMs = 1000 / bcastsPerSec;
+let localBcastIndex = 0;
 
 class ControlPanel {
   currentPlayer = 0;
@@ -583,6 +591,19 @@ export function main(pool) {
         timeline.push(bcast);
         if (timeline.length > timelineLimit) {
           timeline.shift();
+        }
+        if (localBcast) {
+          bcastBuffer.push(bcast);
+          if (bcastBuffer.length == localBcastDur * bcastsPerSec) {
+            socket.disconnect();
+            setInterval(() => {
+              const bcast = bcastBuffer[localBcastIndex];
+              bcast.time = now() + delta;
+              timeline.push(bcast);
+              localBcastIndex = (localBcastIndex + 1) % bcastBuffer.length;
+              timeline.shift();
+            }, bcastPeriodMs);
+          }
         }
       });
 
