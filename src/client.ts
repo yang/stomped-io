@@ -604,10 +604,11 @@ export function main(pool) {
       // setTimeout((() => botMgr.makeBot()), 3000);
 
       socket.on('bcast', (bcast) => {
+        const currTime = now();
+        getLogger('bcast.data').log(currTime, bcast);
         if (localBcast && bcastBuffer.length == localBcastDur * bcastsPerSec)
           return;
         // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
-        const currTime = now();
         const thisDelta = bcast.time - currTime;
         delta = delta * .9 + thisDelta * (timeline.length == 1 ? 1 : .1);
         getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta);
