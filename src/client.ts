@@ -291,6 +291,12 @@ function vecStr(v) {
 
 const entToLabel = new Map<Ent, any>();
 
+class ClientState {
+  lastBcastNum = 0;
+}
+
+const clientState = new ClientState();
+
 function update() {
 
   const currentPlayer = players[cp.currentPlayer];
@@ -361,24 +367,36 @@ ${_(players)
     }
     const nextBcast = timeline[nextBcastIdx];
     const prevBcast = timeline[nextBcastIdx - 1];
+
+    // Catch up on additions/removals
+    if (!timeline.find(bcast => bcast.bcastNum == clientState.lastBcastNum + 1)) {
+      console.warn('skipped over bcastNum', clientState.lastBcastNum + 1, '- no longer on timeline, smallest kept is', timeline[0].bcastNum);
+    }
+    const toProcess = timeline.filter(bcast =>
+      clientState.lastBcastNum < bcast.bcastNum && bcast.bcastNum <= prevBcast.bcastNum
+    )
+    for (let bcast of toProcess) {
+      for (let ev of bcast.events) {
+        switch (ev.type) {
+          case 'AddEnt':
+            const ent: Ent = (<AddEnt>ev).ent;
+            entMgr.addEnt(ent);
+            break;
+          case 'RemEnt':
+            const id = (<RemEnt>ev).id;
+            tryRemove(id, players);
+            tryRemove(id, ledges);
+            tryRemove(id, gameState.stars);
+            break;
+        }
+      }
+    }
+    clientState.lastBcastNum = prevBcast.bcastNum;
+
     const alpha = (targetTime - prevBcast.time) / (nextBcast.time - prevBcast.time);
 
     const aMap = new Map(prevBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
     const bMap = new Map(nextBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
-    for (let ev of prevBcast.events) {
-      switch (ev.type) {
-        case 'AddEnt':
-          const ent: Ent = (<AddEnt>ev).ent;
-          entMgr.addEnt(ent);
-          break;
-        case 'RemEnt':
-          const id = (<RemEnt>ev).id;
-          tryRemove(id, players);
-          tryRemove(id, ledges);
-          tryRemove(id, gameState.stars);
-          break;
-      }
-    }
     onNextBcastPersistentCallbacks = onNextBcastPersistentCallbacks.filter(f => !f());
     for (let ent of getEnts()) {
       const [a, b] = [aMap.get(ent.id), bMap.get(ent.id)];
