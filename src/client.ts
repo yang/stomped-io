@@ -138,17 +138,19 @@ const timeline: Bcast[] = [];
 
 // This may get called multiple times on same object in a single frame when multiple entities collide with something.
 function destroy2(ent) {
-  const log = getLogger('destroy');
-  world.destroyBody(ent.bod);
-  entToSprite.get(ent).kill();
-  const removed = [
-    ..._.remove(gameState.players, e => e == ent),
-    ..._.remove(gameState.stars, e => e == ent)
-  ];
-  log.log(removed.length, ent.type, ent.id);
-  assert(ent.type != 'Player' || removed.length == 1);
-  if (ent instanceof Player) {
-    guiMgr.refresh();
+  if (runLocally) {
+    const log = getLogger('destroy');
+    world.destroyBody(ent.bod);
+    entToSprite.get(ent).kill();
+    const removed = [
+      ..._.remove(gameState.players, e => e == ent),
+      ..._.remove(gameState.stars, e => e == ent)
+    ];
+    log.log(removed.length, ent.type, ent.id);
+    assert(ent.type != 'Player' || removed.length == 1);
+    if (ent instanceof Player) {
+      guiMgr.refresh();
+    }
   }
 }
 
