@@ -592,10 +592,9 @@ function mkScoreText() {
   return `Leaderboard
 ${_(gameState.players)
     .sort(p => -p.size)
-    .map(p => `${showScore(p)} ${p.name} ${p == me ? '<---' : ''}`)
-    .join('\n')}
-
-Your size: ${showScore(me)}`;
+    .filter((p, i) => i < 10 || me == p)
+    .map((p, i) => `${i + 1}. ${showScore(p)} ${p.name} ${p == me ? '<---' : ''}`)
+    .join('\n')}`;
 };
 
 function plVelFromEnt(ent) {
