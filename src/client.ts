@@ -583,12 +583,18 @@ ${mkScoreText()}
   getLogger('client-jank').log('start', currTime, 'end', endTime, 'elapsed', endTime - currTime);
 }
 
+function showScore(player: Player) {
+  return Math.round(10 * player.size);
+}
+
 function mkScoreText() {
   return `Leaderboard
 ${_(gameState.players)
     .sort(p => -p.size)
-    .map(p => `${Math.round(10 * p.size)} ${p.name}`)
-    .join('\n')}`;
+    .map(p => `${showScore(p)} ${p.name}`)
+    .join('\n')}
+
+Your size: ${showScore(me)}`;
 };
 
 function plVelFromEnt(ent) {
