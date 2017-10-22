@@ -268,8 +268,8 @@ function makePlayer(name) {
   }
   const player = new Player(
     name,
-    ledges[2].x + ledgeWidth / 2,
-    ledges[2].y - 50,
+    Common.gameWorld.width / 2,
+    50,
     `dude-${styleGen.next().value}`
   );
   addBody(player, 'dynamic');
