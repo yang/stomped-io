@@ -325,6 +325,10 @@ export class Player extends Ent {
     fA.setDensity(player.size ** (1 / 3));
     bA.resetMassData();
   }
+
+  describe() {
+    return `${this.name} (${this.id})`;
+  }
 }
 
 export const ledgeWidth = 300, ledgeHeight = 24;

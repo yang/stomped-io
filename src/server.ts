@@ -21,7 +21,7 @@ import * as Pl from 'planck-js';
 import * as fs from 'fs';
 
 class Client {
-  id = ids.next();
+  id = ids.next().value;
   constructor(public socket) {}
 }
 
@@ -96,6 +96,7 @@ function bcast() {
   for (let ent of toRemove) {
     world.destroyBody(ent.bod);
     if (ent instanceof Player) {
+      console.log('player', ent.describe(), 'died');
       _.remove(players, e => e == ent);
     }
     if (ent instanceof Ledge) {
@@ -273,6 +274,10 @@ io.on('connection', (socket: SocketIO.Socket) => {
   clients.push(client);
   console.log('client', client.id, 'connected');
 
+  socket.on('disconnect', () => {
+    console.log('client', client.id, 'disconnected');
+  });
+
   socket.on('ding', (data) => {
     socket.emit('dong', data)
   });
@@ -280,14 +285,14 @@ io.on('connection', (socket: SocketIO.Socket) => {
   socket.on('join', (playerData) => {
     const player = makePlayer(playerData.name);
 
-    console.log(`player ${player.name} joined`);
+    console.log('player', player.describe(), `joined (client ${client.id})`);
 
     // TODO create player-joined event
 
     socket.emit('joined', initSnap());
 
     socket.on('input', (data) => {
-      console.log(`player ${player.name} sent input for t=${data.time}`);
+      getLogger('input').log('player', player.describe(), 'sent input for time', data.time);
       player.inputs = data.events[data.events.length - 1].inputs;
     });
 
@@ -299,10 +304,6 @@ io.on('connection', (socket: SocketIO.Socket) => {
         const resultsData = serSimResults({worldStates, bestPath, bestWorldState});
         socket.emit('botPlan', {botData, ...resultsData});
       });
-    });
-
-    socket.on('disconnect', () => {
-      console.log(`player ${player.name} disconnected`);
     });
   });
 
