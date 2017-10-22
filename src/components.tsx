@@ -5,6 +5,7 @@ import {Component} from "react";
 interface SplashState {
   name: string;
   shown: boolean;
+  disabled: boolean;
 }
 
 interface SplashProps {
@@ -19,7 +20,8 @@ export class Splash extends React.Component {
     super(props);
     this.state = {
       name: '',
-      shown: props.shown
+      shown: props.shown,
+      disabled: false
     };
   }
   private handleChange = (e) => {
@@ -45,6 +47,7 @@ export class Splash extends React.Component {
           onChange={this.handleChange}
           placeholder={'Enter a nickname'}
           autoFocus={true}
+          disabled={this.state.disabled}
         />
         <br/>
         <button className={'submit-btn'} type={'submit'}>Play!</button>

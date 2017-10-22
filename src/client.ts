@@ -66,6 +66,9 @@ let autoStartName = searchParams.get('autoStartName');
 
 let renderer = searchParams.get('renderer');
 
+let enabledLogs = (searchParams.get('enabledLogs') || '').split(' ');
+for (let x of enabledLogs) { baseHandler.enabled.add(x); }
+
 function selectEnum(value, enumObj, enums) {
   if (value === null || value === undefined) {
     return enums[0];
@@ -190,9 +193,7 @@ function notify(content: string) {
   (notifClearer as any) = setTimeout(() => notifText.text = '', 2000);
 }
 
-function create(initSnap) {
-
-  gameState.time = initSnap.tick * dt;
+function create() {
 
   game.world.setBounds(0,0,Common.gameWorld.width,Common.gameWorld.height);
   game.time.advancedTiming = true;
@@ -223,16 +224,6 @@ function create(initSnap) {
   //  The platforms group contains the ground and the 2 ledges we can jump on
   platforms = game.add.group();
 
-  const {ents} = initSnap;
-  for (let ent of ents) {
-    entMgr.addEnt(ent);
-  }
-
-  me = players[players.length - 1];
-  const meSprite = entToSprite.get(me);
-  game.camera.follow(meSprite, Phaser.Camera.FOLLOW_PLATFORMER);
-  guiMgr.refresh();
-
   //  The score
   scoreText = game.add.text(16, 16, '', { fontSize: '12px', fill: '#fff' });
   scoreText.fixedToCamera = true;
@@ -247,8 +238,6 @@ function create(initSnap) {
     key.onUp.add(() => events.push(new InputEvent(updateInputs())));
   }
 
-  Common.idState.nextId = _.max(getEnts().map(e => e.id)) + 1;
-
   // The notification banner
   notifText = game.add.text(16, 16, '', { fontSize: '48px', fill: '#fff', align: 'center', boundsAlignH: "center", boundsAlignV: "middle" });
   notifText.fixedToCamera = true;
@@ -256,6 +245,24 @@ function create(initSnap) {
   notifText.lineSpacing = -2;
   notifText.setTextBounds(0,0,800,600);
   notifText.setShadow(4,4,'#000',4);
+}
+
+function initEnts() {
+  const initSnap = timeline[0];
+
+  gameState.time = initSnap.tick * dt;
+
+  const {ents} = initSnap;
+  for (let ent of ents) {
+    entMgr.addEnt(ent);
+  }
+
+  Common.idState.nextId = _.max(getEnts().map(e => e.id)) + 1;
+
+  me = players[players.length - 1];
+  const meSprite = entToSprite.get(me);
+  game.camera.follow(meSprite, Phaser.Camera.FOLLOW_PLATFORMER);
+  guiMgr.refresh();
 }
 
 function trace(x) {
@@ -278,7 +285,7 @@ function updateInputs() {
 let lastTime = 0;
 
 const timeBuffer = 100;
-let delta = 0;
+let delta = null;
 
 function lerp(a,b,alpha) {
   return a + alpha * (b - a);
@@ -337,6 +344,7 @@ const entToLabel = new Map<Ent, any>();
 class ClientState {
   lastBcastNum = 0;
   debugText = '';
+  name = '';
 }
 
 const clientState = new ClientState();
@@ -348,7 +356,28 @@ let showDebugText = function () {
   }
 };
 
+function removeEnt(id: number) {
+  tryRemove(id, players);
+  tryRemove(id, ledges);
+  tryRemove(id, gameState.stars);
+  tryRemove(id, gameState.blocks);
+}
+
+function backToSplash() {
+  rootComponent.show();
+
+  for (let ent of getEnts()) {
+    removeEnt(ent.id);
+  }
+
+  game.paused = true;
+  game.canvas.style.display = 'none';
+}
+
 function update() {
+
+  if (gameState.players.length == 0)
+    initEnts();
 
   if (rootComponent.state.shown) {
     rootComponent.hide();
@@ -438,14 +467,14 @@ ${mkScoreText()}
               const killed = players.find(p => p.id == remEnt.id);
               const killer = players.find(p => p.id == remEnt.killerId);
               console.log(killer.describe(), 'killed', killed.describe());
-              if (killed == me)
+              if (killed == me) {
                 notify(`You got stomped by ${killer.name}!`);
-              else if (killer == me)
+                setTimeout(backToSplash, 2000);
+              } else if (killer == me) {
                 notify(`You stomped ${killed.name}!`)
+              }
             }
-            tryRemove(id, players);
-            tryRemove(id, ledges);
-            tryRemove(id, gameState.stars);
+            removeEnt(id);
             break;
         }
       }
@@ -658,8 +687,6 @@ function render() {
 }
 
 function startGame(name: string) {
-  if (game) return;
-
   socket.emit('join', {name});
 
   if (doPings) {
@@ -671,30 +698,36 @@ function startGame(name: string) {
   socket.on('dong', ({pingTime}) => console.log('ping', now() - pingTime));
 
   socket.on('joined', (initSnap) => {
-    game = new Phaser.Game({
-      scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
-      renderer: selectEnum(renderer, Phaser, [Phaser.CANVAS, Phaser.AUTO, Phaser.WEBGL]),
-      state: {
-        onResize: function(scaleMgr, parentBounds) {
-          lastParentBounds = parentBounds;
-          rescale();
-          // This is needed to keep the camera on the player. Camera doesn't register game rescales.
-          this.camera.follow(entToSprite.get(me), Phaser.Camera.FOLLOW_PLATFORMER);
-        },
-        preload: preload,
-        create: function() {
-          if (!ultraSlim) {
-            this.scale.setResizeCallback(this.onResize, this);
-            this.scale.refresh();
-          }
-          create(initSnap);
-        },
-        update: update,
-        render: render
-      }
-    });
-
+    clearArray(timeline);
     timeline.push(initSnap);
+
+    if (!game) {
+      game = new Phaser.Game({
+        scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
+        renderer: selectEnum(renderer, Phaser, [Phaser.CANVAS, Phaser.AUTO, Phaser.WEBGL]),
+        state: {
+          onResize: function (scaleMgr, parentBounds) {
+            lastParentBounds = parentBounds;
+            rescale();
+            // This is needed to keep the camera on the player. Camera doesn't register game rescales.
+            this.camera.follow(entToSprite.get(me), Phaser.Camera.FOLLOW_PLATFORMER);
+          },
+          preload: preload,
+          create: function () {
+            if (!ultraSlim) {
+              this.scale.setResizeCallback(this.onResize, this);
+              this.scale.refresh();
+            }
+            create();
+          },
+          update: update,
+          render: render
+        }
+      });
+    } else {
+      game.canvas.style.display = '';
+      game.paused = false;
+    }
 
     // setTimeout((() => botMgr.makeBot()), 3000);
 
@@ -705,8 +738,9 @@ function startGame(name: string) {
         return;
       // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
       const thisDelta = bcast.time - currTime;
-      delta = delta * .9 + thisDelta * (timeline.length == 1 ? 1 : .1);
+      delta = delta * .9 + thisDelta * (delta == null ? 1 : .1);
       getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta);
+      if (timeline.find(b => b.tick == bcast.tick)) return;
       timeline.push(bcast);
       if (timeline.length > timelineLimit) {
         timeline.shift();
@@ -759,14 +793,20 @@ export function main(pool) {
   gPool = pool;
   socket = Sio('http://localhost:3000', {query: {authKey}});
   botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool);
-  let pRootComponent;
-  const pName = new Promise<string>((resolveSubmit) => {
-    pRootComponent = renderSplash({
-      onSubmit: !autoStartName ? resolveSubmit : _.noop,
+  let firstNameSubmitted = false;
+  const pFirstNameSubmit = new Promise<string>((resolveSubmit) => {
+    renderSplash({
+      onSubmit: (name) => {
+        // OK to resolve multiple times
+        resolveSubmit(name);
+        // Let Promise.all handle the first one
+        if (firstNameSubmitted) startGame(name);
+        firstNameSubmitted = true;
+      },
       shown: !autoStartName
     }).then(root => rootComponent = root);
     if (autoStartName) { resolveSubmit(autoStartName); }
   });
   const pConnected = new Promise((resolve) => socket.on('connect', resolve));
-  Promise.all([pName, pConnected]).then(([name, _]) => startGame(name as string));
+  Promise.all([pFirstNameSubmit, pConnected]).then(([name, _]) => startGame(name as string));
 }
