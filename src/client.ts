@@ -46,6 +46,7 @@ import {
 } from './common';
 import * as _ from 'lodash';
 import {Component} from "react";
+// import Timer = NodeJS.Timer;
 
 const searchParams = new URLSearchParams(window.location.search);
 const authKey = searchParams.get('authKey') || '';
@@ -87,6 +88,7 @@ class ControlPanel {
   alwaysStep = true;
   showIds = false;
   showScores = !isDebug;
+  testNotif() { notify('Testing!'); }
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
@@ -146,7 +148,7 @@ var cursors;
 
 var stars;
 var score = 0;
-var scoreText;
+var scoreText, notifText, notifClearer: number;
 
 var socket;
 var me: Player;
@@ -181,6 +183,12 @@ let onNextBcastPersistentCallbacks = [];
 let gfx;
 
 (<any>window).dbg = {platforms, cursors, baseHandler, gameWorld: world, players, ledges, entToSprite, Common};
+
+function notify(content: string) {
+  notifText.text = content;
+  clearTimeout(notifClearer);
+  (notifClearer as any) = setTimeout(() => notifText.text = '', 2000);
+}
 
 function create(initSnap) {
 
@@ -241,6 +249,13 @@ function create(initSnap) {
 
   Common.idState.nextId = _.max(getEnts().map(e => e.id)) + 1;
 
+  // The notification banner
+  notifText = game.add.text(16, 16, '', { fontSize: '48px', fill: '#fff', align: 'center', boundsAlignH: "center", boundsAlignV: "middle" });
+  notifText.fixedToCamera = true;
+  notifText.cameraOffset.setTo(16,16);
+  notifText.lineSpacing = -2;
+  notifText.setTextBounds(0,0,800,600);
+  notifText.setShadow(4,4,'#000',4);
 }
 
 function trace(x) {
@@ -599,6 +614,7 @@ class GuiMgr {
       this.gui.add(cp, 'drawPlanckBoxes'),
       this.gui.add(cp, 'doShake'),
       this.gui.add(cp, 'alwaysStep'),
+      this.gui.add(cp, 'testNotif'),
       this.gui.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       this.gui.add(cp, 'showIds').onFinishChange(() =>
         cp.showIds ? 0 : Array.from(entToLabel.values()).map(t => t.destroy())),
