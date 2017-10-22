@@ -136,9 +136,16 @@ export class InputState {
 
 export function create(gameState: GameState) {
   const players = gameState.players, world = gameState.world;
-  const starToPlayer = new Map<Star, Player>();
+  const entToKiller = new Map<Ent, Player>();
   const log = getLogger('jumpoff');
   const destroy = gameState.destroy;
+
+  function uniqueKill(player, ent, f) {
+    if (!entToKiller.has(ent)) {
+      entToKiller.set(ent, player);
+      return f();
+    }
+  }
 
   world.on('post-solve', (contact, imp) => {
     const fA = contact.getFixtureA(), bA = fA.getBody();
@@ -149,14 +156,16 @@ export function create(gameState: GameState) {
         const m = contact.getWorldManifold();
         if (veq(m.normal, Pl.Vec2(0,-1).mul(reverse ? -1 : 1))) {
           log.log('jumping', playerA, bB.getUserData());
-          gameState.onJumpoff.dispatch(playerA, bB.getUserData());
+          gameState.onJumpoff.dispatch(playerA, bB.getUserData())
           postStep(() => {
             updateVel(bA, ({x,y}) => Pl.Vec2(x,8));
             if (bB.getUserData() instanceof Player) {
               const playerB: Player = bB.getUserData();
-              destroy(playerB);
-              playerB.dead = true;
-              playerA.grow(playerB.size);
+              uniqueKill(playerA, playerB, () => {
+                destroy(playerB);
+                playerB.dead = true;
+                playerA.grow(playerB.size);
+              });
             }
           });
         }
@@ -187,13 +196,12 @@ export function create(gameState: GameState) {
           // Star may collide with multiple players simultaneously - must attribute the star to only one player.
           contact.setEnabled(false);
           const star: Star = bB.getUserData();
-          if (!starToPlayer.has(star)) {
-            starToPlayer.set(star, player);
+          uniqueKill(player, star, () => {
             postStep(() => {
               player.grow(.1);
               if (destroy) destroy(star);
             });
-          }
+          });
         }
       }
     }
