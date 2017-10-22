@@ -48,6 +48,7 @@ import * as _ from 'lodash';
 import {Component} from "react";
 
 const searchParams = new URLSearchParams(window.location.search);
+const authKey = searchParams.get('authKey') || '';
 
 // For debugging GPU pressure in WebGL canvas.
 let ultraSlim = searchParams.get('ultraSlim');
@@ -710,7 +711,7 @@ const doPings = false;
 let rootComponent;
 export function main(pool) {
   gPool = pool;
-  socket = Sio('http://localhost:3000');
+  socket = Sio('http://localhost:3000', {query: {authKey}});
   botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool);
   let pRootComponent;
   const pName = new Promise<string>((resolveSubmit) => {

@@ -269,10 +269,23 @@ function makePlayer(name) {
   return player;
 }
 
+const admins = new Set<SocketIO.Socket>();
+
+// From https://stackoverflow.com/questions/13745519/send-custom-data-along-with-handshakedata-in-socket-io
+io.use(function(socket, next) {
+  if (socket.handshake.query.authKey == 'SECRET') {
+    admins.add(socket);
+  }
+  return next();
+});
+
 io.on('connection', (socket: SocketIO.Socket) => {
   const client = new Client(socket);
   clients.push(client);
   console.log('client', client.id, 'connected');
+
+  if (admins.has(socket))
+    console.log('client', client.id, 'is an admin');
 
   socket.on('disconnect', () => {
     console.log('client', client.id, 'disconnected');
