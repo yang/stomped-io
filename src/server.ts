@@ -111,7 +111,7 @@ function bcast() {
     if (ent instanceof Star) {
       _.remove(gameState.stars, e => e == ent);
     }
-    events.push(ev);
+    events.push(ev.ser());
   }
   clearArray(toRemove);
 
