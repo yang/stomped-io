@@ -86,11 +86,6 @@ function getEnts(): Ent[] {
 }
 
 function bcast() {
-  // for (let ent of getEnts()) {
-  //   updateEntPhysFromPl(ent);
-  // }
-  //if (lastBcastTime == null) lastBcastTime = Date.now() / 1000;
-  //if (currTime - lastBcastTime >= bcastPeriod) {
   for (let ent of toRemove) {
     world.destroyBody(ent.bod);
     if (ent instanceof Player) {
@@ -107,25 +102,23 @@ function bcast() {
   clearArray(toRemove);
 
   // snapshot world
-    const currTime = now();
-    const snapshot: Bcast = ({
-      time: currTime,
-      tick: tick,
-      bcastNum: bcastNum,
-      events: events,
-      ents: getEnts().map((p) => p.ser())
-    });
-    // broadcast
-    for (let player of players) {
-      const socket = playerToSocket.get(player);
-      if (socket) {
-        socket.emit('bcast', snapshot);
-        getLogger('bcast').log('tick', tick, 'player', player.id, 'snap time', currTime, 'send done time', now());
-      }
+  const currTime = now();
+  const snapshot: Bcast = ({
+    time: currTime,
+    tick: tick,
+    bcastNum: bcastNum,
+    events: events,
+    ents: getEnts().map((p) => p.ser())
+  });
+  // broadcast
+  for (let player of players) {
+    const socket = playerToSocket.get(player);
+    if (socket) {
+      socket.emit('bcast', snapshot);
+      getLogger('bcast').log('tick', tick, 'player', player.id, 'snap time', currTime, 'send done time', now());
     }
-    clearArray(events);
-    //lastBcastTime = currTime;
-  //}
+  }
+  clearArray(events);
   bcastNum += 1;
 }
 
