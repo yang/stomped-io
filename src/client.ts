@@ -49,7 +49,7 @@ import {Component} from "react";
 
 const searchParams = new URLSearchParams(window.location.search);
 const authKey = searchParams.get('authKey') || '';
-const isAdmin = !!authKey;
+const isDebug = !!searchParams.get('debug');
 
 // For debugging GPU pressure in WebGL canvas.
 let ultraSlim = searchParams.get('ultraSlim');
@@ -80,7 +80,7 @@ class ControlPanel {
   // hide latency when turning sprite around
   instantTurn = true;
   drawPlanckBoxes = false;
-  showDebug = true;
+  showDebug = isDebug;
   doShake = false;
   doBuffer = baseHandler.doBuffer;
   runLocally = runLocally;
@@ -553,7 +553,7 @@ function feedInputs(player) {
 
 class GuiMgr {
   controllers = [];
-  gui = new dat.GUI();
+  gui = isDebug ? new dat.GUI() : null;
   private add(xs) {
     this.controllers = this.controllers.concat(xs);
   }
@@ -562,6 +562,7 @@ class GuiMgr {
     this.gui = new dat.GUI();
   }
   refresh() {
+    if (!isDebug) return;
     this.clear();
     const targetPlayerIndex = players.findIndex(p => entToSprite.get(p) == game.camera.target);
     cp.currentPlayer = targetPlayerIndex >= 0 ? targetPlayerIndex : 0;
