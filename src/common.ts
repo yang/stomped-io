@@ -303,7 +303,7 @@ export class Player extends Ent {
   dead = false;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
   dispDims() {
-    const dims = super.dispDims();
+    const dims = super.dispDims().mul(1.2);
     if (this.currentSquishTime != null) {
       const currentSquish = 1 - 0.5 * Math.sin(this.currentSquishTime * Math.PI / totalSquishTime);
       dims.y *= currentSquish;
