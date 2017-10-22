@@ -6,7 +6,7 @@ import {
   AddEnt, baseHandler,
   Bcast, Block, BotMgr,
   clearArray, Ent, EntMgr,
-  Event, GameState, genStyles, getLogger, ids,
+  Event, GameState, genStyles, getLogger, ids, KillEv,
   Lava,
   Ledge,
   ledgeHeight,
@@ -93,10 +93,12 @@ function getEnts(): Ent[] {
 }
 
 function bcast() {
-  for (let ent of toRemove) {
+  for (let ev of toRemove) {
+    const ent = getEnts().find(e => e.id == ev.id);
     world.destroyBody(ent.bod);
     if (ent instanceof Player) {
-      console.log('player', ent.describe(), 'died');
+      const killer = players.find(e => e.id == ev.killerId);
+      console.log(killer.describe(), 'killed', ent.describe());
       _.remove(players, e => e == ent);
     }
     if (ent instanceof Ledge) {
@@ -105,7 +107,7 @@ function bcast() {
     if (ent instanceof Star) {
       _.remove(gameState.stars, e => e == ent);
     }
-    events.push(new RemEnt(ent.id));
+    events.push(ev);
   }
   clearArray(toRemove);
 
@@ -247,10 +249,10 @@ function create() {
 
 }
 
-const toRemove: Ent[] = [];
+const toRemove: RemEnt[] = [];
 
-function destroy(ent) {
-  toRemove.push(ent);
+function destroy(ent, killer?) {
+  toRemove.push(new RemEnt(ent.id, killer ? killer.id : null));
 }
 
 function makePlayer(name) {

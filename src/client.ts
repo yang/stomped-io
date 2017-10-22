@@ -308,9 +308,9 @@ function tryRemove(id: number, ents: Ent[]) {
     entToSprite.delete(ent);
     const label = entToLabel.get(ent);
     if (label) label.destroy();
-    return true;
+    return ent;
   }
-  return false;
+  return null;
 }
 
 function vecStr(v) {
@@ -417,7 +417,13 @@ ${mkScoreText()}
             entMgr.addEnt(ent);
             break;
           case 'RemEnt':
-            const id = (<RemEnt>ev).id;
+            const remEnt = ev as RemEnt;
+            const id = remEnt.id;
+            if (remEnt.killerId !== null) {
+              const killed = players.find(p => p.id == remEnt.id);
+              const killer = players.find(p => p.id == remEnt.killerId);
+              console.log(killer.describe(), 'killed', killed.describe());
+            }
             tryRemove(id, players);
             tryRemove(id, ledges);
             tryRemove(id, gameState.stars);

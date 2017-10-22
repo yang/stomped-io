@@ -156,13 +156,13 @@ export function create(gameState: GameState) {
         const m = contact.getWorldManifold();
         if (veq(m.normal, Pl.Vec2(0,-1).mul(reverse ? -1 : 1))) {
           log.log('jumping', playerA, bB.getUserData());
-          gameState.onJumpoff.dispatch(playerA, bB.getUserData())
+          gameState.onJumpoff.dispatch(playerA, bB.getUserData());
           postStep(() => {
             updateVel(bA, ({x,y}) => Pl.Vec2(x,8));
             if (bB.getUserData() instanceof Player) {
               const playerB: Player = bB.getUserData();
               uniqueKill(playerA, playerB, () => {
-                destroy(playerB);
+                destroy(playerB, playerA);
                 playerB.dead = true;
                 playerA.grow(playerB.size);
               });
@@ -370,6 +370,10 @@ export class InputEvent extends Event {
   constructor(public inputs: Inputs) { super(); }
 }
 
+export class KillEv extends Event {
+  constructor(public killerId: number, public killedId: number) { super(); }
+}
+
 export class AddEnt extends Event {
   constructor(public ent: Ent) { super(); }
   ser(): this {
@@ -382,7 +386,7 @@ export class AddEnt extends Event {
 }
 
 export class RemEnt extends Event {
-  constructor(public id: number) { super(); }
+  constructor(public id: number, public killerId?: number) { super(); }
 }
 
 export function plPosFromEnt(ent) {
