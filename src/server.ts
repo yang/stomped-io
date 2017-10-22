@@ -285,6 +285,8 @@ io.on('connection', (socket: SocketIO.Socket) => {
   socket.on('join', (playerData) => {
     const player = makePlayer(playerData.name);
 
+    socket.on('disconnect', () => destroy(player));
+
     console.log('player', player.describe(), `joined (client ${client.id})`);
 
     // TODO create player-joined event
