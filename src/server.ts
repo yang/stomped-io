@@ -6,7 +6,7 @@ import {
   AddEnt, baseHandler,
   Bcast, Block, BotMgr,
   clearArray, Ent, EntMgr,
-  Event, GameState, genStyles, getLogger,
+  Event, GameState, genStyles, getLogger, ids,
   Lava,
   Ledge,
   ledgeHeight,
@@ -20,6 +20,11 @@ import {
 import * as Pl from 'planck-js';
 import * as fs from 'fs';
 
+class Client {
+  id = ids.next();
+  constructor(public socket) {}
+}
+
 baseHandler.file = fs.createWriteStream('log');
 
 const styleGen = genStyles();
@@ -31,6 +36,8 @@ const gameState = new GameState(undefined, destroy);
 const events: Event[] = [];
 const players = gameState.players;
 const ledges = gameState.ledges;
+
+const clients: Client[] = [];
 
 function onEntAdded(ent: Ent) {
   events.push(new AddEnt(ent).ser());
@@ -111,11 +118,11 @@ function bcast() {
     ents: getEnts().map((p) => p.ser())
   });
   // broadcast
-  for (let player of players) {
-    const socket = playerToSocket.get(player);
+  for (let client of clients) {
+    const socket = client.socket;
     if (socket) {
       socket.emit('bcast', snapshot);
-      getLogger('bcast').log('tick', tick, 'player', player.id, 'snap time', currTime, 'send done time', now());
+      getLogger('bcast').log('tick', tick, 'client', client.id, 'snap time', currTime, 'send done time', now());
     }
   }
   clearArray(events);
@@ -262,7 +269,9 @@ function makePlayer(name) {
 }
 
 io.on('connection', (socket: SocketIO.Socket) => {
-  console.log('client connected');
+  const client = new Client(socket);
+  clients.push(client);
+  console.log('client', client.id, 'connected');
 
   socket.on('ding', (data) => {
     socket.emit('dong', data)
@@ -270,7 +279,6 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
   socket.on('join', (playerData) => {
     const player = makePlayer(playerData.name);
-    playerToSocket.set(player, socket);
 
     console.log(`player ${player.name} joined`);
 

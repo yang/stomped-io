@@ -234,7 +234,7 @@ function* genIds() {
     idState.nextId += 1;
   }
 }
-const ids = genIds();
+export const ids = genIds();
 
 export abstract class Serializable {
   type: string;
