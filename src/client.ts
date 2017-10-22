@@ -306,7 +306,7 @@ function onEntAdded(ent: Ent) {
     return sprite;
   }
   if (ent instanceof Player) {
-    const sprite = mkSprite(playerGroup, `dude-${styleGen.next().value}`);
+    const sprite = mkSprite(playerGroup, ent.style);
     sprite.animations.add('left', [3, 4, 3, 5], 10, true);
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     guiMgr.refresh();
