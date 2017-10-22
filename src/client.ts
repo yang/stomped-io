@@ -410,6 +410,7 @@ Step: ${bot ?
             .extend({index, steps})
             .value())(bot.getCurrChunk(-1))) : ''
       }` : ''}
+Total ${players.length} players
 
 ${mkScoreText()}
     `.trim();
