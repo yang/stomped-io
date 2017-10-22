@@ -86,6 +86,7 @@ class ControlPanel {
   runLocally = runLocally;
   alwaysStep = true;
   showIds = false;
+  showScores = !isDebug;
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
 const cp = new ControlPanel();
@@ -225,7 +226,10 @@ function create(initSnap) {
   guiMgr.refresh();
 
   //  The score
-  scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+  scoreText = game.add.text(16, 16, '', { fontSize: '12px', fill: '#fff' });
+  scoreText.fixedToCamera = true;
+  scoreText.cameraOffset.setTo(16,16);
+  scoreText.lineSpacing = -2;
 
   //  Our controls.
   cursors = game.input.keyboard.createCursorKeys();
@@ -361,11 +365,7 @@ Step: ${bot ?
             .value())(bot.getCurrChunk(-1))) : ''
       }` : ''}
 
-Scores:
-${_(players)
-      .sort(p => -p.size)
-      .map(p => `${p.size} ${p.name}`)
-      .join('\n')}
+${mkScoreText()}
     `.trim();
     showDebugText();
   }
@@ -442,6 +442,9 @@ ${_(players)
         ent.y = lerp(a.y, b.y, alpha);
         ent.vel.x = lerp(a.vel.x, b.vel.x, alpha);
         ent.vel.y = lerp(a.vel.y, b.vel.y, alpha);
+        if (ent instanceof Player) {
+          ent.size = lerp((a as Player).size, (b as Player).size, alpha);
+        }
       }
     }
     for (let player of players) {
@@ -516,9 +519,21 @@ ${_(players)
     }
   }
 
+  if (cp.showScores) {
+    scoreText.text = mkScoreText();
+  }
+
   const endTime = now();
   getLogger('client-jank').log('start', currTime, 'end', endTime, 'elapsed', endTime - currTime);
 }
+
+function mkScoreText() {
+  return `Leaderboard
+${_(gameState.players)
+    .sort(p => -p.size)
+    .map(p => `${Math.round(10 * p.size)} ${p.name}`)
+    .join('\n')}`;
+};
 
 function plVelFromEnt(ent) {
   return Pl.Vec2(ent.vel.x / ratio, -ent.vel.y / ratio);
@@ -576,6 +591,7 @@ class GuiMgr {
       this.gui.add(cp, 'drawPlanckBoxes'),
       this.gui.add(cp, 'doShake'),
       this.gui.add(cp, 'alwaysStep'),
+      this.gui.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       this.gui.add(cp, 'showIds').onFinishChange(() =>
         cp.showIds ? 0 : Array.from(entToLabel.values()).map(t => t.destroy())),
       this.gui.add(cp, 'doBuffer').onFinishChange(() => baseHandler.doBuffer = cp.doBuffer),
