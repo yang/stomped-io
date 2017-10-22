@@ -626,7 +626,7 @@ function startGame(name: string) {
   socket.on('joined', (initSnap) => {
     game = new Phaser.Game({
       scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
-      renderer: selectEnum(renderer, Phaser, [Phaser.AUTO, Phaser.CANVAS, Phaser.WEBGL]),
+      renderer: selectEnum(renderer, Phaser, [Phaser.CANVAS, Phaser.AUTO, Phaser.WEBGL]),
       state: {
         onResize: function(scaleMgr, parentBounds) {
           lastParentBounds = parentBounds;
