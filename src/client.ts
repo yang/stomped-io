@@ -49,6 +49,7 @@ import {Component} from "react";
 
 const searchParams = new URLSearchParams(window.location.search);
 const authKey = searchParams.get('authKey') || '';
+const isAdmin = !!authKey;
 
 // For debugging GPU pressure in WebGL canvas.
 let ultraSlim = searchParams.get('ultraSlim');
@@ -553,19 +554,19 @@ function feedInputs(player) {
 class GuiMgr {
   controllers = [];
   gui = new dat.GUI();
-  add(xs) {
+  private add(xs) {
     this.controllers = this.controllers.concat(xs);
   }
-  clear() {
+  private clear() {
     if (this.gui) this.gui.destroy();
     this.gui = new dat.GUI();
   }
   refresh() {
-    guiMgr.clear();
+    this.clear();
     const targetPlayerIndex = players.findIndex(p => entToSprite.get(p) == game.camera.target);
     cp.currentPlayer = targetPlayerIndex >= 0 ? targetPlayerIndex : 0;
     refollow();
-    guiMgr.add([
+    this.add([
       this.gui.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
       this.gui.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
       this.gui.add(cp, 'makeBot'),
