@@ -146,7 +146,7 @@ function preload() {
   }
 }
 
-var platforms;
+var platforms, starGroup, playerGroup;
 var cursors;
 
 var stars;
@@ -211,18 +211,20 @@ function create() {
     bg.alpha = .05
   }
 
+  // Specify the z-order via groups
+  starGroup = game.add.group();
+  playerGroup = game.add.group();
+  platforms = game.add.group();
+
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
   gameState.lava = lava;
-  const lavaSprite = game.add.sprite(0, Common.gameWorld.height - 64, doLava ? 'lava' : 'ground');
+  const lavaSprite = platforms.create(0, Common.gameWorld.height - 64, doLava ? 'lava' : 'ground');
   entToSprite.set(lava, lavaSprite);
   lavaSprite.width = lava.width;
   lavaSprite.height = lava.height;
 
   Common.create(gameState);
-
-  //  The platforms group contains the ground and the 2 ledges we can jump on
-  platforms = game.add.group();
 
   //  The score
   scoreText = game.add.text(16, 16, '', { fontSize: '12px', fill: '#fff' });
@@ -296,24 +298,24 @@ function getEnts() {
 }
 
 function onEntAdded(ent: Ent) {
-  function mkSprite(spriteArt: string) {
+  function mkSprite(group, spriteArt: string) {
     const [x, y] = ent.dispPos().toTuple();
-    const sprite = game.add.sprite(x, y, spriteArt);
+    const sprite = group.create(x, y, spriteArt);
     [sprite.width, sprite.height] = ent.dispDims().toTuple();
     entToSprite.set(ent, sprite);
     return sprite;
   }
   if (ent instanceof Player) {
-    const sprite = mkSprite(`dude-${styleGen.next().value}`);
+    const sprite = mkSprite(playerGroup, `dude-${styleGen.next().value}`);
     sprite.animations.add('left', [3, 4, 3, 5], 10, true);
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     guiMgr.refresh();
   } else if (ent instanceof Ledge) {
-    mkSprite('ground');
+    mkSprite(platforms, 'ground');
   } else if (ent instanceof Star) {
-    mkSprite('star');
+    mkSprite(starGroup, 'star');
   } else if (ent instanceof Block) {
-    mkSprite('ground');
+    mkSprite(platforms, 'ground');
   } else {
     throw new Error();
   }
