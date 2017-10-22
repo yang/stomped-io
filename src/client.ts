@@ -438,6 +438,10 @@ ${mkScoreText()}
               const killed = players.find(p => p.id == remEnt.id);
               const killer = players.find(p => p.id == remEnt.killerId);
               console.log(killer.describe(), 'killed', killed.describe());
+              if (killed == me)
+                notify(`You got stomped by ${killer.name}!`);
+              else if (killer == me)
+                notify(`You stomped ${killed.name}!`)
             }
             tryRemove(id, players);
             tryRemove(id, ledges);
