@@ -308,7 +308,9 @@ function tryRemove(id: number, ents: Ent[]) {
     entToSprite.delete(ent);
     const label = entToLabel.get(ent);
     if (label) label.destroy();
+    return true;
   }
+  return false;
 }
 
 function vecStr(v) {
