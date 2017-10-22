@@ -591,7 +591,7 @@ function mkScoreText() {
   return `Leaderboard
 ${_(gameState.players)
     .sort(p => -p.size)
-    .map(p => `${showScore(p)} ${p.name}`)
+    .map(p => `${showScore(p)} ${p.name} ${p == me ? '<---' : ''}`)
     .join('\n')}
 
 Your size: ${showScore(me)}`;
