@@ -326,8 +326,21 @@ function tryRemove(id: number, ents: Ent[]) {
   if (i >= 0) {
     const ent = ents[i];
     ents.splice(i, 1);
-    entToSprite.get(ent).destroy();
-    entToSprite.delete(ent);
+    const sprite = entToSprite.get(ent);
+    const removeSprite = () => {
+      sprite.destroy();
+      entToSprite.delete(ent);
+    };
+    if (ent instanceof Player) {
+      const squishHeight = sprite.height / 5;
+      sprite.y += sprite.height - squishHeight;
+      sprite.x -= sprite.width / 2;
+      sprite.height = squishHeight;
+      sprite.width *= 2;
+      setTimeout(removeSprite, 2000);
+    } else {
+      removeSprite();
+    }
     const label = entToLabel.get(ent);
     if (label) label.destroy();
     return ent;
