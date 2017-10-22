@@ -49,7 +49,7 @@ const botMgr = new BotMgr(styleGen, entMgr, gameState, null, null);
 const doRun = !runLocally, doAddPlayers = !runLocally; // doRun = save-batteries mode
 
 let lastBcastTime = null;
-const bcastPeriod = 1 / 20;
+const bcastPeriod = 1 / 20, regenStarPeriod = 1;
 let tick = 0, bcastNum = 0;
 
 function getRandomInt(min: number, max: number) {
@@ -198,7 +198,8 @@ function schedRandInputs(player) {
 }
 
 const doStars = true, gridDim = 200, expPerGrid = doStars ? 10 : 0;
-function updateStars(gameState: GameState) {
+function updateStars(gameState: GameState, bootstrap: boolean) {
+  getLogger('stars').log('regenerating stars');
   const gridCounts = [];
   for (let x = 0; x < Common.gameWorld.width / gridDim; x++) {
     gridCounts.push([]);
@@ -209,15 +210,16 @@ function updateStars(gameState: GameState) {
   for (let star of gameState.stars) {
     gridCounts[Math.floor(star.x / gridDim)][Math.floor(star.y / gridDim)] += 1;
   }
-  for (let x = 0; x < Common.gameWorld.width / gridDim; x++) {
-    for (let y = 0; y < Common.gameWorld.height / gridDim; y++) {
-      while (gridCounts[x][y] < expPerGrid) {
+  for (let x = 0; x < Math.floor(Common.gameWorld.width / gridDim); x++) {
+    for (let y = 0; y < Math.floor(Common.gameWorld.height / gridDim); y++) {
+      while (gridCounts[x][y] < expPerGrid && (bootstrap || Math.random() < .1)) {
         const star = new Star(
           getRandomInt(gridDim * x, gridDim * (x + 1) - 1),
           getRandomInt(gridDim * y, gridDim * (y + 1) - 1));
         gameState.stars.push(star);
         addBody(star, 'kinematic');
         gridCounts[x][y] += 1;
+        events.push(new AddEnt(star).ser());
       }
     }
   }
@@ -230,7 +232,7 @@ function create() {
   addBody(lava, 'kinematic');
   gameState.lava = lava;
 
-  updateStars(gameState);
+  updateStars(gameState, true);
   updateLedges();
 
   for (let i = 0; i < 2; i++) {
@@ -247,6 +249,7 @@ function create() {
   if (doRun) {
     setInterval(bcast, bcastPeriod * 1000);
     setInterval(update, updatePeriod * 1000);
+    setInterval(() => updateStars(gameState, false), regenStarPeriod * 3000);
   }
 
   Common.create(gameState);
