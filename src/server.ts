@@ -93,16 +93,21 @@ function getEnts(): Ent[] {
 }
 
 function bcast() {
-  // TODO move to update()
+  // TODO move all removal code to update()
   for (let ev of toRemove) {
     const ent = getEnts().find(e => e.id == ev.id);
-    if (!ent) continue; // e.g. if player already killed, and then its client disconnects
-    world.destroyBody(ent.bod);
     if (ent instanceof Player) {
       if (ev.killerId) {
         const killer = players.find(e => e.id == ev.killerId);
         console.log(killer.describe(), 'killed', ent.describe());
       }
+    }
+  }
+  for (let ev of toRemove) {
+    const ent = getEnts().find(e => e.id == ev.id);
+    if (!ent) continue; // e.g. if player already killed, and then its client disconnects
+    world.destroyBody(ent.bod);
+    if (ent instanceof Player) {
       _.remove(players, e => e == ent);
     }
     if (ent instanceof Ledge) {

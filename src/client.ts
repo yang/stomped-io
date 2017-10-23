@@ -501,6 +501,7 @@ ${mkScoreText()}
     const toProcess = timeline.filter(bcast =>
       clientState.lastBcastNum < bcast.bcastNum && bcast.bcastNum <= prevBcast.bcastNum
     )
+    const later = [];
     for (let bcast of toProcess) {
       for (let ev of bcast.events) {
         switch (ev.type) {
@@ -522,11 +523,14 @@ ${mkScoreText()}
                 notify(`You stomped ${killed.name}!`)
               }
             }
-            removeEnt(id);
+            // Do actual removals after additions (since we may be removing just-added Ents) and after
+            // notifications have been displayed.
+            later.push(() => removeEnt(id));
             break;
         }
       }
     }
+    later.forEach(f => f());
     clientState.lastBcastNum = prevBcast.bcastNum;
 
     const alpha = (targetTime - prevBcast.time) / (nextBcast.time - prevBcast.time);
