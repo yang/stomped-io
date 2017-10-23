@@ -29,10 +29,11 @@ export class Splash extends React.Component {
   };
   private handleSubmit = (e) => {
     e.preventDefault();
+    this.setState({disabled: true});
     this.props.onSubmit(this.state.name);
   };
   show() {
-    this.setState({shown: true});
+    this.setState({shown: true, disabled: false});
     document.getElementById('mount-point').style.display = '';
   }
   hide() {
@@ -52,7 +53,10 @@ export class Splash extends React.Component {
           disabled={this.state.disabled}
         />
         <br/>
-        <button className={'submit-btn'} type={'submit'}>Play!</button>
+        <button
+          className={'submit-btn'}
+          type={'submit'}
+          disabled={this.state.disabled}>Play!</button>
       </form>
     </div>;
   }

@@ -69,3 +69,6 @@ h1 {
     outline: none;
     background: #ff6600;
 }
+.submit-btn:disabled {
+    color: #ffcc88;
+}
