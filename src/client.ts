@@ -518,6 +518,10 @@ ${mkScoreText()}
               console.log(killer.describe(), 'killed', killed.describe());
               if (killed == me) {
                 notify(`You got stomped by ${killer.name}!`);
+                setTimeout(() => {
+                  cp.currentPlayer = players.indexOf(killer);
+                  follow(entToSprite.get(killer));
+                }, 0);
                 setTimeout(backToSplash, 2000);
               } else if (killer == me) {
                 notify(`You stomped ${killed.name}!`)
