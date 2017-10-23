@@ -440,7 +440,7 @@ Bounds: world ${game.world.bounds.height} camera ${game.camera.bounds.height}
 Current player:
 Position: ${currentPlayer ? vecStr(currentPlayer.pos()) : ''}
 Planck Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
-Target: ${bot ? vecStr(bot.target) : ''}
+Target: ${bot && bot.target ? vecStr(bot.target) : ''}
 Size: ${currentPlayer ? currentPlayer.size : ''}
 Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
 Step: ${bot ?
