@@ -104,6 +104,9 @@ function initSnap() {
 function update() {
   const currTime = now();
   for (let bot of botMgr.bots) {
+    bot.checkDeath();
+  }
+  for (let bot of botMgr.bots) {
     bot.isDumb ? bot.dumbPlan() : bot.replayPlan(true, currTime);
   }
   for (let bot of botMgr.bots) {

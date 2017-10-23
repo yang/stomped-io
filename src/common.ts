@@ -848,7 +848,9 @@ export class Bot {
     public gameState: GameState,
     public socket,
     public pool,
-    public isDumb: boolean
+    public isDumb: boolean,
+    private keepPlayingFor = 0,
+    private onRejoin = null
   ) {}
 
   ser() {
@@ -1278,6 +1280,13 @@ export class Bot {
       }
     }
   }
+
+  private playStart = now();
+  checkDeath() {
+    if (this.isDead() && now() - this.playStart < this.keepPlayingFor + 5000) {
+      this.player = this.onRejoin();
+    }
+  }
 }
 
 export class EntMgr {
@@ -1390,17 +1399,27 @@ export class BotMgr {
   }
 
   makeBot(isDumb: boolean) {
-    const entMgr = this.entMgr, gameState = this.gameState;
-    const player = entMgr.addPlayer(_.assign({}, new Player(
-      this.nameGen ? this.nameGen.next().value : 'bot',
-      gameState.ledges[2].x + ledgeWidth / 2,
-      gameState.ledges[2].y - 50,
-      this.styleGen.next().value
-    )));
-    player.inputs.left.isDown = true;
-    const bot = new Bot(player, gameState, this.socket, this.pool, isDumb);
+    const name = this.nameGen ? this.nameGen.next().value : 'bot';
+    const player = this.joinGame(name);
+    const bot = new Bot(
+      player, this.gameState, this.socket, this.pool, isDumb, 8 * 60 * 1000,
+      () => this.joinGame(name)
+    );
     bot.target = new Vec2(0,0);
     this.bots.push(bot);
     return bot;
   }
+
+  private joinGame = (name: string) => {
+    console.log('bot', name, 'joining');
+    const entMgr = this.entMgr, gameState = this.gameState;
+    const player = entMgr.addPlayer(_.assign({}, new Player(
+      name,
+      gameWorld.width / 2,
+      50,
+      this.styleGen.next().value
+    )));
+    player.inputs.left.isDown = true;
+    return player;
+  };
 }
