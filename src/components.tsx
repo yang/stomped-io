@@ -16,6 +16,7 @@ interface SplashProps {
 export class Splash extends React.Component {
   state: SplashState;
   props: SplashProps;
+  inputEl: HTMLInputElement;
   constructor(props) {
     super(props);
     this.state = {
@@ -32,6 +33,11 @@ export class Splash extends React.Component {
     this.setState({disabled: true});
     this.props.onSubmit(this.state.name);
   };
+  componentDidUpdate() {
+    // Must do after element is rendered - see
+    // https://stackoverflow.com/questions/26556436/react-after-render-code
+    setTimeout(() => this.inputEl.focus(), 100);
+  }
   show() {
     this.setState({shown: true, disabled: false});
     document.getElementById('mount-point').style.display = '';
@@ -46,6 +52,7 @@ export class Splash extends React.Component {
       <form className='splash-form' onSubmit={this.handleSubmit}>
         <input
           className={'name-input'}
+          ref={(el) => this.inputEl = el}
           value={this.state.name}
           onChange={this.handleChange}
           placeholder={'Enter a nickname'}
