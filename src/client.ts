@@ -15,14 +15,14 @@ import {
   Bcast, Block, Bot, BotMgr,
   clearArray,
   cloneWorld,
-  copyVec, createBody, defaultColor, deserSimResults, doLava,
+  copyVec, createBody, defaultColor, deserSimResults, Dir, doLava,
   dt,
   Ent,
   EntMgr,
   entPosFromPl,
   enumerate,
   Event, fixtureDims,
-  GameState, genStyles,
+  GameState, genStyles, getDir,
   getLogger,
   InputEvent, Inputs,
   iterBodies,
@@ -35,7 +35,7 @@ import {
   plPosFromEnt,
   pushAll,
   ratio,
-  RemEnt, runLocally,
+  RemEnt, runLocally, setInputsByDir,
   Star,
   timeWarp, totalSquishTime,
   updateEntPhysFromPl,
@@ -400,6 +400,10 @@ function update() {
 
   const currentPlayer = players[cp.currentPlayer];
   const bot = botMgr.bots.find(b => b.player == currentPlayer);
+  // We're manually calculating the mouse pointer position in scaled world coordinates.
+  // game.input.worldX doesn't factor in the world scaling.
+  // Setting game.input.scale didn't seem to do anything.
+  const ptr = new Vec2(game.input.x, game.input.y).add(new Vec2(game.camera.x, game.camera.y)).div(game.world.scale.x);
 
   const currTime = now();
   // if (delta == null && timeline.length > 0)
@@ -411,9 +415,11 @@ function update() {
 FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
 ${players.length} players
 Delta: ${delta}
+Mouse: ${vecStr(ptr)}
 
 Current player:
-Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
+Position: ${currentPlayer ? vecStr(currentPlayer.pos()) : ''}
+Planck Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
 Target: ${bot ? vecStr(bot.target) : ''}
 Size: ${currentPlayer ? currentPlayer.size : ''}
 Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
@@ -430,6 +436,12 @@ Total ${players.length} players
 ${mkScoreText()}
     `.trim();
     showDebugText();
+  }
+
+  const dir = ptr.x <= me.x + me.width / 2 ? Dir.Left : Dir.Right;
+  if (dir != getDir(me)) {
+    setInputsByDir(me, dir);
+    socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
   }
 
   let updating = false;

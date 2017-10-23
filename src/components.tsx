@@ -33,9 +33,11 @@ export class Splash extends React.Component {
   };
   show() {
     this.setState({shown: true});
+    document.getElementById('mount-point').style.display = '';
   }
   hide() {
     this.setState({shown: false});
+    document.getElementById('mount-point').style.display = 'none';
   }
   render() {
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>

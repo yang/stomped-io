@@ -701,11 +701,11 @@ function setInputs(player: Player, [left, right]: [boolean, boolean]) {
   player.inputs.right.isDown = right;
 }
 
-function setInputsByDir(player: Player, dir: Dir) {
+export function setInputsByDir(player: Player, dir: Dir) {
   setInputs(player, dir == Dir.Left ? [true, false] : [false, true]);
 }
 
-function getDir(player) {
+export function getDir(player) {
   return player.inputs.left.isDown ? Dir.Left :
     player.inputs.right.isDown ? Dir.Right : null;
 }
