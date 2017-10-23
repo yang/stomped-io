@@ -677,9 +677,12 @@ function showScore(player: Player) {
 function mkScoreText() {
   return `Leaderboard
 ${_(gameState.players)
-    .sort(p => -p.size)
+    .sortBy([
+      p => -p.size,
+      p => p.name
+    ])
     .filter((p, i) => i < 10 || me == p)
-    .map((p, i) => `${i + 1}. ${showScore(p)} ${p.name} ${p == me ? '<---' : ''}`)
+    .map((p, i) => `${i + 1}. ${showScore(p)} -- ${p.name} ${p == me ? '<---' : ''}`)
     .join('\n')}`;
 };
 
