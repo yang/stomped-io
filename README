@@ -9,6 +9,7 @@ Dev Notes
 =========
 
 - May want to consider using simpler [AABB-only physics engine](https://gist.github.com/BonsaiDen/6144232).
+- Bot names from https://www.findnicknames.com/cool-gamer-tags/
 
 Multiplayer Engines
 -------------------

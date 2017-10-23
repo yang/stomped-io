@@ -1368,7 +1368,8 @@ export class BotMgr {
     public entMgr: EntMgr,
     public gameState: GameState,
     public socket,
-    public pool
+    public pool,
+    private nameGen
   ) {}
 
   maybeAddProxy(botData) {
@@ -1391,7 +1392,7 @@ export class BotMgr {
   makeBot(isDumb: boolean) {
     const entMgr = this.entMgr, gameState = this.gameState;
     const player = entMgr.addPlayer(_.assign({}, new Player(
-      'bot',
+      this.nameGen ? this.nameGen.next().value : 'bot',
       gameState.ledges[2].x + ledgeWidth / 2,
       gameState.ledges[2].y - 50,
       this.styleGen.next().value

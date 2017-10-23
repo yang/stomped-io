@@ -19,6 +19,39 @@ import {
 } from './common';
 import * as Pl from 'planck-js';
 import * as fs from 'fs';
+import {Chance} from 'chance';
+import * as Case from 'case';
+import * as Leet from 'leet';
+
+const chance = new Chance(0);
+
+function permuteName(name: string) {
+  switch (chance.integer({min: 0, max: 6})) {
+    case 0:
+      return name;
+    case 1:
+      return name.toLowerCase();
+    case 2:
+      return name.toUpperCase();
+    case 3:
+      return Case.random(name);
+    case 4:
+      return Leet.convert(name);
+    case 5:
+      return Leet.convert(name).toLowerCase();
+    case 6:
+      return Case.random(Leet.convert(name));
+    default:
+      throw new Error();
+  }
+}
+const botNames = fs
+  .readFileSync('src/botnames.txt', 'utf8')
+  .trim()
+  .split('\n');
+const botNameGen = chance.shuffle(botNames)
+  .map(name => permuteName(name))
+  [Symbol.iterator]();
 
 class Client {
   id = ids.next().value;
@@ -44,7 +77,7 @@ function onEntAdded(ent: Ent) {
 }
 
 const entMgr = new EntMgr(world, gameState, onEntAdded);
-const botMgr = new BotMgr(styleGen, entMgr, gameState, null, null);
+const botMgr = new BotMgr(styleGen, entMgr, gameState, null, null, botNameGen);
 
 const doRun = !runLocally, doAddPlayers = !runLocally; // doRun = save-batteries mode
 

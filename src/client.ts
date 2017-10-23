@@ -890,7 +890,7 @@ let rootComponent;
 export function main(pool) {
   gPool = pool;
   socket = Sio('http://localhost:3000', {query: {authKey}});
-  botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool);
+  botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool, null);
   let firstSubmitted = false;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
     renderSplash({
