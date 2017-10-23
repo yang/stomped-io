@@ -423,6 +423,9 @@ FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
 ${players.length} players
 Delta: ${delta}
 Mouse: ${vecStr(ptr)}
+Game dims: ${vecStr(new Vec2(game.width, game.height))} 
+Scale: ${game.world.scale.x}
+Bounds: world ${game.world.bounds.height} camera ${game.camera.bounds.height}
 
 Current player:
 Position: ${currentPlayer ? vecStr(currentPlayer.pos()) : ''}
@@ -709,6 +712,16 @@ function refollow() {
 let lastParentBounds = null;
 function rescale() {
   if (lastParentBounds) {
+    // Main job is to ensure, in normal non-viewAll mode, that we scale the world up or down enough
+    // such that the viewport covers 800 logical pixels, either in the horizontal or vertical direction,
+    // whichever one is longer.  Thus we are OK truncating the shorter dimension.
+    //
+    // This is done by scaling to max(width / 800, height / 800).  Consider some examples:
+    //
+    // - width = 800 means no scaling.
+    // - width = 400 means shrink to half size.
+    // - width = 1600 means doubling size.
+    // - width = 800, height = 400 means no scaling.
     const scale = cp.viewAll ?
       Math.min(
         game.width / game.world.width,
