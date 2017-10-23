@@ -92,6 +92,7 @@ class ControlPanel {
   showIds = false;
   showScores = !isDebug;
   useKeyboard = false;
+  boundCameraWithinWalls = false;
   testNotif() { notify('Testing!'); }
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
@@ -147,7 +148,7 @@ function preload() {
   }
 }
 
-var platforms, starGroup, playerGroup, nameGroup;
+var platforms, starGroup, playerGroup, nameGroup, lavaGroup;
 var cursors;
 
 var stars;
@@ -197,7 +198,7 @@ function notify(content: string) {
 
 function create() {
 
-  game.world.setBounds(0,0,Common.gameWorld.width, Common.gameWorld.height);
+  game.world.setBounds(-Common.gameWorld.width,0,3 * Common.gameWorld.width, Common.gameWorld.height);
   game.time.advancedTiming = true;
 
   gfx = game.add.graphics(0,0);
@@ -218,13 +219,14 @@ function create() {
   playerGroup = game.add.group();
   platforms = game.add.group();
   nameGroup = game.add.group();
+  lavaGroup = game.add.group();
 
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
   gameState.lava = lava;
-  const lavaSprite = platforms.create(0, Common.gameWorld.height - 64, doLava ? 'lava' : 'ground');
+  const lavaSprite = lavaGroup.create(-Common.gameWorld.width, Common.gameWorld.height - 64, doLava ? 'lava' : 'ground');
   entToSprite.set(lava, lavaSprite);
-  lavaSprite.width = lava.width;
+  lavaSprite.width = 3 * lava.width;
   lavaSprite.height = lava.height;
 
   Common.create(gameState);
@@ -423,7 +425,8 @@ function update() {
   // create()/rescale()/onResize() doesn't work.
   //
   // Understanding zooming and the camera and scaling systems in Phaser is very confusing.
-  game.camera.bounds.width = Common.gameWorld.width;
+  game.camera.bounds.width = (cp.boundCameraWithinWalls ? 1 : 3) * Common.gameWorld.width;
+  game.camera.bounds.x = cp.boundCameraWithinWalls ? 0 : -Common.gameWorld.width;
   game.camera.bounds.height = Common.gameWorld.height;
 
   if (gameState.players.length == 0)
@@ -731,6 +734,7 @@ class GuiMgr {
       this.gui.add(cp, 'doShake'),
       this.gui.add(cp, 'alwaysStep'),
       this.gui.add(cp, 'testNotif'),
+      this.gui.add(cp, 'boundCameraWithinWalls'),
       this.gui.add(cp, 'useKeyboard'),
       this.gui.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       this.gui.add(cp, 'showIds').onFinishChange(() =>

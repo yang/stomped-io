@@ -241,7 +241,7 @@ function create() {
   updateLedges();
 
   for (let i = 0; i < 2; i++) {
-    const wall = new Block(i == 0 ? -10 : Common.gameWorld.width, 0, 10, Common.gameWorld.height);
+    const wall = new Block(i == 0 ? -Common.gameWorld.width : Common.gameWorld.width, 0, Common.gameWorld.width, 2 * Common.gameWorld.height);
     addBody(wall, 'kinematic');
     gameState.blocks.push(wall);
   }
