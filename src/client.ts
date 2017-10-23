@@ -196,7 +196,7 @@ function notify(content: string) {
 
 function create() {
 
-  game.world.setBounds(0,0,Common.gameWorld.width,Common.gameWorld.height);
+  game.world.setBounds(0,0,Common.gameWorld.width, Common.gameWorld.height);
   game.time.advancedTiming = true;
 
   gfx = game.add.graphics(0,0);
@@ -397,6 +397,16 @@ function backToSplash() {
 }
 
 function update() {
+
+  // Phaser stupidly grows game.world.bounds to at least cover game.width/.height
+  // (which I understand as the canvas size) even if world is scaled.
+  // This in turn propagates - repeatedly - to game.camera.bounds, so I have to keep reminding
+  // Phaser to properly bound the camera every step - simply doing so in
+  // create()/rescale()/onResize() doesn't work.
+  //
+  // Understanding zooming and the camera and scaling systems in Phaser is very confusing.
+  game.camera.bounds.width = Common.gameWorld.width;
+  game.camera.bounds.height = Common.gameWorld.height;
 
   if (gameState.players.length == 0)
     initEnts();
