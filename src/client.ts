@@ -91,6 +91,7 @@ class ControlPanel {
   alwaysStep = true;
   showIds = false;
   showScores = !isDebug;
+  useKeyboard = false;
   testNotif() { notify('Testing!'); }
   makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
 }
@@ -236,8 +237,8 @@ function create() {
   cursors = game.input.keyboard.createCursorKeys();
   for (let keyName of ['left', 'down', 'right', 'up']) {
     const key = cursors[keyName];
-    key.onDown.add(() => events.push(new InputEvent(updateInputs())));
-    key.onUp.add(() => events.push(new InputEvent(updateInputs())));
+    key.onDown.add(() => cp.useKeyboard && events.push(new InputEvent(updateInputs())));
+    key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(updateInputs())));
   }
 
   // The notification banner
@@ -439,7 +440,7 @@ ${mkScoreText()}
   }
 
   const dir = ptr.x <= me.x + me.width / 2 ? Dir.Left : Dir.Right;
-  if (dir != getDir(me)) {
+  if (!cp.useKeyboard && dir != getDir(me)) {
     setInputsByDir(me, dir);
     socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
   }
@@ -681,6 +682,7 @@ class GuiMgr {
       this.gui.add(cp, 'doShake'),
       this.gui.add(cp, 'alwaysStep'),
       this.gui.add(cp, 'testNotif'),
+      this.gui.add(cp, 'useKeyboard'),
       this.gui.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       this.gui.add(cp, 'showIds').onFinishChange(() =>
         cp.showIds ? 0 : Array.from(entToLabel.values()).map(t => t.destroy())),
