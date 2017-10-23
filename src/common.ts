@@ -173,15 +173,15 @@ export function makeBurst(x: number, y: number, count: number, gameState: GameSt
   gameState.bursters.push(new Burster(stars));
 }
 
+const entToHitter = new Map<Ent, Player>();
 export function create(gameState: GameState) {
   const players = gameState.players, world = gameState.world;
-  const entToKiller = new Map<Ent, Player>();
   const log = getLogger('jumpoff');
   const destroy = gameState.destroy;
 
-  function uniqueKill(player, ent, f) {
-    if (!entToKiller.has(ent)) {
-      entToKiller.set(ent, player);
+  function uniqueHit(player, ent, f) {
+    if (!entToHitter.has(ent)) {
+      entToHitter.set(ent, player);
       return f();
     }
   }
@@ -200,11 +200,15 @@ export function create(gameState: GameState) {
             updateVel(bA, ({x,y}) => Pl.Vec2(x,8));
             if (bB.getUserData() instanceof Player) {
               const playerB: Player = bB.getUserData();
-              uniqueKill(playerA, playerB, () => {
-                destroy(playerB, playerA);
-                makeBurst(playerB.x, playerB.y,10, gameState);
-                playerB.dead = true;
-                playerA.grow(playerB.size / 2);
+              uniqueHit(playerA, playerB, () => {
+                const impact = Math.min(playerA.size, playerB.size);
+                playerB.grow(-impact);
+                playerA.grow(impact / 2);
+                makeBurst(playerB.x, playerB.y,impact / 2 * 10, gameState);
+                if (playerB.size < 1) {
+                  destroy(playerB, playerA);
+                  playerB.dead = true;
+                }
               });
             }
           });
@@ -236,7 +240,7 @@ export function create(gameState: GameState) {
           // Star may collide with multiple players simultaneously - must attribute the star to only one player.
           contact.setEnabled(false);
           const star: Star = bB.getUserData();
-          uniqueKill(player, star, () => {
+          uniqueHit(player, star, () => {
             postStep(() => {
               player.grow(.1);
               if (destroy) destroy(star);
@@ -542,6 +546,8 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
   for (let f of postSteps) {
     f();
   }
+  // Clear this after every step!
+  entToHitter.clear();
   for (let player of gameState.players) {
     updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, 9)));
     if (
