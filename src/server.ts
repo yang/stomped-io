@@ -4,13 +4,13 @@ import * as Common from './common';
 import {
   addBody,
   AddEnt, baseHandler,
-  Bcast, Block, BotMgr,
+  Bcast, Block, BotMgr, Burster,
   clearArray, Ent, EntMgr,
-  Event, GameState, genStyles, getLogger, ids, KillEv,
+  Event, GameState, genStyles, getLogger, getRandomInt, ids, KillEv,
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth, now, oscDist,
+  ledgeWidth, makeStar, now, oscDist,
   Player,
   RemEnt, runLocally, serSimResults, Star,
   updateEntPhysFromPl,
@@ -65,6 +65,7 @@ const styleGen = genStyles();
 const io = Sio();
 
 const gameState = new GameState(undefined, destroy);
+gameState.onEntCreated.add(ent => ent instanceof Star && events.push(new AddEnt(ent).ser()));
 
 const events: Event[] = [];
 const players = gameState.players;
@@ -84,12 +85,6 @@ const doRun = !runLocally, doAddPlayers = !runLocally; // doRun = save-batteries
 let lastBcastTime = null;
 const bcastPeriod = 1 / 20, regenStarPeriod = 1;
 let tick = 0, bcastNum = 0;
-
-function getRandomInt(min: number, max: number) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
-}
 
 function initSnap() {
   return <Bcast>{
@@ -242,25 +237,30 @@ const doStars = true, gridDim = 200, expPerGrid = doStars ? 10 : 0;
 function updateStars(gameState: GameState, bootstrap: boolean) {
   getLogger('stars').log('regenerating stars');
   const gridCounts = [];
-  for (let x = 0; x < Common.gameWorld.width / gridDim; x++) {
+  const nx = Common.gameWorld.width / gridDim;
+  const ny = Common.gameWorld.height / gridDim;
+  for (let x = 0; x < nx; x++) {
     gridCounts.push([]);
-    for (let y = 0; y < Common.gameWorld.height / gridDim; y++) {
+    for (let y = 0; y < ny; y++) {
       gridCounts[x].push(0);
     }
   }
   for (let star of gameState.stars) {
-    gridCounts[Math.floor(star.x / gridDim)][Math.floor(star.y / gridDim)] += 1;
+    const x = Math.floor(star.x / gridDim);
+    const y = Math.floor(star.y / gridDim);
+    if (0 <= x && x < nx && 0 <= y && y < ny) {
+      gridCounts[x][y] += 1;
+    }
   }
-  for (let x = 0; x < Math.floor(Common.gameWorld.width / gridDim); x++) {
-    for (let y = 0; y < Math.floor(Common.gameWorld.height / gridDim); y++) {
+  for (let x = 0; x < Math.floor(nx); x++) {
+    for (let y = 0; y < Math.floor(ny); y++) {
       while (gridCounts[x][y] < expPerGrid && (bootstrap || Math.random() < .1)) {
-        const star = new Star(
+        const star = makeStar(
           getRandomInt(gridDim * x, gridDim * (x + 1) - 1),
-          getRandomInt(gridDim * y, gridDim * (y + 1) - 1));
-        gameState.stars.push(star);
-        addBody(star, 'kinematic');
+          getRandomInt(gridDim * y, gridDim * (y + 1) - 1),
+          gameState
+        );
         gridCounts[x][y] += 1;
-        events.push(new AddEnt(star).ser());
       }
     }
   }

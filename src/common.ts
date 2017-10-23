@@ -81,7 +81,10 @@ export class GameState {
   public lava: Lava;
   public stars: Star[] = [];
   public blocks: Block[] = [];
+  // not serialized
+  public bursters: Burster[] = [];
   onJumpoff = new Signals.Signal();
+  onEntCreated = new Signals.Signal();
   constructor(public world: Pl.World = gWorld, public destroy = _.noop) {}
   getEnts() {
     return (<Ent[]>this.players).concat(this.ledges).concat(this.stars).concat(this.blocks);
@@ -134,6 +137,42 @@ export class InputState {
   isDown = false;
 }
 
+export function getRandomInt(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+export function makeStar(x: number, y: number, gameState: GameState, xformer = _.noop) {
+  const star = new Star(x,y);
+  gameState.stars.push(star);
+  addBody(star, 'kinematic');
+  xformer(star);
+  gameState.onEntCreated.dispatch(star);
+  return star;
+}
+
+export function makeBurst(x: number, y: number, count: number, gameState: GameState) {
+  const stars = [];
+  for (let i = 0; i < count; i++) {
+    const star = makeStar(x,y,gameState, (star) => {
+      star.bod.setLinearVelocity(Pl.Vec2(
+        getRandomInt(-10,10),
+        getRandomInt(-10,10)
+      ));
+      star.bod.getFixtureList().setFilterData({
+        categoryBits: 1,
+        maskBits: 0,
+        filterGroupIndex: 0
+      });
+      star.vel.x = star.bod.getLinearVelocity().x * ratio;
+      star.vel.y = star.bod.getLinearVelocity().y * ratio;
+    });
+    stars.push(star);
+  }
+  gameState.bursters.push(new Burster(stars));
+}
+
 export function create(gameState: GameState) {
   const players = gameState.players, world = gameState.world;
   const entToKiller = new Map<Ent, Player>();
@@ -163,8 +202,9 @@ export function create(gameState: GameState) {
               const playerB: Player = bB.getUserData();
               uniqueKill(playerA, playerB, () => {
                 destroy(playerB, playerA);
+                makeBurst(playerB.x, playerB.y,10, gameState);
                 playerB.dead = true;
-                playerA.grow(playerB.size);
+                playerA.grow(playerB.size / 2);
               });
             }
           });
@@ -365,6 +405,35 @@ export class Star extends Ent {
   dispDims(): Vec2 { return super.dispDims().mul(2); }
 }
 
+const burstDur = 1;
+export class Burster {
+  private elapsed = 0;
+  constructor(public ents: Ent[]) {}
+  step(dt: number) {
+    // start velocity = 2
+    // last elapsed = .3
+    // last velocity = 1.4
+    // curr elapsed = .5
+    // curr velocity = ? = last velocity / (1 - last progress) * curr progress
+    const lastProgress = this.elapsed / burstDur,
+      currProgress = (this.elapsed + dt) / burstDur,
+      factor = (1 - currProgress) / (1 - lastProgress);
+    for (let ent of this.ents) {
+      if (ent.bod.getFixtureList()) {
+        if (this.elapsed > .2)
+          ent.bod.getFixtureList().setFilterData({
+            categoryBits: 1,
+            maskBits: 65535,
+            filterGroupIndex: 0
+          });
+        updateVel(ent.bod, ({x, y}) => Pl.Vec2(x * factor, y * factor));
+      }
+    }
+    this.elapsed += dt;
+    return this.elapsed < burstDur;
+  }
+}
+
 export class Event extends Serializable {}
 
 export class InputEvent extends Event {
@@ -459,6 +528,10 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
   // clients bucketed into the bcasts, which are less frequent.
   for (let player of gameState.players) feedInputs(player, _dt);
   for (let ledge of gameState.ledges) oscillate(ledge, gameState.time);
+
+  const newBursters = gameState.bursters.filter(b => b.step(_dt));
+  clearArray(gameState.bursters);
+  for (let b of newBursters) gameState.bursters.push(b);
 
   const currTime = Date.now() / 1000;
 
