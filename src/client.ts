@@ -250,6 +250,12 @@ function create() {
   notifText.setShadow(4,4,'#000',4);
 }
 
+let follow = function (sprite: any) {
+  game.camera.follow(sprite, Phaser.Camera.FOLLOW_PLATFORMER);
+  const zone = game.camera.deadzone;
+  game.camera.deadzone = new Phaser.Rectangle(game.camera.width / 2, zone.y, 0, zone.height);
+};
+
 function initEnts() {
   const initSnap = timeline[0];
 
@@ -264,7 +270,7 @@ function initEnts() {
 
   me = players[players.length - 1];
   const meSprite = entToSprite.get(me);
-  game.camera.follow(meSprite, Phaser.Camera.FOLLOW_PLATFORMER);
+  follow(meSprite);
   guiMgr.refresh();
 }
 
@@ -696,7 +702,7 @@ const guiMgr = new GuiMgr();
 
 function refollow() {
   if (cp.currentPlayer <= players.length) {
-    game.camera.follow(entToSprite.get(players[cp.currentPlayer]), Phaser.Camera.FOLLOW_PLATFORMER);
+    follow(entToSprite.get(players[cp.currentPlayer]));
   }
 }
 
@@ -745,7 +751,7 @@ function startGame(name: string) {
             lastParentBounds = parentBounds;
             rescale();
             // This is needed to keep the camera on the player. Camera doesn't register game rescales.
-            this.camera.follow(entToSprite.get(me), Phaser.Camera.FOLLOW_PLATFORMER);
+            follow(entToSprite.get(me));
           },
           preload: preload,
           create: function () {
