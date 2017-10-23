@@ -339,7 +339,7 @@ function onEntAdded(ent: Ent) {
 
 const entMgr = new EntMgr(world, gameState, onEntAdded);
 
-function tryRemove(id: number, ents: Ent[]) {
+function tryRemove(id: number, ents: Ent[], instantly = false) {
   const i = _(ents).findIndex((p) => p.id == id);
   if (i >= 0) {
     const ent = ents[i];
@@ -355,11 +355,17 @@ function tryRemove(id: number, ents: Ent[]) {
       sprite.x -= sprite.width / 2;
       sprite.height = squishHeight;
       sprite.width *= 2;
-      setTimeout(() => {
+      let removeSpriteAndName = function () {
         removeSprite();
         playerToName.get(ent).destroy();
         playerToName.delete(ent);
-      }, 2000);
+      };
+      if (instantly)
+        removeSpriteAndName();
+      else
+        setTimeout(() => {
+          removeSpriteAndName();
+        }, 2000);
     } else {
       removeSprite();
     }
@@ -391,18 +397,18 @@ let showDebugText = function () {
   }
 };
 
-function removeEnt(id: number) {
-  tryRemove(id, players);
-  tryRemove(id, ledges);
-  tryRemove(id, gameState.stars);
-  tryRemove(id, gameState.blocks);
+function removeEnt(id: number, instantly = false) {
+  tryRemove(id, players, instantly);
+  tryRemove(id, ledges, instantly);
+  tryRemove(id, gameState.stars, instantly);
+  tryRemove(id, gameState.blocks, instantly);
 }
 
 function backToSplash() {
   rootComponent.show();
 
   for (let ent of getEnts()) {
-    removeEnt(ent.id);
+    removeEnt(ent.id, true);
   }
 
   game.paused = true;
