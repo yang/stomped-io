@@ -1,15 +1,17 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {Component} from "react";
+import * as classnames from 'classnames';
 
 interface SplashState {
   name: string;
   shown: boolean;
   disabled: boolean;
+  char: string;
 }
 
 interface SplashProps {
-  onSubmit: (name: string) => void;
+  onSubmit: (name: string, char: string) => void;
   shown: boolean;
 }
 
@@ -17,12 +19,24 @@ export class Splash extends React.Component {
   state: SplashState;
   props: SplashProps;
   inputEl: HTMLInputElement;
+  chars = [
+    'white',
+    'red',
+    'yellow',
+    'green'
+  ];
   constructor(props) {
     super(props);
+    if (0/1) {
+      for (let i = 0; i < 2; i++) {
+        this.chars = this.chars.concat(this.chars);
+      }
+    }
     this.state = {
       name: '',
       shown: props.shown,
-      disabled: false
+      disabled: false,
+      char: this.chars[0]
     };
   }
   private handleChange = (e) => {
@@ -31,7 +45,7 @@ export class Splash extends React.Component {
   private handleSubmit = (e) => {
     e.preventDefault();
     this.setState({disabled: true});
-    this.props.onSubmit(this.state.name);
+    this.props.onSubmit(this.state.name, this.state.char);
   };
   componentDidUpdate() {
     // Must do after element is rendered - see
@@ -46,6 +60,9 @@ export class Splash extends React.Component {
     this.setState({shown: false});
     document.getElementById('mount-point').style.display = 'none';
   }
+  chooseChar = (char: string) => {
+    this.setState({char});
+  };
   render() {
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Bounce<span className="io">.io</span></h1>
@@ -59,6 +76,19 @@ export class Splash extends React.Component {
           autoFocus={true}
           disabled={this.state.disabled}
         />
+        <br/>
+        <div className={'gallery'}>{
+          this.chars.map(char =>
+            <div className={classnames({
+              'gallery-item': true,
+              'gallery-item--selected': this.state.char == char
+            })}>
+              <a href={"#"} onMouseDown={() => this.chooseChar(char)}>
+                <img className='gallery-img' src={`dist/assets/player-${char}.png`}/>
+              </a>
+            </div>
+          )
+        }</div>
         <br/>
         <button
           className={'submit-btn'}

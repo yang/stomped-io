@@ -267,7 +267,7 @@ function destroy(ent, killer?) {
   toRemove.push(new RemEnt(ent.id, killer ? killer.id : null));
 }
 
-function makePlayer(name) {
+function makePlayer(name, style = null) {
   if (!doAddPlayers && players.length > 0) {
     return players[0];
   }
@@ -275,7 +275,7 @@ function makePlayer(name) {
     name,
     Common.gameWorld.width / 2,
     50,
-    `dude-${styleGen.next().value}`
+    style || styleGen.next().value
   );
   addBody(player, 'dynamic');
   players.push(player);
@@ -310,11 +310,11 @@ io.on('connection', (socket: SocketIO.Socket) => {
   });
 
   socket.on('join', (playerData) => {
-    const player = makePlayer(playerData.name);
+    const player = makePlayer(playerData.name, playerData.char);
 
     socket.on('disconnect', () => destroy(player));
 
-    console.log('player', player.describe(), `joined (client ${client.id})`);
+    console.log('player', player.describe(), 'with style', player.style, `joined (client ${client.id})`);
 
     // TODO create player-joined event
 

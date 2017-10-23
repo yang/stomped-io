@@ -5,6 +5,7 @@
   "author": "Yang Zhang <yaaang@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/classnames": "^2.2.3",
     "@types/dat-gui": "^0.6.3",
     "@types/flatbuffers": "^1.6.4",
     "@types/lodash": "^4.14.74",

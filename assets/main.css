@@ -1,3 +1,6 @@
+:root {
+    --bg: #2A0F3F;
+}
 html, body, #mount-point {
     height: 100%;
     width: 100%;
@@ -11,7 +14,7 @@ html, body, #mount-point {
     width: 100%;
     height: 100%;
     background: #331133;
-    background: #2A0F3F;
+    background: var(--bg);
     display: flex;
     flex-direction: column;
     align-content: center;
@@ -71,4 +74,46 @@ h1 {
 }
 .submit-btn:disabled {
     color: #ffcc88;
+}
+.gallery {
+    width: 800px;
+    height: 140px;
+    overflow-x: auto;
+    margin: 20px;
+    vertical-align: middle;
+    white-space: nowrap;
+    text-align: center;
+}
+.gallery-item {
+    width: 75px;
+    overflow: hidden;
+    display: inline-block;
+    margin: 0 20px;
+}
+.gallery-item--selected {
+    border: 4px solid orange;
+}
+.gallery-img {
+    height: 100px;
+}
+
+.gallery::-webkit-scrollbar-track
+{
+    /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+    border-radius: 10px;
+    background-color: #4a1f6f;
+}
+
+.gallery::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+    background-color: var(--bg);
+}
+
+.gallery::-webkit-scrollbar-thumb
+{
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: darkorange;
 }

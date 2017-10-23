@@ -1394,7 +1394,7 @@ export class BotMgr {
       'bot',
       gameState.ledges[2].x + ledgeWidth / 2,
       gameState.ledges[2].y - 50,
-      `dude-${this.styleGen.next().value}`
+      this.styleGen.next().value
     )));
     player.inputs.left.isDown = true;
     const bot = new Bot(player, gameState, this.socket, this.pool, isDumb);

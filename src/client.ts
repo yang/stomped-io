@@ -315,7 +315,7 @@ function onEntAdded(ent: Ent) {
     return sprite;
   }
   if (ent instanceof Player) {
-    const sprite = mkSprite(playerGroup, ent.style);
+    const sprite = mkSprite(playerGroup, `dude-${ent.style}`);
     sprite.animations.add('left', [3, 4, 3, 5], 10, true);
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     const style = { font: "12px Arial", fill: "#cccccc", align: "center"};
@@ -780,8 +780,8 @@ function render() {
     showDebugText();
 }
 
-function startGame(name: string) {
-  socket.emit('join', {name});
+function startGame(name: string, char: string) {
+  socket.emit('join', {name, char});
 
   if (doPings) {
     setInterval(() => {
@@ -887,20 +887,21 @@ export function main(pool) {
   gPool = pool;
   socket = Sio('http://localhost:3000', {query: {authKey}});
   botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool);
-  let firstNameSubmitted = false;
-  const pFirstNameSubmit = new Promise<string>((resolveSubmit) => {
+  let firstSubmitted = false;
+  const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
     renderSplash({
-      onSubmit: (name) => {
+      onSubmit: (name, char) => {
         // OK to resolve multiple times
-        resolveSubmit(name);
+        resolveSubmit([name, char]);
         // Let Promise.all handle the first one
-        if (firstNameSubmitted) startGame(name);
-        firstNameSubmitted = true;
+        if (firstSubmitted) startGame(name, char);
+        firstSubmitted = true;
       },
       shown: !autoStartName
     }).then(root => rootComponent = root);
-    if (autoStartName) { resolveSubmit(autoStartName); }
+    if (autoStartName) { resolveSubmit([autoStartName, 'white']); }
   });
   const pConnected = new Promise((resolve) => socket.on('connect', resolve));
-  Promise.all([pFirstNameSubmit, pConnected]).then(([name, _]) => startGame(name as string));
+  Promise.all([pFirstSubmit, pConnected])
+    .then(([[name, char], _]) => startGame(name as string, char as string));
 }
