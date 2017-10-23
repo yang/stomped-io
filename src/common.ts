@@ -284,6 +284,7 @@ export class Ent extends Serializable {
   dims() { return new Vec2(this.width, this.height); }
   dispDims() { return this.dims(); }
   dispPos(): Vec2 { return this.pos().add(this.dims().sub(this.dispDims()).div(2)); }
+  midDispPos(): Vec2 { return this.dispPos().add(this.dispDims().div(2)); }
 }
 
 export class Lava extends Ent {

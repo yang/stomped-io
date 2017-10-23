@@ -147,7 +147,7 @@ function preload() {
   }
 }
 
-var platforms, starGroup, playerGroup;
+var platforms, starGroup, playerGroup, nameGroup;
 var cursors;
 
 var stars;
@@ -180,7 +180,8 @@ function destroy2(ent) {
   }
 }
 
-const entToSprite = new Map();
+const entToSprite = new Map<Ent, any>();
+const playerToName = new Map<Player, any>();
 const events: Event[] = [];
 let onNextBcastPersistentCallbacks = [];
 
@@ -216,6 +217,7 @@ function create() {
   starGroup = game.add.group();
   playerGroup = game.add.group();
   platforms = game.add.group();
+  nameGroup = game.add.group();
 
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
@@ -316,6 +318,11 @@ function onEntAdded(ent: Ent) {
     const sprite = mkSprite(playerGroup, ent.style);
     sprite.animations.add('left', [3, 4, 3, 5], 10, true);
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
+    const style = { font: "12px Arial", fill: "#cccccc", align: "center"};
+    const text = game.add.text(0, 0, ent.name, style, nameGroup);
+    text.anchor.x = text.anchor.y = 0.5;
+    playerToName.set(ent, text);
+    moveName(ent);
     guiMgr.refresh();
   } else if (ent instanceof Ledge) {
     mkSprite(platforms, 'ground');
@@ -346,7 +353,11 @@ function tryRemove(id: number, ents: Ent[]) {
       sprite.x -= sprite.width / 2;
       sprite.height = squishHeight;
       sprite.width *= 2;
-      setTimeout(removeSprite, 2000);
+      setTimeout(() => {
+        removeSprite();
+        playerToName.get(ent).destroy();
+        playerToName.delete(ent);
+      }, 2000);
     } else {
       removeSprite();
     }
@@ -395,6 +406,13 @@ function backToSplash() {
   game.paused = true;
   game.canvas.style.display = 'none';
 }
+
+let moveName = function (player) {
+  const text = playerToName.get(player);
+  text.x = player.midDispPos().x;
+  text.y = player.y - 16;
+  return text;
+};
 
 function update() {
 
@@ -629,6 +647,10 @@ ${mkScoreText()}
       }
       [label.x, label.y] = [ent.x, ent.y];
     }
+  }
+
+  for (let player of players) {
+    const text = moveName(player);
   }
 
   if (cp.showScores) {
