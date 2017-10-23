@@ -71,7 +71,7 @@ function initSnap() {
 function update() {
   const currTime = now();
   for (let bot of botMgr.bots) {
-    bot.replayPlan(true, currTime);
+    bot.isDumb ? bot.dumbPlan() : bot.replayPlan(true, currTime);
   }
   for (let bot of botMgr.bots) {
     bot.checkPlan(currTime);
@@ -326,7 +326,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
     });
 
     socket.on('makeBot', () => {
-      const bot = botMgr.makeBot();
+      const bot = botMgr.makeBot(true);
       socket.emit('botProxy', bot.ser());
       bot.onSim.add(({worldStates, bestPath, bestWorldState}) => {
         const botData = bot.ser();

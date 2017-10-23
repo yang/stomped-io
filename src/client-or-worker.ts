@@ -13,7 +13,7 @@ function sim(botData?, gameStateData?) {
   gameState.deser(gameStateData);
   const bot = new Bot(
     gameState.players.find(p => p.id == botData.playerId),
-    gameState, null, null
+    gameState, null, null, false
   );
   bot.deser(botData);
   const {bestWorldState, bestPath, worldStates} = bot.runSimsClone();

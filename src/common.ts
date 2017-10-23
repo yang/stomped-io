@@ -846,7 +846,8 @@ export class Bot {
     public player: Player,
     public gameState: GameState,
     public socket,
-    public pool
+    public pool,
+    public isDumb: boolean
   ) {}
 
   ser() {
@@ -859,6 +860,30 @@ export class Bot {
   deser(botData) {
     this.target = Vec2.fromObj(botData.target);
     this.initPlan = botData.initPlan;
+  }
+
+  private lastDumbTime = 0;
+  private lastNearest: Player = null;
+  private lastDirChange = 0;
+  dumbPlan() {
+    const me = this.player;
+    const currTime = now();
+    if (currTime - this.lastDumbTime > 5000) {
+      const players = this.gameState.players.filter(p => p != me);
+      if (players.length > 0) {
+        this.lastNearest = _(players).minBy(p => p.pos().sub(me.pos()).len());
+        this.lastDumbTime = currTime;
+        this.lastDirChange = 0;
+      }
+    }
+    if (this.lastNearest && currTime - this.lastDirChange > 500) {
+      if (this.lastNearest.dead) {
+        // so next round we will look for someone new
+        this.lastDumbTime = 0;
+      }
+      this.reallySetInput(this.lastNearest.x <= me.x ? Dir.Left : Dir.Right, currTime);
+      this.lastDirChange = currTime;
+    }
   }
 
   capturePlState(): PlState {
@@ -1352,7 +1377,8 @@ export class BotMgr {
         player,
         this.gameState,
         this.socket,
-        this.pool
+        this.pool,
+        false
       );
       this.bots.push(bot);
       return bot;
@@ -1361,7 +1387,7 @@ export class BotMgr {
     }
   }
 
-  makeBot() {
+  makeBot(isDumb: boolean) {
     const entMgr = this.entMgr, gameState = this.gameState;
     const player = entMgr.addPlayer(_.assign({}, new Player(
       'bot',
@@ -1370,7 +1396,7 @@ export class BotMgr {
       `dude-${this.styleGen.next().value}`
     )));
     player.inputs.left.isDown = true;
-    const bot = new Bot(player, gameState, this.socket, this.pool);
+    const bot = new Bot(player, gameState, this.socket, this.pool, isDumb);
     bot.target = new Vec2(0,0);
     this.bots.push(bot);
     return bot;

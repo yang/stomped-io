@@ -588,7 +588,7 @@ ${mkScoreText()}
   }
   if (runLocally) {
     for (let bot of botMgr.bots) {
-      bot.replayPlan(updating, currTime);
+      bot.isDumb ? bot.dumbPlan() : bot.replayPlan(updating, currTime);
     }
   }
   for (let bot of botMgr.bots) {
