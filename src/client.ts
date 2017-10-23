@@ -415,7 +415,7 @@ function update() {
     rootComponent.hide();
   }
 
-  const currentPlayer = players[cp.currentPlayer];
+  const currentPlayer = cp.currentPlayer ? players[cp.currentPlayer] : null;
   const bot = botMgr.bots.find(b => b.player == currentPlayer);
   // We're manually calculating the mouse pointer position in scaled world coordinates.
   // game.input.worldX doesn't factor in the world scaling.
@@ -693,7 +693,7 @@ class GuiMgr {
     if (!isDebug) return;
     this.clear();
     const targetPlayerIndex = players.findIndex(p => entToSprite.get(p) == game.camera.target);
-    cp.currentPlayer = targetPlayerIndex >= 0 ? targetPlayerIndex : 0;
+    cp.currentPlayer = targetPlayerIndex >= 0 ? targetPlayerIndex : null;
     refollow();
     this.add([
       this.gui.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
@@ -718,7 +718,7 @@ class GuiMgr {
 const guiMgr = new GuiMgr();
 
 function refollow() {
-  if (cp.currentPlayer <= players.length) {
+  if (cp.currentPlayer && cp.currentPlayer <= players.length) {
     follow(entToSprite.get(players[cp.currentPlayer]));
   }
 }
