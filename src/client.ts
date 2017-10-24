@@ -574,8 +574,10 @@ ${mkScoreText()}
     for (let ent of getEnts()) {
       const [a, b] = [aMap.get(ent.id), bMap.get(ent.id)];
       if (a && b) {
-        if (!cp.instantTurn && ent instanceof Player && a.type == 'Player') {
-          ent.inputs = (<Player>a).inputs;
+        if (ent instanceof Player) {
+          if (ent != me || !cp.instantTurn) {
+            ent.inputs = (<Player>a).inputs;
+          }
         }
         ent.height = lerp(a.height, b.height, alpha);
         ent.width = lerp(a.width, b.width, alpha);
