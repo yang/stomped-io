@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {Component} from "react";
 import * as classnames from 'classnames';
+import {Chance} from 'chance';
 
 interface SplashState {
   name: string;
@@ -36,7 +37,7 @@ export class Splash extends React.Component {
       name: '',
       shown: props.shown,
       disabled: false,
-      char: this.chars[0]
+      char: new Chance().pickone(this.chars)
     };
   }
   private handleChange = (e) => {

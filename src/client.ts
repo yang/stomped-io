@@ -94,7 +94,9 @@ class ControlPanel {
   useKeyboard = false;
   boundCameraWithinWalls = false;
   testNotif() { notify('Testing!'); }
-  makeBot() { runLocally ? botMgr.makeBot() : socket.emit('makeBot'); }
+  makeBot() {
+    runLocally ? botMgr.makeBot() : socket.emit('makeBot');
+  }
 }
 const cp = new ControlPanel();
 
@@ -898,7 +900,7 @@ const doPings = false;
 let rootComponent;
 export function main(pool) {
   gPool = pool;
-  socket = Sio('http://localhost:3000', {query: {authKey}});
+  socket = Sio(location.origin.replace(':8000', ':3000'), {query: {authKey}});
   botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool, null);
   let firstSubmitted = false;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
