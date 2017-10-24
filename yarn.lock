@@ -2879,7 +2879,7 @@ ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
 
-nan@^2.3.0:
+nan@^2.3.0, nan@^2.5.1:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.7.0.tgz#d95bf721ec877e08db276ed3fc6eb78f9083ad46"
 
@@ -2984,7 +2984,7 @@ node-notifier@^5.0.2:
     shellwords "^0.1.0"
     which "^1.2.12"
 
-node-pre-gyp@^0.6.36:
+node-pre-gyp@^0.6.34, node-pre-gyp@^0.6.36:
   version "0.6.38"
   resolved "https://registry.yarnpkg.com/node-pre-gyp/-/node-pre-gyp-0.6.38.tgz#e92a20f83416415bb4086f6d1fb78b3da73d113d"
   dependencies:
@@ -4278,6 +4278,13 @@ uuid@^3.0.0, uuid@^3.1.0:
 uws@~0.14.4:
   version "0.14.5"
   resolved "https://registry.yarnpkg.com/uws/-/uws-0.14.5.tgz#67aaf33c46b2a587a5f6666d00f7691328f149dc"
+
+v8-profiler@^5.7.0:
+  version "5.7.0"
+  resolved "https://registry.yarnpkg.com/v8-profiler/-/v8-profiler-5.7.0.tgz#e8381cbebb5b5fd0ca8d2b09f6a0181a158db34d"
+  dependencies:
+    nan "^2.5.1"
+    node-pre-gyp "^0.6.34"
 
 v8flags@^3.0.0:
   version "3.0.1"
