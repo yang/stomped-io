@@ -93,6 +93,7 @@ class ControlPanel {
   showScores = !isDebug;
   useKeyboard = false;
   boundCameraWithinWalls = false;
+  boundCameraAboveGround = true;
   testNotif() { notify('Testing!'); }
   makeBot() {
     runLocally ? botMgr.makeBot() : socket.emit('makeBot');
@@ -435,7 +436,7 @@ function update() {
   // Understanding zooming and the camera and scaling systems in Phaser is very confusing.
   game.camera.bounds.width = (cp.boundCameraWithinWalls ? 1 : 3) * Common.gameWorld.width;
   game.camera.bounds.x = cp.boundCameraWithinWalls ? 0 : -Common.gameWorld.width;
-  game.camera.bounds.height = Common.gameWorld.height;
+  game.camera.bounds.height = cp.boundCameraAboveGround ? Common.gameWorld.height : game.world.height;
 
   if (gameState.players.length == 0)
     initEnts();
@@ -541,6 +542,7 @@ ${mkScoreText()}
           case 'RemEnt':
             const remEnt = ev as RemEnt;
             const id = remEnt.id;
+            assert(getEnts().find(e => e.id == id));
             if (remEnt.killerId !== null) {
               const killed = players.find(p => p.id == remEnt.id);
               const killer = players.find(p => p.id == remEnt.killerId);
@@ -749,6 +751,7 @@ class GuiMgr {
       this.gui.add(cp, 'testNotif'),
       this.gui.add(cp, 'boundCameraWithinWalls'),
       this.gui.add(cp, 'useKeyboard'),
+      this.gui.add(cp, 'boundCameraAboveGround'),
       this.gui.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       this.gui.add(cp, 'showIds').onFinishChange(() =>
         cp.showIds ? 0 : Array.from(entToLabel.values()).map(t => t.destroy())),
