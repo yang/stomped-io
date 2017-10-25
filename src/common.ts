@@ -85,6 +85,7 @@ export class ServerSettings {
   doOsc = true;
   oscDist = gameWorld.width / 8 * 2;
   maxFallSpeed = 9;
+  smashSpeed = 12;
   ser() {
     return _({}).assignIn(this);
   }
@@ -583,7 +584,7 @@ function feedInputs(player: Player, dt: number, gameState: GameState) {
   if (player.state == 'startingSmash') {
     updateVel(player.bod, (old) => Pl.Vec2(0, 0));
   } else if (player.state == 'smashing') {
-    updateVel(player.bod, (old) => Pl.Vec2(0, -settings.maxFallSpeed));
+    updateVel(player.bod, (old) => Pl.Vec2(0, -settings.smashSpeed));
   } else if (player.state == 'normal') {
     if (inputs.left.isDown || alwaysMoveLeft) {
       //  Move to the left
@@ -630,7 +631,7 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
   // Clear this after every step!
   entToHitter.clear();
   for (let player of gameState.players) {
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, settings.maxFallSpeed)));
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, player.state == 'smashing' ? settings.smashSpeed : settings.maxFallSpeed)));
     if (
       doLava &&
       player.bod.getFixtureList().getAABB(0).lowerBound.y <=

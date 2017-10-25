@@ -777,6 +777,7 @@ class GuiMgr {
       svrOpts.add(svrSettings, 'accel'),
       svrOpts.add(svrSettings, 'doOsc'),
       svrOpts.add(svrSettings, 'oscDist'),
+      svrOpts.add(svrSettings, 'smashSpeed'),
       svrOpts.add(svrSettings, 'maxFallSpeed')
         ];
     const uploadSettings = () => socket.emit('svrSettings', svrSettings.ser());
