@@ -85,7 +85,7 @@ export class GameState {
   public bursters: Burster[] = [];
   onJumpoff = new Signals.Signal();
   onEntCreated = new Signals.Signal();
-  constructor(public world: Pl.World = gWorld, public destroy = _.noop) {}
+  constructor(public world: Pl.World = gWorld, public destroy: (killed: Ent, killer?: Ent) => void = () => {}) {}
   getEnts() {
     return (<Ent[]>this.players).concat(this.ledges).concat(this.stars).concat(this.blocks);
   }
@@ -107,7 +107,7 @@ export class GameState {
   deser(data) {
     this.time = data.time;
     this.world = restoreWorldWithBackRef(data.world);
-    this.lava = new Lava(0,0);
+    this.lava = new Lava(0, 0);
     this.lava.deser(data.lava);
     const t2bs = bodiesByType(this.world);
     this.players = t2bs.get(Player);
@@ -123,6 +123,11 @@ export function pushAll(xs, ys) {
 
 export function clearArray(xs) {
   xs.splice(0, xs.length);
+}
+
+export function replaceArray<T>(xs: T[], ys: T[]) {
+  clearArray(xs);
+  pushAll(xs, ys);
 }
 
 export function enumerate<T>(xs: T[]): [number,T][] {
@@ -532,10 +537,7 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
   // clients bucketed into the bcasts, which are less frequent.
   for (let player of gameState.players) feedInputs(player, _dt);
   for (let ledge of gameState.ledges) oscillate(ledge, gameState.time);
-
-  const newBursters = gameState.bursters.filter(b => b.step(_dt));
-  clearArray(gameState.bursters);
-  for (let b of newBursters) gameState.bursters.push(b);
+  gameState.bursters = gameState.bursters.filter(b => b.step(_dt));
 
   const currTime = Date.now() / 1000;
 
