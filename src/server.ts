@@ -274,7 +274,8 @@ function updateStars(gameState: GameState, bootstrap: boolean) {
         );
         gridCounts[x][y].push(star);
       }
-      while (gridCounts[x][y].length > expPerGrid && Math.random() < .2) {
+      const target = gridCounts[x][y].length * .1 + expPerGrid * .9;
+      while (gridCounts[x][y].length > target) {
         const star = gridCounts[x][y].shift();
         gameState.destroy(star);
       }
