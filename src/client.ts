@@ -99,6 +99,8 @@ class ControlPanel {
   boundCameraAboveGround = true;
   camWidth = 1200;
   camHeight = 800;
+  spectate = false;
+  backToSplash() { backToSplash(); }
   testNotif() { notify('Testing!'); }
   makeBot() {
     runLocally ? botMgr.makeBot() : socket.emit('makeBot');
@@ -569,7 +571,8 @@ ${mkScoreText()}
                   cp.currentPlayer = players.indexOf(killer);
                   follow(entToSprite.get(killer));
                 }, 0);
-                setTimeout(backToSplash, 2000);
+                if (!cp.spectate)
+                  setTimeout(backToSplash, 2000);
               } else if (killer == me) {
                 notify(`You stomped ${killed.name}!`)
               }
@@ -813,6 +816,8 @@ class GuiMgr {
       cliOpts.add(cp, 'useKeyboard'),
       cliOpts.add(cp, 'camWidth').onFinishChange(rescale),
       cliOpts.add(cp, 'camHeight').onFinishChange(rescale),
+      cliOpts.add(cp, 'spectate'),
+      cliOpts.add(cp, 'backToSplash'),
       cliOpts.add(cp, 'boundCameraAboveGround'),
       cliOpts.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       cliOpts.add(cp, 'showIds').onFinishChange(() =>
