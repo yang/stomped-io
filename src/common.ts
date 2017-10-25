@@ -201,10 +201,19 @@ export class InputState {
   isDown = false;
 }
 
-export function getRandomInt(min: number, max: number) {
+let getRandomNum = function (min: number, max: number) {
   min = Math.ceil(min);
   max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+  return Math.random() * (max - min) + min;
+};
+
+//The maximum is exclusive and the minimum is inclusive
+export function getRandomIntRange(min: number, max: number) {
+  return Math.floor(getRandomNum(min, max));
+}
+
+export function getRandomInt(min: number, max: number) {
+  return getRandomIntRange(min, max + 1);
 }
 
 export function makeStar(x: number, y: number, gameState: GameState, xformer = _.noop) {
@@ -221,8 +230,8 @@ export function makeBurst(x: number, y: number, count: number, gameState: GameSt
   for (let i = 0; i < count; i++) {
     const star = makeStar(x,y,gameState, (star) => {
       star.bod.setLinearVelocity(Pl.Vec2(
-        getRandomInt(-10,10),
-        getRandomInt(-10,10)
+        getRandomNum(-10,10),
+        getRandomNum(-10,10)
       ));
       star.bod.getFixtureList().setFilterData({
         categoryBits: 1,

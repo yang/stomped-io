@@ -6,7 +6,7 @@ import {
   AddEnt, assert, baseHandler,
   Bcast, Block, BotMgr, Burster,
   clearArray, Ent, EntMgr,
-  Event, GameState, genStyles, getLogger, getRandomInt, ids, KillEv,
+  Event, GameState, genStyles, getLogger, getRandomIntRange, ids, KillEv,
   Lava,
   Ledge,
   ledgeHeight,
@@ -217,7 +217,7 @@ function updateLedges() {
       */
       const xCenter = spawnMin + (column + 0.5) * colWidth;
       const x = xCenter - ledgeWidth / 2;
-      const ledge = new Ledge(x, y, getRandomInt(5, 10));
+      const ledge = new Ledge(x, y, getRandomIntRange(5, 10));
       log.log(wasOdd, column, xCenter, x, y);
       addBody(ledge, 'kinematic');
       ledge.bod.setLinearVelocity(Pl.Vec2(0, 0));
@@ -236,9 +236,9 @@ function schedRandInputs(player) {
     }
   }
   if (allClear) {
-    player.inputs[['left','right'][getRandomInt(0,2) % 2]].isDown = true;
+    player.inputs[['left','right'][getRandomIntRange(0,2) % 2]].isDown = true;
   }
-  setTimeout(() => schedRandInputs(player), getRandomInt(1000, 3000));
+  setTimeout(() => schedRandInputs(player), getRandomIntRange(1000, 3000));
 }
 
 const doStars = true, gridDim = 200, expPerGrid = doStars ? 10 : 0;
@@ -268,8 +268,8 @@ function updateStars(gameState: GameState, bootstrap: boolean) {
     for (let y = 0; y < Math.floor(ny); y++) {
       while (gridCounts[x][y].length < expPerGrid && (bootstrap || Math.random() < .1)) {
         const star = makeStar(
-          getRandomInt(gridDim * x, gridDim * (x + 1) - 1),
-          getRandomInt(gridDim * y, gridDim * (y + 1) - 1),
+          getRandomIntRange(gridDim * x, gridDim * (x + 1) - 1),
+          getRandomIntRange(gridDim * y, gridDim * (y + 1) - 1),
           gameState
         );
         gridCounts[x][y].push(star);
