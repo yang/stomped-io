@@ -3,7 +3,7 @@ import * as Sio from 'socket.io';
 import * as Common from './common';
 import {
   addBody,
-  AddEnt, baseHandler,
+  AddEnt, assert, baseHandler,
   Bcast, Block, BotMgr, Burster,
   clearArray, Ent, EntMgr,
   Event, GameState, genStyles, getLogger, getRandomInt, ids, KillEv,
@@ -236,31 +236,39 @@ function schedRandInputs(player) {
 const doStars = true, gridDim = 200, expPerGrid = doStars ? 10 : 0;
 function updateStars(gameState: GameState, bootstrap: boolean) {
   getLogger('stars').log('regenerating stars');
-  const gridCounts = [];
+  const gridCounts: Star[][][] = [];
   const nx = Common.gameWorld.width / gridDim;
   const ny = Common.gameWorld.height / gridDim;
+  const {'true': kept, 'false': toRemove} = _(gameState.stars).groupBy(({x,y}) =>
+    (0 <= x && x < Common.gameWorld.width && 0 <= y && y < Common.gameWorld.height)
+  ).defaults({'true': [], 'false': []}).value();
+  for (let star of toRemove) {
+    gameState.destroy(star);
+  }
   for (let x = 0; x < nx; x++) {
     gridCounts.push([]);
     for (let y = 0; y < ny; y++) {
-      gridCounts[x].push(0);
+      gridCounts[x].push([]);
     }
   }
-  for (let star of gameState.stars) {
+  for (let star of kept) {
     const x = Math.floor(star.x / gridDim);
     const y = Math.floor(star.y / gridDim);
-    if (0 <= x && x < nx && 0 <= y && y < ny) {
-      gridCounts[x][y] += 1;
-    }
+    gridCounts[x][y].push(star);
   }
   for (let x = 0; x < Math.floor(nx); x++) {
     for (let y = 0; y < Math.floor(ny); y++) {
-      while (gridCounts[x][y] < expPerGrid && (bootstrap || Math.random() < .1)) {
+      while (gridCounts[x][y].length < expPerGrid && (bootstrap || Math.random() < .1)) {
         const star = makeStar(
           getRandomInt(gridDim * x, gridDim * (x + 1) - 1),
           getRandomInt(gridDim * y, gridDim * (y + 1) - 1),
           gameState
         );
-        gridCounts[x][y] += 1;
+        gridCounts[x][y].push(star);
+      }
+      while (gridCounts[x][y].length > expPerGrid && Math.random() < .2) {
+        const star = gridCounts[x][y].shift();
+        gameState.destroy(star);
       }
     }
   }
@@ -290,7 +298,7 @@ function create() {
   if (doRun) {
     setInterval(bcast, bcastPeriod * 1000);
     setInterval(update, updatePeriod * 1000);
-    setInterval(() => updateStars(gameState, false), regenStarPeriod * 3000);
+    setInterval(() => updateStars(gameState, false), regenStarPeriod * 1000);
   }
 
   Common.create(gameState);
