@@ -49,7 +49,8 @@
   "scripts": {
     "build": "webpack",
     "watch": "webpack --progress --colors --watch",
-    "server": "node-dev -r ts-node/register src/server.ts",
+    "server": "ts-node --inspect src/server.ts",
+    "server-watch": "node-dev -r ts-node/register src/server.ts",
     "test": "jest",
     "watch-test": "jest --watch"
   },
