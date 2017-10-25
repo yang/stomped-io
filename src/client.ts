@@ -921,7 +921,10 @@ export function main(pool) {
     }).then(root => rootComponent = root);
     if (autoStartName) { resolveSubmit([autoStartName, 'white']); }
   });
-  const pConnected = new Promise((resolve) => socket.on('connect', resolve));
+  const pConnected = new Promise<any>((resolve) => socket.on('connect', resolve));
   Promise.all([pFirstSubmit, pConnected])
-    .then(([[name, char], _]) => startGame(name as string, char as string));
+    .then(([firstSubmit, _]) => {
+      const [name, char] = firstSubmit;
+      return startGame(name, char);
+    });
 }
