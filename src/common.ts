@@ -76,7 +76,7 @@ export function* cumsum(xs: number[]) {
 }
 
 export class ServerSettings {
-  accel = 20;
+  accel = 25;
   doOsc = true;
   oscDist = gameWorld.width / 8 * 2;
   ser() {
