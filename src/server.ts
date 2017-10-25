@@ -123,6 +123,9 @@ function getEnts(): Ent[] {
   return gameState.getEnts();
 }
 
+let dbgRementSent = true;
+const rementSent = new Map<number, RemEnt>();
+
 function bcast() {
   // TODO move all removal code to update()
   for (let ev of toRemove) {
@@ -136,7 +139,9 @@ function bcast() {
   }
   for (let ev of toRemove) {
     const ent = getEnts().find(e => e.id == ev.id);
-    if (!ent) continue; // e.g. if player already killed, and then its client disconnects
+    if (!ent)
+      continue; // e.g. if player already killed, and then its client disconnects
+    assert(!rementSent.has(ev.id));
     world.destroyBody(ent.bod);
     if (ent instanceof Player) {
       _.remove(players, e => e == ent);
@@ -147,6 +152,8 @@ function bcast() {
     if (ent instanceof Star) {
       _.remove(gameState.stars, e => e == ent);
     }
+    if (dbgRementSent)
+      rementSent.set(ev.id, ev);
     events.push(ev.ser());
   }
   clearArray(toRemove);
@@ -308,6 +315,7 @@ function create() {
 const toRemove: RemEnt[] = [];
 
 function destroy(ent, killer?) {
+  getLogger('destroy').log('destroying', ent.type, ent.id);
   toRemove.push(new RemEnt(ent.id, killer ? killer.id : null));
 }
 
@@ -382,7 +390,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
 });
 
-(<any>global).dbg = {Common, gameState, botMgr};
+(<any>global).dbg = {Common, gameState, botMgr, baseHandler};
 
 create();
 
