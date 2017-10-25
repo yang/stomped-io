@@ -2,6 +2,11 @@ import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 import * as Signals from 'signals';
 import * as CBuffer from 'CBuffer';
+// Terrible bug: https://github.com/montagejs/collections/issues/185
+const origFind = Array.prototype.find;
+import {SortedSet} from "collections/sorted-set";
+import * as Iterator from 'collections/iterator';
+Array.prototype.find = origFind;
 
 export class Logger {
   constructor(public name: string, public handler: LogHandler) {}
@@ -79,6 +84,7 @@ export class ServerSettings {
   accel = 25;
   doOsc = true;
   oscDist = gameWorld.width / 8 * 2;
+  maxFallSpeed = 9;
   ser() {
     return _({}).assignIn(this);
   }
@@ -91,7 +97,42 @@ export const settings = new ServerSettings();
 
 export let alwaysMoveLeft = false;
 
+export class Timer {
+  aborted = false;
+  id = ids.next().value;
+  constructor(public time: number, public callback: () => void) {}
+  cancel() { this.aborted = true; }
+}
+
+export class TimerMgr {
+  timers = new SortedSet<Timer>([], null, (a,b) => Math.sign(a.time - b.time) || Math.sign(a.id - b.id));
+  constructor(public time = 0) {}
+  advanceTo(time: number) {
+    assert(time >= this.time);
+    const toRemove = new Iterator(this.timers.iterate())
+      // for some reason the iteration protocol always yields an extra undefined at the end and it can't be filtered out!
+      .takeWhile(x => x && x.time < time)
+      .toArray();
+    for (let x of toRemove) {
+      if (!x.aborted)
+        x.callback();
+      this.timers.remove(x);
+    }
+    this.time = time;
+  }
+  advanceBy(dt: number) {
+    return this.advanceTo(this.time + dt);
+  }
+  at(time: number, callback: () => void) {
+    this.timers.push(new Timer(time, callback));
+  }
+  wait(dur: number, callback: () => void) {
+    this.timers.push(new Timer(this.time + dur, callback));
+  }
+}
+
 export class GameState {
+  timerMgr = new TimerMgr();
   public time = 0;
   public players: Player[] = [];
   public ledges: Ledge[] = [];
@@ -218,6 +259,7 @@ export function create(gameState: GameState) {
         if (veq(m.normal, Pl.Vec2(0,-1).mul(reverse ? -1 : 1))) {
           log.log('jumping', playerA, bB.getUserData());
           gameState.onJumpoff.dispatch(playerA, bB.getUserData());
+          playerA.state = 'normal';
           postStep(() => {
             updateVel(bA, ({x,y}) => Pl.Vec2(x,8));
             if (bB.getUserData() instanceof Player) {
@@ -227,6 +269,7 @@ export function create(gameState: GameState) {
                 playerB.grow(-impact);
                 playerA.grow(impact / 2);
                 makeBurst(playerB.x, playerB.y,impact / 2 * 10, gameState);
+                playerB.state = 'normal';
                 if (playerB.size < 1) {
                   destroy(playerB, playerA);
                   playerB.dead = true;
@@ -254,6 +297,7 @@ export function create(gameState: GameState) {
           postStep(() => {
             bA.setPosition(Pl.Vec2(bA.getPosition().x, -99999))
             if (destroy) {
+              player.state = 'normal';
               player.dead = true;
               destroy(player);
             }
@@ -361,6 +405,7 @@ export class Lava extends Ent {
 
 export const totalSquishTime = 0.25;
 export class Player extends Ent {
+  state = 'normal';
   width = 24;
   height = 32;
   baseDims = new Vec2(this.width, this.height);
@@ -368,6 +413,7 @@ export class Player extends Ent {
   size = 1;
   currentSquishTime: number = null;
   dead = false;
+  smashStart: number = null;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
   dispDims() {
     const dims = super.dispDims().mul(1.2);
@@ -462,6 +508,10 @@ export class Burster {
 
 export class Event extends Serializable {}
 
+export class StartSmash extends Event {
+  constructor(public playerId: number) { super(); }
+}
+
 export class InputEvent extends Event {
   constructor(public inputs: Inputs) { super(); }
 }
@@ -526,23 +576,31 @@ function updateVel(bod, f) {
   bod.setLinearVelocity(f(bod.getLinearVelocity()));
 }
 
-function feedInputs(player, dt) {
+function feedInputs(player: Player, dt: number, gameState: GameState) {
 
   const inputs = player.inputs;
 
-  if (inputs.left.isDown || alwaysMoveLeft) {
-    //  Move to the left
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - settings.accel * dt, -5), y));
-  } else if (inputs.right.isDown) {
-    //  Move to the right
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 5), y));
-  } else {
-    ////  Reset the players velocity (movement)
-    if (player.bod.getLinearVelocity().x < 0) {
-      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 0), y));
+  if (player.state == 'startingSmash') {
+    updateVel(player.bod, (old) => Pl.Vec2(0, 0));
+  } else if (player.state == 'smashing') {
+    updateVel(player.bod, (old) => Pl.Vec2(0, -settings.maxFallSpeed));
+  } else if (player.state == 'normal') {
+    if (inputs.left.isDown || alwaysMoveLeft) {
+      //  Move to the left
+      updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.max(x - settings.accel * dt, -5), y));
+    } else if (inputs.right.isDown) {
+      //  Move to the right
+      updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 5), y));
     } else {
-      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - settings.accel * dt, 0), y));
+      ////  Reset the players velocity (movement)
+      if (player.bod.getLinearVelocity().x < 0) {
+        updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 0), y));
+      } else {
+        updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.max(x - settings.accel * dt, 0), y));
+      }
     }
+  } else {
+    assert(false);
   }
 
 }
@@ -552,9 +610,11 @@ export function oscillate(ledge: Ledge, time: number) {
 }
 
 export function update(gameState: GameState, _dt: number = dt, _world: Pl.World = world) {
+  gameState.timerMgr.advanceBy(_dt);
+
   // TODO we're feeding inputs every physics tick here, but we send inputs to
   // clients bucketed into the bcasts, which are less frequent.
-  for (let player of gameState.players) feedInputs(player, _dt);
+  for (let player of gameState.players) feedInputs(player, _dt, gameState);
   for (let ledge of gameState.ledges) oscillate(ledge, gameState.time);
   gameState.bursters = gameState.bursters.filter(b => b.step(_dt));
 
@@ -562,15 +622,15 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
 
   if (lastTime == null) lastTime = Date.now() / 1000;
 
-  gameState.time += _dt;
   _world.step(_dt);
   for (let f of postSteps) {
     f();
   }
+
   // Clear this after every step!
   entToHitter.clear();
   for (let player of gameState.players) {
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, 9)));
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, settings.maxFallSpeed)));
     if (
       doLava &&
       player.bod.getFixtureList().getAABB(0).lowerBound.y <=
@@ -581,6 +641,8 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
     }
   }
   clearArray(postSteps);
+
+  gameState.time += _dt;
 
   return dt;
 }

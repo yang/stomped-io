@@ -384,7 +384,15 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
     socket.on('input', (data) => {
       getLogger('input').log('player', player.describe(), 'sent input for time', data.time);
-      player.inputs = data.events[data.events.length - 1].inputs;
+      for (let ev of data.events) {
+        if (ev.type == 'InputEvent') {
+          player.inputs = ev.inputs;
+        } else if (ev.type == 'StartSmash') {
+          // Ignore/distrust its id param.
+          player.state = 'startingSmash';
+          gameState.timerMgr.wait(.2, () => player.state = 'smashing');
+        }
+      }
     });
 
     socket.on('makeBot', () => {

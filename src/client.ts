@@ -37,7 +37,7 @@ import {
   pushAll,
   ratio,
   RemEnt, runLocally, ServerSettings, setInputsByDir,
-  Star,
+  Star, StartSmash,
   timeWarp, totalSquishTime,
   updateEntPhysFromPl,
   updatePeriod,
@@ -256,6 +256,8 @@ function create() {
     key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(updateInputs())));
   }
 
+  game.input.onDown.add(startSmash);
+
   // The notification banner
   notifText = game.add.text(16, 16, '', { fontSize: '48px', fill: '#fff', align: 'center', boundsAlignH: "center", boundsAlignV: "middle" });
   notifText.fixedToCamera = true;
@@ -317,6 +319,10 @@ function lerp(a,b,alpha) {
 
 function getEnts() {
   return gameState.getEnts();
+}
+
+function startSmash() {
+  events.push(new StartSmash(me.id));
 }
 
 function onEntAdded(ent: Ent) {
@@ -770,7 +776,8 @@ class GuiMgr {
     const svrControllers = [
       svrOpts.add(svrSettings, 'accel'),
       svrOpts.add(svrSettings, 'doOsc'),
-      svrOpts.add(svrSettings, 'oscDist')
+      svrOpts.add(svrSettings, 'oscDist'),
+      svrOpts.add(svrSettings, 'maxFallSpeed')
         ];
     const uploadSettings = () => socket.emit('svrSettings', svrSettings.ser());
     for (let c of svrControllers) {
