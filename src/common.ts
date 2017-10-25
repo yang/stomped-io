@@ -76,7 +76,7 @@ export function* cumsum(xs: number[]) {
 }
 
 export class ServerSettings {
-  accel = 10;
+  accel = 20;
   ser() {
     return _({}).assignIn(this);
   }
