@@ -4,6 +4,7 @@ import {renderSplash} from "./components";
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
 const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-split');
 
+import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as dat from 'dat.gui/build/dat.gui';
@@ -164,6 +165,7 @@ var me: Player;
 const players = gameState.players;
 const ledges = gameState.ledges;
 
+// const timeline = new CBuffer<Bcast>(8);
 const timeline: Bcast[] = [];
 
 // This may get called multiple times on same object in a single frame when multiple entities collide with something.

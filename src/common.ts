@@ -1,6 +1,7 @@
 import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 import * as Signals from 'signals';
+import * as CBuffer from 'CBuffer';
 
 export class Logger {
   constructor(public name: string, public handler: LogHandler) {}
@@ -11,21 +12,27 @@ export class LogHandler {
   buffer = [];
   enabled = new Set<string>();
   doBuffer = false;
+  doCBuffer = true;
+  cBuffer = new CBuffer(8192);
   file;
   log(name, msg) {
+    const time = now();
     if (this.doBuffer) {
-      this.buffer.push([name, msg]);
+      this.buffer.push([time, name, msg]);
+    }
+    if (this.doCBuffer) {
+      this.cBuffer.push([time, name, msg]);
     }
     if (this.enabled.has(name)) {
-      console.log(`${name}:`, ...msg);
+      console.log(time, `${name}:`, ...msg);
     }
     if (this.file) {
-      this.file.write(`${name}: ${msg.join(' ')}\n`);
+      this.file.write(`${time} ${name}: ${msg.join(' ')}\n`);
     }
   }
   // For convenient copy(baseHandler.toText()) in browser console
   toText() {
-    return this.buffer.map(([tag, msg]) => `${tag}: ${msg.join(' ')}`).join('\n');
+    return this.buffer.map(([time, tag, msg]) => `${time} ${tag}: ${msg.join(' ')}`).join('\n');
   }
 }
 

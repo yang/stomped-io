@@ -14,6 +14,7 @@
     "@types/react": "^16.0.16",
     "@types/react-dom": "^16.0.2",
     "@types/signals": "^0.0.17",
+    "CBuffer": "^2.0.0",
     "case": "^1.5.3",
     "chance": "^1.0.11",
     "classnames": "^2.2.5",
