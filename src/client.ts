@@ -104,7 +104,7 @@ const cp = new ControlPanel();
 
 const styleGen = genStyles();
 
-const timelineLimit = 5;
+const timelineLimit = 8;
 
 var game, gPool;
 
