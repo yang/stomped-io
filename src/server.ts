@@ -350,8 +350,15 @@ io.on('connection', (socket: SocketIO.Socket) => {
   clients.push(client);
   console.log('client', client.id, 'connected');
 
-  if (admins.has(socket))
+  if (admins.has(socket)) {
     console.log('client', client.id, 'is an admin');
+
+    socket.emit('svrSettings', Common.settings.ser());
+
+    socket.on('svrSettings', (svrData) => {
+      Common.settings.deser(svrData);
+    });
+  }
 
   socket.on('disconnect', () => {
     console.log('client', client.id, 'disconnected');

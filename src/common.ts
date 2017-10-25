@@ -57,7 +57,6 @@ export function getLogger(name: string) {
 }
 
 export const ratio = 64;
-export const accel = 10;
 
 export const gravity = -10;
 export const world = Pl.World(Pl.Vec2(0, gravity));
@@ -75,6 +74,18 @@ export function* cumsum(xs: number[]) {
     yield sum;
   }
 }
+
+export class ServerSettings {
+  accel = 10;
+  ser() {
+    return _({}).assignIn(this);
+  }
+  deser(data) {
+    _.merge(this, data);
+  }
+}
+
+export const settings = new ServerSettings();
 
 export const debugMode = true;
 export const oscDist = debugMode ? 0 : gameWorld.width / 8 * 2;
@@ -520,16 +531,16 @@ function feedInputs(player, dt) {
 
   if (inputs.left.isDown || alwaysMoveLeft) {
     //  Move to the left
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel * dt, -5), y));
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - settings.accel * dt, -5), y));
   } else if (inputs.right.isDown) {
     //  Move to the right
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel * dt, 5), y));
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 5), y));
   } else {
     ////  Reset the players velocity (movement)
     if (player.bod.getLinearVelocity().x < 0) {
-      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + accel * dt, 0), y));
+      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 0), y));
     } else {
-      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - accel * dt, 0), y));
+      updateVel(player.bod, ({x,y}) => Pl.Vec2(Math.max(x - settings.accel * dt, 0), y));
     }
   }
 

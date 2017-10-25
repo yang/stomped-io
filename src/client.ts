@@ -36,7 +36,7 @@ import {
   plPosFromEnt,
   pushAll,
   ratio,
-  RemEnt, runLocally, setInputsByDir,
+  RemEnt, runLocally, ServerSettings, setInputsByDir,
   Star,
   timeWarp, totalSquishTime,
   updateEntPhysFromPl,
@@ -103,6 +103,8 @@ class ControlPanel {
   }
 }
 const cp = new ControlPanel();
+
+const svrSettings = new ServerSettings();
 
 const styleGen = genStyles();
 
@@ -728,11 +730,7 @@ function feedInputs(player) {
 }
 
 class GuiMgr {
-  controllers = [];
   gui = isDebug ? new dat.GUI() : null;
-  private add(xs) {
-    this.controllers = this.controllers.concat(xs);
-  }
   private clear() {
     if (this.gui) this.gui.destroy();
     this.gui = new dat.GUI();
@@ -743,27 +741,33 @@ class GuiMgr {
     const targetPlayerIndex = players.findIndex(p => entToSprite.get(p) == game.camera.target);
     cp.currentPlayer = targetPlayerIndex >= 0 ? targetPlayerIndex : null;
     refollow();
-    this.add([
-      this.gui.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
-      this.gui.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
-      this.gui.add(cp, 'makeBot'),
-      this.gui.add(cp, 'viewAll').onFinishChange(rescale),
-      this.gui.add(cp, 'instantTurn'),
-      this.gui.add(cp, 'drawPlanckBoxes'),
-      this.gui.add(cp, 'doShake'),
-      this.gui.add(cp, 'alwaysStep'),
-      this.gui.add(cp, 'testNotif'),
-      this.gui.add(cp, 'boundCameraWithinWalls'),
-      this.gui.add(cp, 'useKeyboard'),
-      this.gui.add(cp, 'camWidth').onFinishChange(rescale),
-      this.gui.add(cp, 'camHeight').onFinishChange(rescale),
-      this.gui.add(cp, 'boundCameraAboveGround'),
-      this.gui.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
-      this.gui.add(cp, 'showIds').onFinishChange(() =>
+
+    const cliOpts = this.gui.addFolder('Client');
+    cliOpts.open();
+    const cliControllers = [
+      cliOpts.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
+      cliOpts.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
+      cliOpts.add(cp, 'makeBot'),
+      cliOpts.add(cp, 'viewAll').onFinishChange(rescale),
+      cliOpts.add(cp, 'instantTurn'),
+      cliOpts.add(cp, 'drawPlanckBoxes'),
+      cliOpts.add(cp, 'doShake'),
+      cliOpts.add(cp, 'alwaysStep'),
+      cliOpts.add(cp, 'testNotif'),
+      cliOpts.add(cp, 'boundCameraWithinWalls'),
+      cliOpts.add(cp, 'useKeyboard'),
+      cliOpts.add(cp, 'camWidth').onFinishChange(rescale),
+      cliOpts.add(cp, 'camHeight').onFinishChange(rescale),
+      cliOpts.add(cp, 'boundCameraAboveGround'),
+      cliOpts.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
+      cliOpts.add(cp, 'showIds').onFinishChange(() =>
         cp.showIds ? 0 : Array.from(entToLabel.values()).map(t => t.destroy())),
-      this.gui.add(cp, 'doBuffer').onFinishChange(() => baseHandler.doBuffer = cp.doBuffer),
-      this.gui.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
-    ]);
+      cliOpts.add(cp, 'doBuffer').onFinishChange(() => baseHandler.doBuffer = cp.doBuffer),
+      cliOpts.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
+      ];
+    const svrOpts = this.gui.addFolder('Server');
+    svrOpts.add(svrSettings, 'accel').onFinishChange(() => socket.emit('svrSettings', svrSettings.ser()));
+    svrOpts.open();
   }
 
 }
@@ -912,6 +916,10 @@ let rootComponent;
 export function main(pool) {
   gPool = pool;
   socket = Sio(location.origin.replace(':8000', ':3000'), {query: {authKey}});
+  socket.on('svrSettings', (svrData) => {
+    svrSettings.deser(svrData);
+    guiMgr.refresh();
+  });
   botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool, null);
   let firstSubmitted = false;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
