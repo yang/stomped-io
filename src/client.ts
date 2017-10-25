@@ -110,7 +110,7 @@ const svrSettings = new ServerSettings();
 
 const styleGen = genStyles();
 
-const timelineLimit = 8;
+const timelineLimit = 32;
 
 var game, gPool;
 
