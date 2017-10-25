@@ -10,7 +10,7 @@ import {
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth, makeStar, now, oscDist,
+  ledgeWidth, makeStar, now,
   Player,
   RemEnt, runLocally, serSimResults, Star,
   updateEntPhysFromPl,
@@ -200,7 +200,7 @@ function updateLedges() {
       Common.gameWorld.height - ledgeSpacing : lastLedge.y - ledgeSpacing;
 
     const numCols = 2;
-    const margin = oscDist / 2 + ledgeWidth;
+    const margin = +Common.settings.doOsc * Common.settings.oscDist / 2 + ledgeWidth;
     const [spawnMin, spawnMax] = [margin, Common.gameWorld.width - margin];
     const spawnWidth = spawnMax - spawnMin;
     const colWidth = spawnWidth / numCols;

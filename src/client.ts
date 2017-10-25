@@ -745,7 +745,6 @@ class GuiMgr {
     refollow();
 
     const cliOpts = this.gui.addFolder('Client');
-    cliOpts.open();
     const cliControllers = [
       cliOpts.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
       cliOpts.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
@@ -768,7 +767,16 @@ class GuiMgr {
       cliOpts.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
       ];
     const svrOpts = this.gui.addFolder('Server');
-    svrOpts.add(svrSettings, 'accel').onFinishChange(() => socket.emit('svrSettings', svrSettings.ser()));
+    const svrControllers = [
+      svrOpts.add(svrSettings, 'accel'),
+      svrOpts.add(svrSettings, 'doOsc'),
+      svrOpts.add(svrSettings, 'oscDist')
+        ];
+    const uploadSettings = () => socket.emit('svrSettings', svrSettings.ser());
+    for (let c of svrControllers) {
+      c.onFinishChange(uploadSettings);
+    }
+    cliOpts.open();
     svrOpts.open();
   }
 

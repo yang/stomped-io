@@ -77,6 +77,8 @@ export function* cumsum(xs: number[]) {
 
 export class ServerSettings {
   accel = 20;
+  doOsc = true;
+  oscDist = gameWorld.width / 8 * 2;
   ser() {
     return _({}).assignIn(this);
   }
@@ -86,9 +88,6 @@ export class ServerSettings {
 }
 
 export const settings = new ServerSettings();
-
-export const debugMode = true;
-export const oscDist = debugMode ? 0 : gameWorld.width / 8 * 2;
 
 export let alwaysMoveLeft = false;
 
@@ -549,7 +548,7 @@ function feedInputs(player, dt) {
 }
 
 export function oscillate(ledge: Ledge, time: number) {
-  ledge.bod.setLinearVelocity(Pl.Vec2(Math.cos(time * 2 * Math.PI / ledge.oscPeriod) * oscDist / 2 / ratio, 0));
+  ledge.bod.setLinearVelocity(Pl.Vec2(Math.cos(time * 2 * Math.PI / ledge.oscPeriod) * +settings.doOsc * settings.oscDist / 2 / ratio, 0));
 }
 
 export function update(gameState: GameState, _dt: number = dt, _world: Pl.World = world) {
