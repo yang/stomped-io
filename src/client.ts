@@ -763,9 +763,33 @@ function feedInputs(player) {
 
 class GuiMgr {
   gui = isDebug ? new dat.GUI() : null;
+  cliControllers = [];
+  cliOpts;
+  svrOpts;
+  constructor() {
+    if (!isDebug) return;
+    this.cliOpts = this.gui.addFolder('Client');
+    this.svrOpts = this.gui.addFolder('Server');
+    this.cliOpts.open();
+    this.svrOpts.open();
+    const svrOpts = this.svrOpts;
+    const svrControllers = [
+      svrOpts.add(svrSettings, 'accel'),
+      svrOpts.add(svrSettings, 'doOsc'),
+      svrOpts.add(svrSettings, 'oscDist'),
+      svrOpts.add(svrSettings, 'smashSpeed'),
+      svrOpts.add(svrSettings, 'maxFallSpeed')
+    ];
+    const uploadSettings = () => socket.emit('svrSettings', svrSettings.ser());
+    for (let c of svrControllers) {
+      c.onFinishChange(uploadSettings);
+    }
+  }
   private clear() {
-    if (this.gui) this.gui.destroy();
-    this.gui = new dat.GUI();
+    this.cliControllers.forEach(c => this.cliOpts.remove(c));
+    clearArray(this.cliControllers);
+    // if (this.gui) this.gui.destroy();
+    // this.gui = new dat.GUI();
   }
   refresh() {
     if (!isDebug) return;
@@ -774,8 +798,8 @@ class GuiMgr {
     cp.currentPlayer = targetPlayerIndex >= 0 ? targetPlayerIndex : null;
     refollow();
 
-    const cliOpts = this.gui.addFolder('Client');
-    const cliControllers = [
+    const cliOpts = this.cliOpts;
+    this.cliControllers = [
       cliOpts.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
       cliOpts.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
       cliOpts.add(cp, 'makeBot'),
@@ -796,20 +820,6 @@ class GuiMgr {
       cliOpts.add(cp, 'doBuffer').onFinishChange(() => baseHandler.doBuffer = cp.doBuffer),
       cliOpts.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
       ];
-    const svrOpts = this.gui.addFolder('Server');
-    const svrControllers = [
-      svrOpts.add(svrSettings, 'accel'),
-      svrOpts.add(svrSettings, 'doOsc'),
-      svrOpts.add(svrSettings, 'oscDist'),
-      svrOpts.add(svrSettings, 'smashSpeed'),
-      svrOpts.add(svrSettings, 'maxFallSpeed')
-        ];
-    const uploadSettings = () => socket.emit('svrSettings', svrSettings.ser());
-    for (let c of svrControllers) {
-      c.onFinishChange(uploadSettings);
-    }
-    cliOpts.open();
-    svrOpts.open();
   }
 
 }
