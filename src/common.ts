@@ -517,8 +517,10 @@ export const updatePeriod = 1 / 20 / 1;
 // physics timestep per real timestep
 export const timeWarp = dt / updatePeriod;
 
+export let doAsserts = true;
+export function setDoAsserts(x: boolean) { doAsserts = x; }
 export function assert(pred, msg = "Assertion failed") {
-  if (!pred) throw new Error(msg);
+  if (doAsserts && !pred) throw new Error(msg);
 }
 
 function updateVel(bod, f) {

@@ -53,6 +53,8 @@ const searchParams = new URLSearchParams(window.location.search);
 const authKey = searchParams.get('authKey') || '';
 const isDebug = !!searchParams.get('debug');
 
+if (!isDebug) Common.setDoAsserts(false);
+
 // For debugging GPU pressure in WebGL canvas.
 let ultraSlim = searchParams.get('ultraSlim');
 
