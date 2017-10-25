@@ -65,7 +65,7 @@ const gWorld = world;
 
 export const gameWorld = {
   width: 1600,
-  height: 800
+  height: 1200
 };
 
 export function* cumsum(xs: number[]) {

@@ -95,6 +95,8 @@ class ControlPanel {
   useKeyboard = false;
   boundCameraWithinWalls = false;
   boundCameraAboveGround = true;
+  camWidth = 1200;
+  camHeight = 800;
   testNotif() { notify('Testing!'); }
   makeBot() {
     runLocally ? botMgr.makeBot() : socket.emit('makeBot');
@@ -255,7 +257,7 @@ function create() {
   notifText.fixedToCamera = true;
   notifText.cameraOffset.setTo(16,16);
   notifText.lineSpacing = -2;
-  notifText.setTextBounds(0,0,800,600);
+  notifText.setTextBounds(0,0,cp.camWidth,600);
   notifText.setShadow(4,4,'#000',4);
 }
 
@@ -753,6 +755,8 @@ class GuiMgr {
       this.gui.add(cp, 'testNotif'),
       this.gui.add(cp, 'boundCameraWithinWalls'),
       this.gui.add(cp, 'useKeyboard'),
+      this.gui.add(cp, 'camWidth').onFinishChange(rescale),
+      this.gui.add(cp, 'camHeight').onFinishChange(rescale),
       this.gui.add(cp, 'boundCameraAboveGround'),
       this.gui.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       this.gui.add(cp, 'showIds').onFinishChange(() =>
@@ -790,8 +794,8 @@ function rescale() {
         game.height / game.world.height
       ) :
       Math.max(
-        game.width / 800,
-        game.height / 800
+        game.width / cp.camWidth,
+        game.height / cp.camHeight
       )
     game.world.scale.set(scale);
   }
