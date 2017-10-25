@@ -67,6 +67,7 @@ const io = Sio();
 const gameState = new GameState(undefined, destroy);
 gameState.onEntCreated.add(ent => ent instanceof Star && events.push(new AddEnt(ent).ser()));
 
+// already-serialized
 const events: Event[] = [];
 const players = gameState.players;
 const ledges = gameState.ledges;
@@ -391,6 +392,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
           // Ignore/distrust its id param.
           player.state = 'startingSmash';
           gameState.timerMgr.wait(.2, () => player.state = 'smashing');
+          events.push(ev);
         }
       }
     });

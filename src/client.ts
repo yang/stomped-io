@@ -335,6 +335,8 @@ function onEntAdded(ent: Ent) {
   }
   if (ent instanceof Player) {
     const sprite = mkSprite(playerGroup, `dude-${ent.style}`);
+    // [sprite.anchor.x, sprite.anchor.y] = [.5, .5];
+    sprite.anchor.setTo(.5, .5);
     sprite.animations.add('left', [3, 4, 3, 5], 10, true);
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     const style = { font: "12px Arial", fill: "#cccccc", align: "center"};
@@ -576,6 +578,13 @@ ${mkScoreText()}
             // notifications have been displayed.
             later.push(() => removeEnt(id));
             break;
+          case 'StartSmash':
+            const startSmash = ev as StartSmash;
+            const player = gameState.players.find(p => p.id == startSmash.playerId);
+            player.state = 'startingSmash';
+            // const sprite = entToSprite.get(player);
+            // game.timer.add(200, () => sprite.state = 'normal');
+            break;
         }
       }
     }
@@ -603,6 +612,9 @@ ${mkScoreText()}
         ent.vel.y = lerp(a.vel.y, b.vel.y, alpha);
         if (ent instanceof Player) {
           ent.size = lerp((a as Player).size, (b as Player).size, alpha);
+          const state = (a as Player).state;
+          if (state != 'startingSmash')
+            ent.state = state;
         }
       }
     }
@@ -718,7 +730,11 @@ function updateSpriteAndPlFromEnt(ent) {
 
 function updateSpriteFromEnt(ent) {
   const sprite = entToSprite.get(ent);
-  [sprite.x, sprite.y] = ent.dispPos().toTuple();
+  if (sprite.anchor.x == 0) {
+    [sprite.x, sprite.y] = ent.dispPos().toTuple();
+  } else {
+    [sprite.x, sprite.y] = ent.dispPos().add(ent.dispDims().div(2)).toTuple();
+  }
   [sprite.width, sprite.height] = ent.dispDims().toTuple();
 }
 
@@ -734,6 +750,14 @@ function feedInputs(player) {
     sprite.animations.stop();
     if (sprite.frame < 3) sprite.frame = 0;
     else sprite.frame = 3;
+  }
+  if (player.state == 'startingSmash') {
+    sprite.angle += 360 / 8;
+    if (sprite.angle == 0) {
+      player.state = 'normal';
+    }
+  } else {
+    sprite.angle = 0;
   }
 }
 
