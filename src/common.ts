@@ -1589,7 +1589,7 @@ export class BotMgr {
     const entMgr = this.entMgr, gameState = this.gameState;
     const player = entMgr.addPlayer(_.assign({}, new Player(
       name,
-      gameWorld.width / 2,
+      getRandomIntRange(0, gameWorld.width),
       50,
       this.styleGen.next().value
     )));

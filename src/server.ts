@@ -329,7 +329,7 @@ function makePlayer(name, style = null) {
   }
   const player = new Player(
     name,
-    Common.gameWorld.width / 2,
+    getRandomIntRange(0, Common.gameWorld.width),
     50,
     style || styleGen.next().value
   );
