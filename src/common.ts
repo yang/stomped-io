@@ -390,7 +390,7 @@ export class Ent extends Serializable {
   vel = new Vec2(0,0);
   id = ids.next().value;
   bod?: Pl.Body;
-  ser(): this { return <this>_.omit(this, 'bod', 'stack'); }
+  ser(): this { return <this>_.omit(this, 'bod', 'stack', 'timers'); }
   pos() { return new Vec2(this.x, this.y); }
   dims() { return new Vec2(this.width, this.height); }
   dispDims() { return this.dims(); }
@@ -406,6 +406,7 @@ export class Lava extends Ent {
 
 export const totalSquishTime = 0.25;
 export class Player extends Ent {
+  timers: Timer[] = [];
   state = 'normal';
   width = 24;
   height = 32;
@@ -416,6 +417,7 @@ export class Player extends Ent {
   dead = false;
   smashStart: number = null;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
+
   dispDims() {
     const dims = super.dispDims().mul(1.2);
     if (this.currentSquishTime != null) {
