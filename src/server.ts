@@ -296,6 +296,9 @@ function create() {
     addBody(wall, 'kinematic');
     gameState.blocks.push(wall);
   }
+  const ceiling = new Block(0, -10, Common.gameWorld.width, 10);
+  addBody(ceiling, 'kinematic');
+  gameState.blocks.push(ceiling);
 
   for (let i = 0; i < initPlayers; i++) {
     const player = makePlayer(`bot${i}`);
