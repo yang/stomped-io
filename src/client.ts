@@ -229,8 +229,8 @@ function create() {
 
   // Specify the z-order via groups
   starGroup = game.add.group();
-  playerGroup = game.add.group();
   platforms = game.add.group();
+  playerGroup = game.add.group();
   nameGroup = game.add.group();
   lavaGroup = game.add.group();
 
@@ -781,7 +781,8 @@ class GuiMgr {
       svrOpts.add(svrSettings, 'doOsc'),
       svrOpts.add(svrSettings, 'oscDist'),
       svrOpts.add(svrSettings, 'smashSpeed'),
-      svrOpts.add(svrSettings, 'maxFallSpeed')
+      svrOpts.add(svrSettings, 'maxFallSpeed'),
+      svrOpts.add(svrSettings, 'oneWayLedges')
     ];
     const uploadSettings = () => socket.emit('svrSettings', svrSettings.ser());
     for (let c of svrControllers) {

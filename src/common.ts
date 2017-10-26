@@ -82,10 +82,11 @@ export function* cumsum(xs: number[]) {
 
 export class ServerSettings {
   accel = 25;
-  doOsc = true;
+  doOsc = false;
   oscDist = gameWorld.width / 8 * 2;
   maxFallSpeed = 9;
-  smashSpeed = 12;
+  smashSpeed = 20;
+  oneWayLedges = true;
   ser() {
     return _({}).assignIn(this);
   }
@@ -322,6 +323,16 @@ export function create(gameState: GameState) {
               if (destroy) destroy(star);
             });
           });
+        } else if (bB.getUserData() instanceof Ledge && settings.oneWayLedges) {
+          if (
+            !(
+              veq(contact.m_manifold.localNormal, Pl.Vec2(0,1)) &&
+              bA.getLinearVelocity().y <= 0 &&
+              bbox(bA).above(bbox(bB))
+            )
+          ) {
+            contact.setEnabled(false);
+          }
         }
       }
     }
@@ -669,6 +680,26 @@ export function fixtureDims(fix) {
     ymax = _(ys).max(),
     ymin = _(ys).min();
   return {width: xmax - xmin, height: ymax - ymin};
+}
+
+export class Box {
+  constructor(public x: number, public y: number, public w: number, public h: number) {}
+  xf() { return this.x + this.w; }
+  yf() { return this.y + this.h; }
+  upper() { return new Vec2(this.xf(), this.yf()); }
+  lower() { return new Vec2(this.x, this.y); }
+  above(other: Box) { return this.lower().y > other.upper().y; }
+  below(other: Box) { return this.upper().y < other.lower().y; }
+  static fromBounds(x: number, y: number, xf: number, yf: number) {
+    return new Box(x, y, xf - x, yf - y);
+  }
+}
+
+export function bbox(body) {
+  const pos = body.getPosition();
+  const fix = body.getFixtureList();
+  const dims = fixtureDims(fix);
+  return new Box(pos.x - dims.width / 2, pos.y - dims.height / 2, dims.width, dims.height);
 }
 
 export function updateEntPhysFromPl(ent) {
