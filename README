@@ -49,3 +49,49 @@ The first few `runSims` run times when using `manuallyCloneWorld`:
 - 762.75
 - 850.2850000000108
 - 376.13500000000204
+
+Deployment
+==========
+
+Open ports 80, 3000.
+
+Instructions tested on Ubuntu 16.04:
+
+    # One-time setup
+    sudo apt install nginx virtualenvwrapper unzip
+    # log out and back in
+    mkvirtualenv bounce
+    pip install nodeenv
+    nodeenv -n 6.11.2 ~/.node/bounce/
+    . ~/.node/bounce/bin/activate
+    npm install -g yarn
+
+    # Deployment prep
+    git archive --format zip -o bounce.zip master
+    rsync -ril dist/ DEST:dist/
+    rsync -ril bounce.zip DEST:
+    ssh DEST
+      mkdir -p bounce
+      cd bounce
+      unzip ../bounce.zip
+
+    # One-time host app setup
+    ln -s ../dist/
+    mkdir -p web/
+    for i in index.html assets/ dist/ ; do
+        ln -s ../$i web/
+    done
+
+    # Each-time
+    . ~/.node/gen/bin/activate
+    yarn install
+    yarn server
+
+nginx
+-----
+
+    server {
+      listen 80;
+      root /home/yang/bounce/web;
+      index index.html index.htm index.nginx-debian.html;
+    }

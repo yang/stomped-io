@@ -4,3 +4,4 @@ dist/
 .idea/workspace.xml
 *log
 .ipynb_checkpoints/
+bounce.zip
