@@ -972,7 +972,7 @@ const doPings = false;
 let rootComponent;
 export function main(pool) {
   gPool = pool;
-  socket = Sio(location.origin.replace(':8000', ':3000'), {query: {authKey}});
+  socket = Sio(location.origin.replace(':8000', '') + ':3000', {query: {authKey}});
   socket.on('svrSettings', (svrData) => {
     svrSettings.deser(svrData);
     guiMgr.refresh();
