@@ -174,7 +174,7 @@ const players = gameState.players;
 const ledges = gameState.ledges;
 
 // const timeline = new CBuffer<Bcast>(8);
-const timeline: Bcast[] = [];
+const timeline = new CBuffer(1024); // : Bcast[] = [];
 
 // This may get called multiple times on same object in a single frame when multiple entities collide with something.
 function destroy2(ent) {
@@ -277,7 +277,7 @@ let follow = function (sprite: any) {
 };
 
 function initEnts() {
-  const initSnap = timeline[0];
+  const initSnap = timeline.get(0);
 
   gameState.time = initSnap.tick * dt;
 
@@ -533,19 +533,19 @@ ${mkScoreText()}
         'time', currTime,
         'delta', delta,
         'targetTime', targetTime,
-        't0', timeline[0].time,
-        't1', _(timeline).last().time
+        't0', timeline.get(0).time,
+        't1', timeline.last().time
       );
     if (nextBcastIdx <= 0) {
       console.warn('off end of timeline');
       return;
     }
-    const nextBcast = timeline[nextBcastIdx];
-    const prevBcast = timeline[nextBcastIdx - 1];
+    const nextBcast: Bcast = timeline.get(nextBcastIdx);
+    const prevBcast: Bcast = timeline.get(nextBcastIdx - 1);
 
     // Catch up on additions/removals
     if (!timeline.find(bcast => bcast.bcastNum == clientState.lastBcastNum + 1)) {
-      console.warn('skipped over bcastNum', clientState.lastBcastNum + 1, '- no longer on timeline, smallest kept is', timeline[0].bcastNum);
+      console.warn('skipped over bcastNum', clientState.lastBcastNum + 1, '- no longer on timeline, smallest kept is', timeline.first().bcastNum);
     }
     const toProcess = timeline.filter(bcast =>
       clientState.lastBcastNum < bcast.bcastNum && bcast.bcastNum <= prevBcast.bcastNum
@@ -888,7 +888,7 @@ function startGame(name: string, char: string) {
   socket.on('dong', ({pingTime}) => console.log('ping', now() - pingTime));
 
   socket.on('joined', (initSnap) => {
-    clearArray(timeline);
+    timeline.empty();
     timeline.push(initSnap);
 
     if (!game) {

@@ -3,6 +3,28 @@ import * as _ from 'lodash';
 import * as Signals from 'signals';
 import * as CBuffer from 'CBuffer';
 
+CBuffer.prototype.findIndex = function(pred) {
+  for (let i = 0; i < this.length; i++) {
+    const x = this.get(i);
+    if (pred(x,i)) return i;
+  }
+  return -1;
+};
+
+CBuffer.prototype.find = function(pred) {
+  const i = this.findIndex(pred);
+  return i < 0 ? null : this.get(i);
+};
+
+CBuffer.prototype.filter = function(pred) {
+  const res = [];
+  for (let i = 0; i < this.length; i++) {
+    const x = this.get(i);
+    if (pred(x,i)) res.push(x);
+  }
+  return res;
+};
+
 export class Logger {
   constructor(public name: string, public handler: LogHandler) {}
   log(...args) { this.handler.log(this.name, args); }
