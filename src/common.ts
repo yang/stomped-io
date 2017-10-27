@@ -87,6 +87,7 @@ export class ServerSettings {
   maxFallSpeed = 9;
   smashSpeed = 20;
   oneWayLedges = true;
+  doDiff = true;
   ser() {
     return _({}).assignIn(this);
   }
@@ -360,6 +361,7 @@ export interface Bcast {
   bcastNum: number;
   events: Event[];
   ents: Ent[];
+  isDiff: boolean;
 }
 
 // simple container so that client can reach in and bump this

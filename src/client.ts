@@ -549,7 +549,7 @@ ${mkScoreText()}
     }
     const toProcess = timeline.filter(bcast =>
       clientState.lastBcastNum < bcast.bcastNum && bcast.bcastNum <= prevBcast.bcastNum
-    )
+    );
     const later = [];
     for (let bcast of toProcess) {
       for (let ev of bcast.events) {
@@ -601,7 +601,13 @@ ${mkScoreText()}
     const bMap = new Map(nextBcast.ents.map<[number, Ent]>((p) => [p.id, p]));
     onNextBcastPersistentCallbacks = onNextBcastPersistentCallbacks.filter(f => !f());
     for (let ent of getEnts()) {
-      const [a, b] = [aMap.get(ent.id), bMap.get(ent.id)];
+      // Interpolate directly from current client position if last bcast was a diff and therefore doesn't nec. have
+      // position info.
+      // TODO the lerping is broken here for diffing protocol, since a no longer represents the starting position, but
+      // it appears fine / indistinguishable.
+      // TODO In fact, should always be able to do this, assuming nothing skipped, but we do currently truncate the
+      // timeline aggressively, which should be fixed.
+      const [a, b] = [prevBcast.isDiff ? aMap.get(ent.id) : ent, bMap.get(ent.id)];
       if (a && b) {
         if (ent instanceof Player) {
           if (ent != me || !cp.instantTurn) {
@@ -778,6 +784,7 @@ class GuiMgr {
     this.svrOpts.open();
     const svrOpts = this.svrOpts;
     const svrControllers = [
+      svrOpts.add(svrSettings, 'doDiff'),
       svrOpts.add(svrSettings, 'accel'),
       svrOpts.add(svrSettings, 'doOsc'),
       svrOpts.add(svrSettings, 'oscDist'),

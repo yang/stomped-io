@@ -127,6 +127,8 @@ function getEnts(): Ent[] {
 let dbgRementSent = true;
 const rementSent = new Map<number, RemEnt>();
 
+let lastSnapshot = null;
+
 function bcast() {
   // TODO move all removal code to update()
   for (let ev of toRemove) {
@@ -162,13 +164,27 @@ function bcast() {
   // snapshot world
   const currTime = now();
   const snapshot: Bcast = ({
+    isDiff: false,
     time: currTime,
     tick: tick,
     bcastNum: bcastNum,
     events: events,
     ents: getEnts().map((p) => p.ser())
   });
-  const data = JSON.stringify(snapshot);
+  const diff: Bcast = _(snapshot).clone();
+  if (lastSnapshot && Common.settings.doDiff) {
+    const lastById = new Map(lastSnapshot.ents.map(e => [e.id, e]));
+    diff.isDiff = true;
+    diff.ents = [];
+    for (let b of snapshot.ents) {
+      const a = lastById.get(b.id);
+      if (!_.isEqual(a, b)) {
+        diff.ents.push(b);
+      }
+    }
+  }
+  const data = JSON.stringify(diff);
+
   // broadcast
   for (let client of clients) {
     const socket = client.socket;
@@ -179,6 +195,7 @@ function bcast() {
   }
   clearArray(events);
   bcastNum += 1;
+  lastSnapshot = snapshot;
 }
 
 function whichBucket(bucketStart: number, bucketSize: number, x: number) {
@@ -418,7 +435,9 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
     // TODO create player-joined event
 
-    socket.emit('joined', initSnap());
+    socket.emit('joined',
+      _(lastSnapshot).extend({ents: lastSnapshot.ents.concat([player.ser()])}).value()
+    );
 
     socket.on('input', (data) => {
       getLogger('input').log('player', player.describe(), 'sent input for time', data.time);
