@@ -2,11 +2,6 @@ import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 import * as Signals from 'signals';
 import * as CBuffer from 'CBuffer';
-// Terrible bug: https://github.com/montagejs/collections/issues/185
-const origFind = Array.prototype.find;
-import {SortedSet} from "collections/sorted-set";
-import * as Iterator from 'collections/iterator';
-Array.prototype.find = origFind;
 
 export class Logger {
   constructor(public name: string, public handler: LogHandler) {}
@@ -107,30 +102,39 @@ export class Timer {
   cancel() { this.aborted = true; }
 }
 
+class SortedSet<T> {
+  xs: T[] = [];
+  constructor(public cmp: (a:T,b:T) => number) {}
+  add(x: T) { this.xs.push(x); }
+  remove(x: T) { _.remove(this.xs, x); }
+}
+
 export class TimerMgr {
-  timers = new SortedSet<Timer>([], null, (a,b) => Math.sign(a.time - b.time) || Math.sign(a.id - b.id));
+  timers = new SortedSet<Timer>((a,b) => Math.sign(a.time - b.time) || Math.sign(a.id - b.id));
   constructor(public time = 0) {}
   advanceTo(time: number) {
     assert(time >= this.time);
-    const toRemove = new Iterator(this.timers.iterate())
+    const {'true': toFire, 'false': toKeep} = _(this.timers.xs)
       // for some reason the iteration protocol always yields an extra undefined at the end and it can't be filtered out!
-      .takeWhile(x => x && x.time < time)
-      .toArray();
-    for (let x of toRemove) {
+      .groupBy(x => x && x.time < time)
+      .defaults({'true': [], 'false': []})
+      .value();
+    for (let x of toFire) {
       if (!x.aborted)
         x.callback();
       this.timers.remove(x);
     }
+    this.timers.xs = toKeep;
     this.time = time;
   }
   advanceBy(dt: number) {
     return this.advanceTo(this.time + dt);
   }
   at(time: number, callback: () => void) {
-    this.timers.push(new Timer(time, callback));
+    this.timers.add(new Timer(time, callback));
   }
   wait(dur: number, callback: () => void) {
-    this.timers.push(new Timer(this.time + dur, callback));
+    this.at(this.time + dur, callback);
   }
 }
 
