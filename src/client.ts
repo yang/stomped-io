@@ -914,7 +914,8 @@ function startGame(name: string, char: string) {
 
     // setTimeout((() => botMgr.makeBot()), 3000);
 
-    socket.on('bcast', (bcast) => {
+    socket.on('bcast', (bcastData) => {
+      const bcast = JSON.parse(bcastData);
       const currTime = now();
       getLogger('bcast.data').log(currTime, bcast);
       if (localBcast && bcastBuffer.length == localBcastDur * bcastsPerSec)

@@ -168,12 +168,13 @@ function bcast() {
     events: events,
     ents: getEnts().map((p) => p.ser())
   });
+  const data = JSON.stringify(snapshot);
   // broadcast
   for (let client of clients) {
     const socket = client.socket;
     if (socket) {
-      socket.emit('bcast', snapshot);
-      getLogger('bcast').log('tick', tick, 'client', client.id, 'snap time', currTime, 'send done time', now());
+      socket.emit('bcast', data);
+      getLogger('bcast').log('tick', tick, 'client', client.id, 'snap time', currTime, 'send done time', now(), 'length', data.length);
     }
   }
   clearArray(events);
