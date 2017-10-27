@@ -30,9 +30,15 @@ export class LogHandler {
       this.file.write(`${time} ${name}: ${msg.join(' ')}\n`);
     }
   }
-  // For convenient copy(baseHandler.toText()) in browser console
-  toText() {
-    return this.buffer.map(([time, tag, msg]) => `${time} ${tag}: ${msg.join(' ')}`).join('\n');
+  toText(buffer) {
+    return buffer.map(([time, tag, msg]) => `${time} ${tag}: ${msg.join(' ')}`).join('\n');
+  }
+  bufferToText() {
+    return this.toText(this.buffer);
+  }
+  // For convenient copy(baseHandler.cBufferToText()) in browser console (for analysis in e.g. pandas)
+  cBufferToText() {
+    return this.toText(this.cBuffer.toArray());
   }
 }
 
