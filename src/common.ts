@@ -419,8 +419,10 @@ export class Ent extends Serializable {
 }
 
 export class Lava extends Ent {
-  width = gameWorld.width;
-  height = 64;
+  static width = gameWorld.width;
+  static height = 64;
+  width = Lava.width;
+  height = Lava.height;
   constructor(public x: number, public y: number) {super();}
 }
 
