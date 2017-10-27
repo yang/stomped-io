@@ -195,20 +195,30 @@ function* repeat(xs) {
 const ledgeSpacing = 150;
 function updateLedges() {
   if (gameState.ledges.length > 0) return;
-  const chance = new Chance(0);
-  let xCenter = Common.gameWorld.width / 2;
   const maxGap = ledgeSpacing;
   const range = ledgeWidth + maxGap;
   const lowestY = Common.gameWorld.height - Lava.height - ledgeSpacing;
-  const leftRightPattern = repeat([0,1,1,0,1,0,1,0]);
-  for (let y = lowestY; y > 2 * ledgeSpacing; y -= ledgeSpacing) {
-    const x = xCenter - ledgeWidth / 2;
-    const ledge = new Ledge(x, y, getRandomIntRange(5, 10));
-    addBody(ledge, 'kinematic');
-    ledges.push(ledge);
-    events.push(new AddEnt(ledge).ser());
-    xCenter += (leftRightPattern.next().value ? -1 : 1) *
-      chance.integer({min: 0, max: range});
+  function* genXCenters() {
+    const leftRightPattern = repeat([0,1,1,0,1,0,1,0]);
+    const chance = new Chance(0);
+    const xCenters = null;
+    let xCenter = 0;
+    while (true) {
+      yield xCenter;
+      xCenter += (leftRightPattern.next().value ? -1 : 1) *
+        chance.integer({min: 0, max: range});
+    }
+  }
+  for (let baseX = 3 * ledgeWidth; baseX < Common.gameWorld.width - 3 * ledgeWidth; baseX += 3 * ledgeWidth) {
+    const xCenters = genXCenters();
+    for (let y = lowestY; y > 2 * ledgeSpacing; y -= ledgeSpacing) {
+      const xCenter = baseX + xCenters.next().value;
+      const x = xCenter - ledgeWidth / 2;
+      const ledge = new Ledge(x, y, getRandomIntRange(5, 10));
+      addBody(ledge, 'kinematic');
+      ledges.push(ledge);
+      events.push(new AddEnt(ledge).ser());
+    }
   }
   if (1/1) return;
   const log = getLogger('updateLedges');

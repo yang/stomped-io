@@ -219,7 +219,8 @@ function create() {
 
   //  A simple background for our game
   if (!ultraSlim) {
-    game.add.sprite(0, 0, 'sky');
+    const sky = game.add.sprite(0, 0, 'sky');
+    sky.width = Common.gameWorld.width;
 
     const bg = game.add.tileSprite(0, 0, Common.gameWorld.width, Common.gameWorld.height, 'bg');
     bg.tileScale.x = 1 / 4;
