@@ -100,6 +100,7 @@ class ControlPanel {
   camWidth = 1200;
   camHeight = 800;
   spectate = false;
+  doPings = true;
   backToSplash() { backToSplash(); }
   testNotif() { notify('Testing!'); }
   makeBot() {
@@ -829,6 +830,7 @@ class GuiMgr {
       cliOpts.add(cp, 'camHeight').onFinishChange(rescale),
       cliOpts.add(cp, 'spectate'),
       cliOpts.add(cp, 'backToSplash'),
+      cliOpts.add(cp, 'doPings'),
       cliOpts.add(cp, 'boundCameraAboveGround'),
       cliOpts.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       cliOpts.add(cp, 'showIds').onFinishChange(() =>
@@ -881,7 +883,7 @@ function render() {
 function startGame(name: string, char: string) {
   socket.emit('join', {name, char});
 
-  if (doPings) {
+  if (cp.doPings) {
     setInterval(() => {
       console.log('pinging');
       socket.emit('ding', {pingTime: now()})
@@ -980,7 +982,6 @@ function startGame(name: string, char: string) {
   socket.on('disconnect', () => console.log('disconnect'));
 }
 
-const doPings = false;
 let rootComponent;
 export function main(pool) {
   gPool = pool;
