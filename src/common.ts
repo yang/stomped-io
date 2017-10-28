@@ -63,8 +63,8 @@ export const world = Pl.World(Pl.Vec2(0, gravity));
 const gWorld = world;
 
 export const gameWorld = {
-  width: 4800,
-  height: 1600
+  width: 1600,
+  height: 1200
 };
 
 export function* cumsum(xs: number[]) {
