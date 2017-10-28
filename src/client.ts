@@ -534,7 +534,9 @@ ${mkScoreText()}
         'delta', delta,
         'targetTime', targetTime,
         't0', timeline.get(0).time,
-        't1', timeline.last().time
+        't1', timeline.last().time,
+        'index', nextBcastIdx,
+        'total buffered', timeline.length
       );
     if (nextBcastIdx <= 0) {
       console.warn('off end of timeline');
@@ -930,7 +932,7 @@ function startGame(name: string, char: string) {
       // TODO: compute delta to be EWMA of the running third-std-dev of recent deltas
       const thisDelta = bcast.time - currTime;
       delta = delta * .9 + thisDelta * (delta == null ? 1 : .1);
-      getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta);
+      getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta, 'length', bcastData.length);
       if (timeline.find(b => b.tick == bcast.tick)) return;
       timeline.push(bcast);
       if (timeline.length > timelineLimit) {
