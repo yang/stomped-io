@@ -885,11 +885,10 @@ function startGame(name: string, char: string) {
 
   if (cp.doPings) {
     setInterval(() => {
-      console.log('pinging');
       socket.emit('ding', {pingTime: now()})
     }, 1000);
   }
-  socket.on('dong', ({pingTime}) => console.log('ping', now() - pingTime));
+  socket.on('dong', ({pingTime}) => getLogger('ping').log('ping', now() - pingTime));
 
   socket.on('joined', (initSnap) => {
     timeline.empty();
