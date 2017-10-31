@@ -811,7 +811,7 @@ interface WorldData {
 export function saveWorldWithoutBackRef(world: Pl.World): WorldData {
   const worldData = <WorldData> {
     bodyData: Array.from(iterBodies(world)).reverse().map(body => ({
-      userData: _(body.getUserData()).chain().clone().extend({bod: null}).value(),
+      userData: body.getUserData() && _(body.getUserData()).chain().clone().extend({bod: null}).value(),
       type: body.getType(),
       // Must snapshot these because vectors can be mutated before postMessage.
       vel: copyVec(body.getLinearVelocity()),
