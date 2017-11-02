@@ -178,8 +178,11 @@ function bcast() {
     diff.ents = [];
     for (let b of snapshot.ents) {
       const a = lastById.get(b.id);
-      if (!_.isEqual(a, b)) {
-        diff.ents.push(b);
+      // TODO change to dirty detection
+      const entDiff = Common.objDiff(a, b) as Ent;
+      if (entDiff) {
+        entDiff.id = b.id;
+        diff.ents.push(entDiff);
       }
     }
   }

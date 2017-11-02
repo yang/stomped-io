@@ -610,24 +610,33 @@ ${mkScoreText()}
       // it appears fine / indistinguishable.
       // TODO In fact, should always be able to do this, assuming nothing skipped, but we do currently truncate the
       // timeline aggressively, which should be fixed.
-      const [a, b] = [prevBcast.isDiff ? aMap.get(ent.id) : ent, bMap.get(ent.id)];
+      const [a, b] = [prevBcast.isDiff ? ent : aMap.get(ent.id), bMap.get(ent.id)];
       if (a && b) {
         if (ent instanceof Player) {
-          if (ent != me || !cp.instantTurn) {
+          if ((a as Player).inputs && (ent != me || !cp.instantTurn)) {
             ent.inputs = (<Player>a).inputs;
           }
         }
-        ent.height = lerp(a.height, b.height, alpha);
-        ent.width = lerp(a.width, b.width, alpha);
-        ent.x = lerp(a.x, b.x, alpha);
-        ent.y = lerp(a.y, b.y, alpha);
-        ent.vel.x = lerp(a.vel.x, b.vel.x, alpha);
-        ent.vel.y = lerp(a.vel.y, b.vel.y, alpha);
+        if (b.height)
+          ent.height = lerp(a.height, b.height, alpha);
+        if (b.width)
+          ent.width = lerp(a.width, b.width, alpha);
+        if (b.x)
+          ent.x = lerp(a.x, b.x, alpha);
+        if (b.y)
+          ent.y = lerp(a.y, b.y, alpha);
+        if (b.vel) {
+          ent.vel.x = lerp(a.vel.x, b.vel.x, alpha);
+          ent.vel.y = lerp(a.vel.y, b.vel.y, alpha);
+        }
         if (ent instanceof Player) {
-          ent.size = lerp((a as Player).size, (b as Player).size, alpha);
-          const state = (a as Player).state;
-          if (state != 'startingSmash')
-            ent.state = state;
+          if ((b as Player).size)
+            ent.size = lerp((a as Player).size, (b as Player).size, alpha);
+          if ((b as Player).state) {
+            const state = (a as Player).state;
+            if (state != 'startingSmash')
+              ent.state = state;
+          }
         }
       }
     }

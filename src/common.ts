@@ -223,6 +223,27 @@ export function replaceArray<T>(xs: T[], ys: T[]) {
   pushAll(xs, ys);
 }
 
+/**
+ * Returns object that contains subset of RHS fields that are different from LHS.
+ *
+ * Many things we don't worry about - changing fields/schema, changing types, deep recursion, cycles, etc.
+ *
+ * @param a
+ * @param b
+ * @returns {{}}
+ */
+export function objDiff(a, b) {
+  const res = {};
+  let empty = true;
+  for (let k in a) {
+    if (!_.isEqual(a[k], b[k])) {
+      res[k] = b[k];
+      empty = false;
+    }
+  }
+  return empty ? null : res;
+}
+
 export function enumerate<T>(xs: T[]): [number,T][] {
   return Array.from((function*() {
     for (let i = 0; i < xs.length; i++) {
