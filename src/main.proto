@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package main;
+
+message Bcast {
+    repeated Ent ents = 1;
+}
+
+message Ent {
+    int32 id = 6;
+    float x = 1;
+    float y = 2;
+    float width = 3;
+    float height = 4;
+    Vec2 vel = 5;
+    oneof sub {
+        Player player = 7;
+        Star star = 8;
+    }
+}
+
+message Vec2 {
+    float x = 1;
+    float y = 2;
+}
+
+message Player {
+    string name = 1;
+    float size = 2;
+    bool dirLeft = 3;
+    int32 currentSquishTime = 4;
+    enum State {
+        normal = 0;
+        startingSmash = 1;
+        smashing = 2;
+    }
+}
+
+message Star {
+
+}

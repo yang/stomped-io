@@ -10,7 +10,7 @@ import {
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth, makeStar, now,
+  ledgeWidth, makeStar, now, pb,
   Player,
   RemEnt, runLocally, serSimResults, Star,
   updateEntPhysFromPl,
@@ -22,6 +22,9 @@ import * as fs from 'fs';
 import {Chance} from 'chance';
 import * as Case from 'case';
 import * as Leet from 'leet';
+
+const Protobuf = require('protobufjs');
+Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
 
 const chance = new Chance(0);
 
@@ -169,7 +172,8 @@ function bcast() {
     tick: tick,
     bcastNum: bcastNum,
     events: events,
-    ents: getEnts().map((p) => p.ser())
+    ents: getEnts().map((p) => p.ser()),
+    buf: null
   });
   const diff: Bcast = _(snapshot).clone();
   if (lastSnapshot && Common.settings.doDiff) {
@@ -179,21 +183,32 @@ function bcast() {
     for (let b of snapshot.ents) {
       const a = lastById.get(b.id);
       // TODO change to dirty detection
-      const entDiff = Common.objDiff(a, b) as Ent;
+      const entDiff: any = Common.objDiff(a, b) as Ent;
       if (entDiff) {
         entDiff.id = b.id;
         diff.ents.push(entDiff);
+        if (b.type == "Player") {
+          (entDiff as any).player = _.pick(entDiff, 'name','size','currentSquishTime','state');
+          if (entDiff.inputs)
+            (entDiff as any).player.dirLeft = entDiff.inputs.left.isDown;
+        }
       }
     }
   }
-  const data = JSON.stringify(diff);
+  if (Common.settings.doProtobuf) {
+    assert(!pb.Bcast.verify({ents: diff.ents}));
+    const msg = pb.Bcast.create({ents: diff.ents});
+    diff.buf = pb.Bcast.encode(msg).finish();
+    diff.ents = null;
+  }
+  const data = Common.settings.doProtobuf ? diff : JSON.stringify(diff);
 
   // broadcast
   for (let client of clients) {
     const socket = client.socket;
     if (socket) {
       socket.emit('bcast', data);
-      getLogger('bcast').log('tick', tick, 'client', client.id, 'snap time', currTime, 'send done time', now(), 'length', data.length);
+      getLogger('bcast').log('tick', tick, 'client', client.id, 'snap time', currTime, 'send done time', now(), 'length', data instanceof String ? data.length : data.buf.length);
     }
   }
   clearArray(events);

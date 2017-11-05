@@ -4,6 +4,11 @@ import {renderSplash} from "./components";
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
 const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-split');
 
+// require('protobufjs/dist/protobuf-light');
+// const PB = require('proto!./main.proto');
+
+// import {load} from 'protobufjs';
+const Protobuf = require('protobufjs');
 import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
@@ -31,7 +36,7 @@ import {
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth, now,
+  ledgeWidth, now, pb,
   Player,
   plPosFromEnt,
   pushAll,
@@ -796,6 +801,7 @@ class GuiMgr {
     this.svrOpts.open();
     const svrOpts = this.svrOpts;
     const svrControllers = [
+      svrOpts.add(svrSettings, 'doProtobuf'),
       svrOpts.add(svrSettings, 'doDiff'),
       svrOpts.add(svrSettings, 'accel'),
       svrOpts.add(svrSettings, 'doOsc'),
@@ -934,7 +940,7 @@ function startGame(name: string, char: string) {
     // setTimeout((() => botMgr.makeBot()), 3000);
 
     socket.on('bcast', (bcastData) => {
-      const bcast = JSON.parse(bcastData);
+      const bcast = bcastData.buf ? bcastData : JSON.parse(bcastData);
       const currTime = now();
       getLogger('bcast.data').log(currTime, bcast);
       if (localBcast && bcastBuffer.length == localBcastDur * bcastsPerSec)
@@ -945,6 +951,9 @@ function startGame(name: string, char: string) {
       getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta, 'length', bcastData.length);
       if (timeline.find(b => b.tick == bcast.tick)) return;
       timeline.push(bcast);
+      if (bcast.buf) {
+        bcast.ents = pb.Bcast.decode(new Uint8Array(bcast.buf)).ents;
+      }
       if (timeline.length > timelineLimit) {
         timeline.shift();
       }
@@ -992,6 +1001,8 @@ function startGame(name: string, char: string) {
 
 let rootComponent;
 export function main(pool) {
+  const pPb = Protobuf.load('dist/main.proto');
+  pPb.then((root) => Common.bootstrapPb(root));
   gPool = pool;
   socket = Sio(location.origin.replace(':8000', '') + ':3000', {query: {authKey}});
   socket.on('svrSettings', (svrData) => {
@@ -1014,7 +1025,7 @@ export function main(pool) {
     if (autoStartName) { resolveSubmit([autoStartName, 'white']); }
   });
   const pConnected = new Promise<any>((resolve) => socket.on('connect', resolve));
-  Promise.all([pFirstSubmit, pConnected])
+  Promise.all([pFirstSubmit, pConnected, pPb])
     .then(([firstSubmit, _]) => {
       const [name, char] = firstSubmit;
       return startGame(name, char);

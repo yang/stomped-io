@@ -111,6 +111,7 @@ export class ServerSettings {
   smashSpeed = 20;
   oneWayLedges = true;
   doDiff = true;
+  doProtobuf = true;
   ser() {
     return _({}).assignIn(this);
   }
@@ -401,6 +402,15 @@ function postStep(f) {
   postSteps.push(f);
 }
 
+export let Protobuf;
+export let pb: any = {};
+export function bootstrapPb(_pb) {
+  Protobuf = _pb;
+  for (let t of 'Bcast Ent Vec2 Player Star'.split(' ')) {
+    pb[t] = _pb.lookupType(`main.${t}`);
+  }
+}
+
 export class Inputs {
   left = new InputState();
   down = new InputState();
@@ -415,6 +425,7 @@ export interface Bcast {
   events: Event[];
   ents: Ent[];
   isDiff: boolean;
+  buf: Buffer;
 }
 
 // simple container so that client can reach in and bump this
