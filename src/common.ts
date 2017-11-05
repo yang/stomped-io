@@ -91,8 +91,8 @@ export const world = Pl.World(Pl.Vec2(0, gravity));
 const gWorld = world;
 
 export const gameWorld = {
-  width: 1600,
-  height: 1200
+  width: 4000,
+  height: 2000
 };
 
 export function* cumsum(xs: number[]) {
@@ -772,11 +772,6 @@ export function bbox(body) {
 }
 
 export function updateEntPhysFromPl(ent) {
-  // Destroyed objects have no fixtures
-  if (ent.bod.getFixtureList()) {
-    const d = fixtureDims(ent.bod.getFixtureList());
-    [ent.width, ent.height] = [d.width * ratio, d.height * ratio];
-  }
   [ent.x, ent.y] = entPosFromPl(ent).toTuple();
   ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
   ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;
