@@ -463,10 +463,12 @@ io.on('connection', (socket: SocketIO.Socket) => {
         if (ev.type == 'InputEvent') {
           player.inputs = ev.inputs;
         } else if (ev.type == 'StartSmash') {
-          // Ignore/distrust its id param.
-          player.state = 'startingSmash';
-          gameState.timerMgr.wait(.2, () => player.state = 'smashing');
-          events.push(ev);
+          if (Common.settings.doSmashes) {
+            // Ignore/distrust its id param.
+            player.state = 'startingSmash';
+            gameState.timerMgr.wait(.2, () => player.state = 'smashing');
+            events.push(ev);
+          }
         }
       }
     });

@@ -801,6 +801,7 @@ class GuiMgr {
     this.svrOpts.open();
     const svrOpts = this.svrOpts;
     const svrControllers = [
+      svrOpts.add(svrSettings, 'doSmashes'),
       svrOpts.add(svrSettings, 'doProtobuf'),
       svrOpts.add(svrSettings, 'doDiff'),
       svrOpts.add(svrSettings, 'accel'),

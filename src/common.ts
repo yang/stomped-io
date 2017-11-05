@@ -112,6 +112,7 @@ export class ServerSettings {
   oneWayLedges = true;
   doDiff = true;
   doProtobuf = true;
+  doSmashes = false;
   ser() {
     return _({}).assignIn(this);
   }
