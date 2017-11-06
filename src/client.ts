@@ -30,7 +30,7 @@ import {
   Event, fixtureDims,
   GameState, genStyles, getDir,
   getLogger,
-  InputEvent, Inputs,
+  InputEvent,
   iterBodies,
   iterFixtures,
   Lava,
@@ -261,8 +261,8 @@ function create() {
   cursors = game.input.keyboard.createCursorKeys();
   for (let keyName of ['left', 'down', 'right', 'up']) {
     const key = cursors[keyName];
-    key.onDown.add(() => cp.useKeyboard && events.push(new InputEvent(updateInputs())));
-    key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(updateInputs())));
+    key.onDown.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
+    key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
   }
 
   game.input.onDown.add(startSmash);
@@ -305,16 +305,12 @@ function trace(x) {
   return x;
 }
 
-function updateInputs() {
-  const inputs = new Inputs();
-  inputs.left.isDown = cursors.left.isDown;
-  inputs.right.isDown = cursors.right.isDown;
-  inputs.down.isDown = cursors.down.isDown;
-  inputs.up.isDown = cursors.up.isDown;
+function inputsToDir() {
+  const dir = cursors.left.isDown ? Dir.Left : Dir.Right;
   if (cp.instantTurn) {
-    me.inputs = inputs;
+    me.dir = dir;
   }
-  return inputs;
+  return dir;
 }
 
 let lastTime = 0;
@@ -516,7 +512,7 @@ ${mkScoreText()}
   const dir = ptr.x <= me.x + me.width / 2 ? Dir.Left : Dir.Right;
   if (!cp.useKeyboard && dir != getDir(me)) {
     setInputsByDir(me, dir);
-    socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
+    socket.emit('input', {time: currTime, events: [new InputEvent(me.dir)]});
   }
 
   let updating = false;
@@ -618,8 +614,10 @@ ${mkScoreText()}
       const [a, b] = [prevBcast.isDiff ? ent : aMap.get(ent.id), bMap.get(ent.id)];
       if (a && b) {
         if (ent instanceof Player) {
-          if ((a as Player).inputs && (ent != me || !cp.instantTurn)) {
-            ent.inputs = (<Player>a).inputs;
+          const dir = ((aMap.get(ent.id) || {}) as Player).dir;
+          if (_.isNumber(dir) && (ent != me || !cp.instantTurn)) {
+            console.log(ent.name, ent.dir, '<--', dir);
+            ent.dir = dir;
           }
         }
         if (b.height)
@@ -765,12 +763,11 @@ function updateSpriteFromEnt(ent) {
   [sprite.width, sprite.height] = ent.dispDims().toTuple();
 }
 
-function feedInputs(player) {
-  const inputs = player.inputs;
+function feedInputs(player: Player) {
   const sprite = entToSprite.get(player);
-  if (inputs.left.isDown) {
+  if (player.dir == Dir.Left) {
     sprite.animations.play('left');
-  } else if (inputs.right.isDown) {
+  } else if (player.dir == Dir.Right) {
     sprite.animations.play('right');
   } else {
     //  Stand still
@@ -954,6 +951,15 @@ function startGame(name: string, char: string) {
       timeline.push(bcast);
       if (bcast.buf) {
         bcast.ents = pb.Bcast.decode(new Uint8Array(bcast.buf)).ents;
+        for (let ent of bcast.ents) {
+          if (ent.player) {
+            _.assign(ent, ent.player);
+            if (_.isBoolean(ent.dirLeft)) {
+              console.log(ent.name, ent.dir, ent.dirLeft);
+              ent.dir = ent.dirLeft ? Dir.Left : Dir.Right;
+            }
+          }
+        }
       }
       if (timeline.length > timelineLimit) {
         timeline.shift();

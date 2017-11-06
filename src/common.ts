@@ -412,13 +412,6 @@ export function bootstrapPb(_pb) {
   }
 }
 
-export class Inputs {
-  left = new InputState();
-  down = new InputState();
-  right = new InputState();
-  up = new InputState();
-}
-
 export interface Bcast {
   time: number;
   tick: number;
@@ -502,7 +495,7 @@ export class Player extends Ent {
   width = 24;
   height = 32;
   baseDims = new Vec2(this.width, this.height);
-  inputs = new Inputs();
+  dir = Dir.Left;
   size = 1;
   currentSquishTime: number = null;
   dead = false;
@@ -608,7 +601,7 @@ export class StartSmash extends Event {
 }
 
 export class InputEvent extends Event {
-  constructor(public inputs: Inputs) { super(); }
+  constructor(public dir: Dir) { super(); }
 }
 
 export class KillEv extends Event {
@@ -673,17 +666,15 @@ function updateVel(bod, f) {
 
 function feedInputs(player: Player, dt: number, gameState: GameState) {
 
-  const inputs = player.inputs;
-
   if (player.state == 'startingSmash') {
     updateVel(player.bod, (old) => Pl.Vec2(0, 0));
   } else if (player.state == 'smashing') {
     updateVel(player.bod, (old) => Pl.Vec2(0, -settings.smashSpeed));
   } else if (player.state == 'normal') {
-    if (inputs.left.isDown || alwaysMoveLeft) {
+    if (player.dir == Dir.Left || alwaysMoveLeft) {
       //  Move to the left
       updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.max(x - settings.accel * dt, -5), y));
-    } else if (inputs.right.isDown) {
+    } else if (player.dir == Dir.Right) {
       //  Move to the right
       updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 5), y));
     } else {
@@ -976,18 +967,12 @@ function dist(a: Vec2, b: Vec2) {
   return Math.sqrt(x*x + y*y);
 }
 
-function setInputs(player: Player, [left, right]: [boolean, boolean]) {
-  player.inputs.left.isDown = left;
-  player.inputs.right.isDown = right;
-}
-
 export function setInputsByDir(player: Player, dir: Dir) {
-  setInputs(player, dir == Dir.Left ? [true, false] : [false, true]);
+  player.dir = dir;
 }
 
-export function getDir(player) {
-  return player.inputs.left.isDown ? Dir.Left :
-    player.inputs.right.isDown ? Dir.Right : null;
+export function getDir(player: Player) {
+  return player.dir;
 }
 
 interface BfsParams<V,E> {
@@ -1282,12 +1267,12 @@ export class Bot {
     const res = this.runSims(startState, (init, [dir, chunk]) => {
       // restore world state
       for (let [ent, bodyState] of init.plState) restoreBody(ent, bodyState);
-      const origInputs: [boolean, boolean] = [me.inputs.left.isDown, me.inputs.right.isDown];
+      const origDir = me.dir;
       setInputsByDir(me, dir);
       const stars = gameState.stars;
       clearArray(gameState.stars);
       const res = this.sim(dir, chunk, world, gameState, init, world => this.capturePlState());
-      setInputs(me, origInputs);
+      setInputsByDir(me, origDir);
       pushAll(gameState.stars, stars);
       return res;
     });
@@ -1376,7 +1361,7 @@ export class Bot {
           q.size = p.size;
           q.width = p.width;
           q.height = p.height;
-          setInputs(q, [p.inputs.left.isDown, p.inputs.right.isDown]);
+          setInputsByDir(q, p.dir);
           return q;
         });
         for (let ent of [].concat(newLedges).concat(newPlayers)) {
@@ -1439,7 +1424,7 @@ export class Bot {
     const me = this.player;
     setInputsByDir(me, dir);
     if (this.socket)
-      this.socket.emit('input', {time: currTime, events: [new InputEvent(me.inputs)]});
+      this.socket.emit('input', {time: currTime, events: [new InputEvent(me.dir)]});
   }
 
   replayChunkStep(currTime: number, resetting: boolean) {
@@ -1698,7 +1683,7 @@ export class BotMgr {
       50,
       this.styleGen.next().value
     )));
-    player.inputs.left.isDown = true;
+    player.dir = Dir.Left;
     return player;
   };
 }

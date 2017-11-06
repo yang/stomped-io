@@ -5,7 +5,7 @@ import {
   addBody,
   AddEnt, assert, baseHandler,
   Bcast, Block, BotMgr, Burster,
-  clearArray, Ent, EntMgr,
+  clearArray, Dir, Ent, EntMgr,
   Event, GameState, genStyles, getLogger, getRandomIntRange, ids, KillEv,
   Lava,
   Ledge,
@@ -207,8 +207,10 @@ function bcast() {
         diff.ents.push(entDiff);
         if (b.type == "Player") {
           (entDiff as any).player = _.pick(entDiff, 'name','size','currentSquishTime','state');
-          if (entDiff.inputs)
-            (entDiff as any).player.dirLeft = entDiff.inputs.left.isDown;
+          if (_.isNumber(entDiff.dir)) {
+            console.log((b as Player).name, 'dir', entDiff.dir);
+            (entDiff as any).player.dirLeft = entDiff.dir == Dir.Left;
+          }
         }
       }
     }
@@ -321,20 +323,6 @@ function updateLedges() {
   }
 }
 
-function schedRandInputs(player) {
-  let allClear = true;
-  for (var key of ['left','right']) {
-    if (player.inputs[key].isDown) {
-      player.inputs[key].isDown = false;
-      allClear = false;
-    }
-  }
-  if (allClear) {
-    player.inputs[['left','right'][getRandomIntRange(0,2) % 2]].isDown = true;
-  }
-  setTimeout(() => schedRandInputs(player), getRandomIntRange(1000, 3000));
-}
-
 const doStars = true, gridDim = 200, expPerGrid = doStars ? 10 : 0;
 function updateStars(gameState: GameState, bootstrap: boolean) {
   getLogger('stars').log('regenerating stars');
@@ -395,11 +383,6 @@ function create() {
   const ceiling = new Block(0, -10, Common.gameWorld.width, 10);
   addBody(ceiling, 'kinematic');
   gameState.blocks.push(ceiling);
-
-  for (let i = 0; i < initPlayers; i++) {
-    const player = makePlayer(`bot${i}`);
-    schedRandInputs(player);
-  }
 
   if (doRun) {
     setInterval(bcast, bcastPeriod * 1000);
@@ -484,7 +467,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
       getLogger('input').log('player', player.describe(), 'sent input for time', data.time);
       for (let ev of data.events) {
         if (ev.type == 'InputEvent') {
-          player.inputs = ev.inputs;
+          player.dir = ev.dir;
         } else if (ev.type == 'StartSmash') {
           if (Common.settings.doSmashes) {
             // Ignore/distrust its id param.
