@@ -130,7 +130,7 @@ function getEnts(): Ent[] {
 let dbgRementSent = true;
 const rementSent = new Map<number, RemEnt>();
 
-let lastSnapshot = null;
+let lastSnapshot: Bcast = null;
 
 function bcast() {
   // TODO move all removal code to update()
@@ -162,27 +162,45 @@ function bcast() {
       rementSent.set(ev.id, ev);
     events.push(ev.ser());
   }
+  const removed = new Set(toRemove.map(ev => ev.id));
   clearArray(toRemove);
 
   // snapshot world
   const currTime = now();
+  let allSers: Ent[], dirtySers: Ent[];
+  const dirtyEnts = getEnts().filter(p => p.isDirty());
+  if (lastSnapshot) {
+    const newSers = events.filter(ev => ev.type == 'AddEnt').map(ev => (ev as AddEnt).ent);
+    dirtySers = dirtyEnts.map(p => p.ser());
+    const newOrDirtySers = _.unionBy(newSers, dirtySers, (ent) => ent.id);
+    const newOrDirtySersById = new Map(newOrDirtySers.map<[number, Ent]>(p => [p.id, p]));
+    allSers = lastSnapshot.ents.filter(p =>
+      !newOrDirtySersById.has(p.id) &&
+      // GC destroyed ents
+      !removed.has(p.id)
+    ).concat(newOrDirtySers);
+  } else {
+    dirtySers = allSers = getEnts().map(p => p.ser());
+  }
   const snapshot: Bcast = ({
     isDiff: false,
     time: currTime,
     tick: tick,
     bcastNum: bcastNum,
     events: events,
-    ents: getEnts().map((p) => p.ser()),
+    ents: allSers,
     buf: null
   });
   const diff: Bcast = _(snapshot).clone();
   if (lastSnapshot && Common.settings.doDiff) {
-    const lastById = new Map(lastSnapshot.ents.map(e => [e.id, e]));
+    const lastById = new Map(lastSnapshot.ents.map<[number, Ent]>(e => [e.id, e]));
     diff.isDiff = true;
     diff.ents = [];
-    for (let b of snapshot.ents) {
+    for (let b of dirtySers) {
       const a = lastById.get(b.id);
-      // TODO change to dirty detection
+      // Note we're only diffing dirty ents; new ents that are not dirty should already be covered by
+      // AddEnt.  There are no new ents that are dirty - stars are created after update(), and new
+      // players are TODO there may be new dirty players!?
       const entDiff: any = Common.objDiff(a, b) as Ent;
       if (entDiff) {
         entDiff.id = b.id;
@@ -214,6 +232,11 @@ function bcast() {
   clearArray(events);
   bcastNum += 1;
   lastSnapshot = snapshot;
+
+  // reset dirty bits
+  for (let ent of dirtyEnts) {
+    ent.dirty = false;
+  }
 }
 
 function whichBucket(bucketStart: number, bucketSize: number, x: number) {

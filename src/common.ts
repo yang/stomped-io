@@ -477,12 +477,14 @@ export class Ent extends Serializable {
   vel = new Vec2(0,0);
   id = ids.next().value;
   bod?: Pl.Body;
-  ser(): this { return <this>_.omit(this, 'bod', 'stack', 'timers'); }
+  dirty = false;
+  ser(): this { return <this>_.omit(this, 'bod', 'stack', 'timers', 'dirty'); }
   pos() { return new Vec2(this.x, this.y); }
   dims() { return new Vec2(this.width, this.height); }
   dispDims() { return this.dims(); }
   dispPos(): Vec2 { return this.pos().add(this.dims().sub(this.dispDims()).div(2)); }
   midDispPos(): Vec2 { return this.dispPos().add(this.dispDims().div(2)); }
+  isDirty() { return this.dirty; }
 }
 
 export class Lava extends Ent {
@@ -591,6 +593,7 @@ export class Burster {
             filterGroupIndex: 0
           });
         updateVel(ent.bod, ({x, y}) => Pl.Vec2(x * factor, y * factor));
+        ent.dirty = true;
       }
     }
     this.elapsed += dt;
@@ -772,9 +775,16 @@ export function bbox(body) {
 }
 
 export function updateEntPhysFromPl(ent) {
-  [ent.x, ent.y] = entPosFromPl(ent).toTuple();
-  ent.vel.x = ratio * ent.bod.getLinearVelocity().x;
-  ent.vel.y = ratio * -ent.bod.getLinearVelocity().y;
+  const newPos = entPosFromPl(ent);
+  const newVel = new Vec2(
+    ratio * ent.bod.getLinearVelocity().x,
+    ratio * -ent.bod.getLinearVelocity().y
+  );
+  if (ent.x != newPos.x || ent.y != newPos.y || ent.vel.x != newVel.x || ent.vel.y != newVel.y) {
+    ({x: ent.x, y: ent.y} = newPos);
+    ({x: ent.vel.x, y: ent.vel.y} = newVel);
+    ent.dirty = true;
+  }
 }
 
 export function copyVec(v: Pl.Vec2): Pl.Vec2 {
