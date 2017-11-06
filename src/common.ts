@@ -114,7 +114,7 @@ export class ServerSettings {
   doProtobuf = true;
   doSmashes = false;
   ser() {
-    return _({}).assignIn(this);
+    return _({}).assign(this);
   }
   deser(data) {
     _.merge(this, data);
