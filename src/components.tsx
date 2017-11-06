@@ -66,7 +66,7 @@ export class Splash extends React.Component {
   };
   render() {
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
-      <h1>Bounce<span className="io">.io</span></h1>
+      <h1>Stomped<span className="io">.io</span></h1>
       <form className='splash-form' onSubmit={this.handleSubmit}>
         <input
           className={'name-input'}
