@@ -31,7 +31,7 @@ if (!isWebWorker) {
   const workerpool = require('workerpool/dist/workerpool');
   const pool = workerpool.pool(scriptPath);
 
-  require("./client").main(pool);
+  require("./admin-client").main(pool);
 } else {
   const workerpool = require('workerpool/dist/workerpool');
   workerpool.worker({sim: (...args) => pRun(() => sim(...args))});

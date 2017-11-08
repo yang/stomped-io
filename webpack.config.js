@@ -1,9 +1,11 @@
 const MinifyPlugin = require("babel-minify-webpack-plugin");
 const merge = require('webpack-merge');
 const baseConfig = {
-  entry: './src/client-or-worker.ts',
+  entry: {
+    client: './src/admin-client-or-worker.ts'
+  },
   output: {
-    filename: 'bundle.js',
+    filename: '[name].js',
     path: __dirname + '/dist'
   },
   // Enable sourcemaps for debugging webpack's output.
@@ -22,16 +24,24 @@ const baseConfig = {
 };
 module.exports = [
   merge(baseConfig, {
-    name: 'dev'
+    name: 'dev',
+    entry: {
+      'admin-client': './src/admin-client-or-worker.ts',
+      client: './src/client-runner.ts'
+    },
+    output: {
+      filename: '[name].js',
+      path: __dirname + '/build'
+    }
   }),
   merge(baseConfig, {
     name: 'prod',
-    output: {
-      filename: 'bundle.min.js',
-      path: __dirname + '/dist'
-    },
     plugins: [
       new MinifyPlugin({}, {})
-    ]
+    ],
+    output: {
+      filename: 'bundle.js',
+      path: __dirname + '/dist'
+    }
   })
 ];
