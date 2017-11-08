@@ -1,4 +1,45 @@
 import {renderSplash} from "./components";
+import * as CBuffer from 'CBuffer';
+import * as Pl from 'planck-js';
+import * as Sio from 'socket.io-client';
+import * as Common from './common';
+import {
+  addBody,
+  AddEnt,
+  assert,
+  baseHandler,
+  Bcast,
+  Block,
+  clearArray,
+  Dir,
+  doLava,
+  dt,
+  Ent,
+  EntMgr,
+  enumerate,
+  Event,
+  GameState,
+  genStyles,
+  getDir,
+  getLogger,
+  InputEvent,
+  Lava,
+  Ledge,
+  now,
+  pb,
+  Player,
+  plPosFromEnt,
+  ratio,
+  RemEnt,
+  runLocally,
+  ServerSettings,
+  setInputsByDir,
+  Star,
+  StartSmash,
+  Vec2,
+  world
+} from './common';
+import * as _ from 'lodash';
 
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
@@ -9,54 +50,11 @@ const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-spl
 
 // import {load} from 'protobufjs';
 const Protobuf = require('protobufjs');
-import * as CBuffer from 'CBuffer';
-import * as Pl from 'planck-js';
-import * as Sio from 'socket.io-client';
-import * as dat from 'dat.gui/build/dat.gui';
-import * as Common from './common';
-import {
-  addBody,
-  AddEnt,
-  assert, baseHandler,
-  Bcast, Block, Bot, BotMgr,
-  clearArray,
-  cloneWorld,
-  copyVec, createBody, defaultColor, deserSimResults, Dir, doLava,
-  dt,
-  Ent,
-  EntMgr,
-  entPosFromPl,
-  enumerate,
-  Event, fixtureDims,
-  GameState, genStyles, getDir,
-  getLogger,
-  InputEvent,
-  iterBodies,
-  iterFixtures,
-  Lava,
-  Ledge,
-  ledgeHeight,
-  ledgeWidth, now, pb,
-  Player,
-  plPosFromEnt,
-  pushAll,
-  ratio,
-  RemEnt, runLocally, ServerSettings, setInputsByDir,
-  Star, StartSmash,
-  timeWarp, totalSquishTime,
-  updateEntPhysFromPl,
-  updatePeriod,
-  Vec2,
-  veq,
-  world
-} from './common';
-import * as _ from 'lodash';
-import {Component} from "react";
 // import Timer = NodeJS.Timer;
 
 const searchParams = new URLSearchParams(window.location.search);
 const authKey = searchParams.get('authKey') || '';
-const isDebug = !!searchParams.get('debug');
+export const isDebug = !!searchParams.get('debug');
 
 if (!isDebug) Common.setDoAsserts(false);
 
@@ -86,7 +84,7 @@ function selectEnum(value, enumObj, enums) {
   }
 }
 
-class ControlPanel {
+export class ControlPanel {
   currentPlayer = 0;
   viewAll = false;
   // hide latency when turning sprite around
@@ -108,21 +106,20 @@ class ControlPanel {
   doPings = true;
   backToSplash() { backToSplash(); }
   testNotif() { notify('Testing!'); }
-  makeBot() {
-    runLocally ? botMgr.makeBot() : socket.emit('makeBot');
-  }
 }
-const cp = new ControlPanel();
 
-const svrSettings = new ServerSettings();
+export let cp = new ControlPanel();
+export function setCp(_cp) { cp = _cp; }
 
-const styleGen = genStyles();
+export const svrSettings = new ServerSettings();
+
+export const styleGen = genStyles();
 
 const timelineLimit = 32;
 
-var game, gPool;
+export var game, gPool;
 
-const gameState = new GameState(undefined, destroy2);
+export const gameState = new GameState(undefined, destroy2);
 gameState.onJumpoff.add((player, other) => {
   const minSize = 10, maxSize = 15, slope = 0.1 / (maxSize - minSize);
   if (cp.doShake) {
@@ -136,8 +133,6 @@ gameState.onJumpoff.add((player, other) => {
     other.currentSquishTime = 0;
   }
 });
-
-let botMgr;
 
 function preload() {
 
@@ -171,12 +166,12 @@ var cursors;
 
 var stars;
 var score = 0;
-var scoreText, notifText, notifClearer: number;
+export var scoreText, notifText, notifClearer: number;
 
-var socket;
-var me: Player;
+export var socket;
+export var me: Player;
 
-const players = gameState.players;
+export const players = gameState.players;
 const ledges = gameState.ledges;
 
 // const timeline = new CBuffer<Bcast>(8);
@@ -200,12 +195,12 @@ function destroy2(ent) {
   }
 }
 
-const entToSprite = new Map<Ent, any>();
+export const entToSprite = new Map<Ent, any>();
 const playerToName = new Map<Player, any>();
 const events: Event[] = [];
-let onNextBcastPersistentCallbacks = [];
+export let onNextBcastPersistentCallbacks = [];
 
-let gfx;
+export let gfx;
 
 (<any>window).dbg = {platforms, cursors, baseHandler, gameWorld: world, players, ledges, entToSprite, Common};
 
@@ -313,16 +308,14 @@ function inputsToDir() {
   return dir;
 }
 
-let lastTime = 0;
-
 const timeBuffer = 100;
-let delta = null;
+export let delta = null;
 
 function lerp(a,b,alpha) {
   return a + alpha * (b - a);
 }
 
-function getEnts() {
+export function getEnts() {
   return gameState.getEnts();
 }
 
@@ -361,7 +354,7 @@ function onEntAdded(ent: Ent) {
   }
 }
 
-const entMgr = new EntMgr(world, gameState, onEntAdded);
+export const entMgr = new EntMgr(world, gameState, onEntAdded);
 
 function tryRemove(id: number, ents: Ent[], instantly = false) {
   const i = _(ents).findIndex((p) => p.id == id);
@@ -400,11 +393,11 @@ function tryRemove(id: number, ents: Ent[], instantly = false) {
   return null;
 }
 
-function vecStr(v) {
+export function vecStr(v) {
   return JSON.stringify([v.x, v.y]);
 }
 
-const entToLabel = new Map<Ent, any>();
+export const entToLabel = new Map<Ent, any>();
 
 class ClientState {
   lastBcastNum = 0;
@@ -446,7 +439,9 @@ let moveName = function (player) {
   return text;
 };
 
-function update() {
+
+
+function update(extraSteps, mkDebugText) {
 
   // Phaser stupidly grows game.world.bounds to at least cover game.width/.height
   // (which I understand as the canvas size) even if world is scaled.
@@ -467,7 +462,6 @@ function update() {
   }
 
   const currentPlayer = cp.currentPlayer ? players[cp.currentPlayer] : null;
-  const bot = botMgr.bots.find(b => b.player == currentPlayer);
   // We're manually calculating the mouse pointer position in scaled world coordinates.
   // game.input.worldX doesn't factor in the world scaling.
   // Setting game.input.scale didn't seem to do anything.
@@ -479,33 +473,7 @@ function update() {
   const targetTime = currTime + delta - timeBuffer;
 
   if (cp.showDebug) {
-    clientState.debugText = `
-FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
-${players.length} players
-Delta: ${delta}
-Mouse: ${vecStr(ptr)}
-Game dims: ${vecStr(new Vec2(game.width, game.height))} 
-Scale: ${game.world.scale.x}
-Bounds: world ${game.world.bounds.height} camera ${game.camera.bounds.height}
-
-Current player:
-Position: ${currentPlayer ? vecStr(currentPlayer.pos()) : ''}
-Planck Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
-Target: ${bot && bot.target ? vecStr(bot.target) : ''}
-Size: ${currentPlayer ? currentPlayer.size : ''}
-Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
-Step: ${bot ?
-    `${bot.chunkSteps} total ${bot.lastBestSeq ?
-      JSON.stringify((([chunk, index, steps]) =>
-          _(chunk)
-            .pick('startTime', 'endTime', 'dur')
-            .extend({index, steps})
-            .value())(bot.getCurrChunk(-1))) : ''
-      }` : ''}
-Total ${players.length} players
-
-${mkScoreText()}
-    `.trim();
+    clientState.debugText = mkDebugText(ptr, currentPlayer);
     showDebugText();
   }
 
@@ -517,9 +485,7 @@ ${mkScoreText()}
 
   let updating = false;
 
-  if (runLocally) {
-    updating = cp.alwaysStep || currTime - lastTime >= updatePeriod * 1000;
-  } else {
+  if (!runLocally) {
     if (events.length > 0) {
       socket.emit('input', {
         time: currTime,
@@ -652,68 +618,7 @@ ${mkScoreText()}
     }
   }
 
-  gfx.clear();
-  gfx.lineStyle(1,0x555555,1);
-  if (cp.drawPlanckBoxes) {
-    for (let body of Array.from(iterBodies(world))) {
-      const [fix] = Array.from(iterFixtures(body)), dims = fixtureDims(fix);
-      gfx.drawRect(
-        ratio * (body.getPosition().x - dims.width / 2),
-        ratio * -(body.getPosition().y + dims.height / 2),
-        dims.width * ratio, dims.height * ratio
-      );
-    }
-  }
-  gfx.lineStyle(1,defaultColor,1);
-  if (game.input.activePointer.isDown) {
-    if (bot) {
-      bot.target = new Vec2(game.input.worldX, game.input.worldY);
-    }
-  }
-  if (runLocally) {
-    for (let bot of botMgr.bots) {
-      bot.isDumb ? bot.dumbPlan() : bot.replayPlan(updating, currTime);
-    }
-  }
-  for (let bot of botMgr.bots) {
-    bot.drawPlan(gfx);
-  }
-
-  if (runLocally && updating) {
-    const origEnts = getEnts();
-    const totalStepTime = Common.update(gameState);
-    for (let player of gameState.players) {
-      if (player.currentSquishTime != null) {
-        player.currentSquishTime += totalStepTime;
-        if (player.currentSquishTime > totalSquishTime) {
-          player.currentSquishTime = null;
-        }
-      }
-    }
-    for (let bot of botMgr.bots) {
-      bot.checkPlan(currTime);
-    }
-    for (let player of players) {
-      feedInputs(player);
-    }
-    // update sprites. iterate over all origEnts, including ones that may have been destroyed & removed, since we can then update their Entity positions to their final physics body positions.
-    for (let ent of origEnts) {
-      updateEntPhysFromPl(ent);
-      updateSpriteFromEnt(ent);
-    }
-    lastTime = currTime;
-  }
-
-  if (cp.showIds) {
-    const style = { font: "12px Arial", fill: "#ff0044", wordWrap: true, align: "center"};
-    for (let ent of getEnts()) {
-      let label = entToLabel.get(ent);
-      if (!label) {
-        entToLabel.set(ent, label = game.add.text(ent.x, ent.y, ""+ent.id, style));
-      }
-      [label.x, label.y] = [ent.x, ent.y];
-    }
-  }
+  extraSteps(currentPlayer, updating, currTime);
 
   for (let player of players) {
     const text = moveName(player);
@@ -731,7 +636,7 @@ function showScore(player: Player) {
   return Math.round(10 * player.size);
 }
 
-function mkScoreText() {
+export function mkScoreText() {
   return `Leaderboard
 ${_(gameState.players)
     .sortBy([
@@ -753,7 +658,7 @@ function updateSpriteAndPlFromEnt(ent) {
   ent.bod.setLinearVelocity(plVelFromEnt(ent));
 }
 
-function updateSpriteFromEnt(ent) {
+export function updateSpriteFromEnt(ent) {
   const sprite = entToSprite.get(ent);
   if (sprite.anchor.x == 0) {
     [sprite.x, sprite.y] = ent.dispPos().toTuple();
@@ -763,7 +668,7 @@ function updateSpriteFromEnt(ent) {
   [sprite.width, sprite.height] = ent.dispDims().toTuple();
 }
 
-function feedInputs(player: Player) {
+export function feedInputs(player: Player) {
   const sprite = entToSprite.get(player);
   if (player.dir == Dir.Left) {
     sprite.animations.play('left');
@@ -785,85 +690,16 @@ function feedInputs(player: Player) {
   }
 }
 
-class GuiMgr {
-  gui = isDebug ? new dat.GUI() : null;
-  cliControllers = [];
-  cliOpts;
-  svrOpts;
-  constructor() {
-    if (!isDebug) return;
-    this.cliOpts = this.gui.addFolder('Client');
-    this.svrOpts = this.gui.addFolder('Server');
-    this.cliOpts.open();
-    this.svrOpts.open();
-    const svrOpts = this.svrOpts;
-    const svrControllers = [
-      svrOpts.add(svrSettings, 'doSmashes'),
-      svrOpts.add(svrSettings, 'doProtobuf'),
-      svrOpts.add(svrSettings, 'doDiff'),
-      svrOpts.add(svrSettings, 'accel'),
-      svrOpts.add(svrSettings, 'doOsc'),
-      svrOpts.add(svrSettings, 'oscDist'),
-      svrOpts.add(svrSettings, 'smashSpeed'),
-      svrOpts.add(svrSettings, 'maxFallSpeed'),
-      svrOpts.add(svrSettings, 'oneWayLedges')
-    ];
-    const uploadSettings = () => socket.emit('svrSettings', svrSettings.ser());
-    for (let c of svrControllers) {
-      c.onFinishChange(uploadSettings);
-    }
-  }
-  private clear() {
-    this.cliControllers.forEach(c => this.cliOpts.remove(c));
-    clearArray(this.cliControllers);
-    // if (this.gui) this.gui.destroy();
-    // this.gui = new dat.GUI();
-  }
-  refresh() {
-    if (!isDebug) return;
-    this.clear();
-    const targetPlayerIndex = players.findIndex(p => entToSprite.get(p) == game.camera.target);
-    cp.currentPlayer = targetPlayerIndex >= 0 ? targetPlayerIndex : null;
-    refollow();
+let guiMgr;
 
-    const cliOpts = this.cliOpts;
-    this.cliControllers = [
-      cliOpts.add(cp, 'currentPlayer', players.map((p,i) => i)).onFinishChange(() => refollow()),
-      cliOpts.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
-      cliOpts.add(cp, 'makeBot'),
-      cliOpts.add(cp, 'viewAll').onFinishChange(rescale),
-      cliOpts.add(cp, 'instantTurn'),
-      cliOpts.add(cp, 'drawPlanckBoxes'),
-      cliOpts.add(cp, 'doShake'),
-      cliOpts.add(cp, 'alwaysStep'),
-      cliOpts.add(cp, 'testNotif'),
-      cliOpts.add(cp, 'boundCameraWithinWalls'),
-      cliOpts.add(cp, 'useKeyboard'),
-      cliOpts.add(cp, 'camWidth').onFinishChange(rescale),
-      cliOpts.add(cp, 'camHeight').onFinishChange(rescale),
-      cliOpts.add(cp, 'spectate'),
-      cliOpts.add(cp, 'backToSplash'),
-      cliOpts.add(cp, 'doPings'),
-      cliOpts.add(cp, 'boundCameraAboveGround'),
-      cliOpts.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
-      cliOpts.add(cp, 'showIds').onFinishChange(() =>
-        cp.showIds ? 0 : Array.from(entToLabel.values()).map(t => t.destroy())),
-      cliOpts.add(cp, 'doBuffer').onFinishChange(() => baseHandler.doBuffer = cp.doBuffer),
-      cliOpts.add(cp, 'showDebug').onFinishChange(() => cp.showDebug ? 0 : game.debug.reset())
-      ];
-  }
-
-}
-const guiMgr = new GuiMgr();
-
-function refollow() {
+export function refollow() {
   if (cp.currentPlayer && cp.currentPlayer <= players.length) {
     follow(entToSprite.get(players[cp.currentPlayer]));
   }
 }
 
 let lastParentBounds = null;
-function rescale() {
+export function rescale() {
   if (lastParentBounds) {
     // Main job is to ensure, in normal non-viewAll mode, that we scale the world up or down enough
     // such that the viewport covers 800 logical pixels, either in the horizontal or vertical direction,
@@ -893,7 +729,9 @@ function render() {
     showDebugText();
 }
 
-function startGame(name: string, char: string) {
+export type UpdateExtrasFn = (currentPlayer: Player, updating: boolean, currTime: number) => void;
+
+function startGame(name: string, char: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText) {
   socket.emit('join', {name, char});
 
   if (cp.doPings) {
@@ -926,7 +764,7 @@ function startGame(name: string, char: string) {
             }
             create();
           },
-          update: update,
+          update: () => update(updateExtras, mkDebugText),
           render: render
         }
       });
@@ -934,8 +772,6 @@ function startGame(name: string, char: string) {
       game.canvas.style.display = '';
       game.paused = false;
     }
-
-    // setTimeout((() => botMgr.makeBot()), 3000);
 
     socket.on('bcast', (bcastData) => {
       const bcast = bcastData.buf ? bcastData : JSON.parse(bcastData);
@@ -979,44 +815,23 @@ function startGame(name: string, char: string) {
       }
     });
 
-    socket.on('botProxy', (botData) => {
-      onNextBcastPersistentCallbacks.push(() => botMgr.maybeAddProxy(botData));
-    });
-
-    socket.on('botPlan', ({botData, bestWorldStateIndex, bestPath, worldStatesData}) => {
-      onNextBcastPersistentCallbacks.push(() => {
-        const bot = botMgr.bots.find(b => b.player.id == botData.playerId);
-        if (bot) {
-          const {worldStates, bestPath: realBestPath, bestWorldState} = deserSimResults({
-            bestWorldStateIndex,
-            bestPath,
-            worldStatesData
-          });
-          bot.deser(botData);
-          bot.lastWorldStates = worldStates;
-          bot.lastBestSeq = realBestPath.map(([ws, dir]) => ws).concat([bestWorldState]);
-          return true;
-        } else {
-          return false;
-        }
-      });
-    });
+    onJoin(socket);
   });
 
   socket.on('disconnect', () => console.log('disconnect'));
 }
 
 let rootComponent;
-export function main(pool) {
+export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText) {
+  guiMgr = _guiMgr;
+  gPool = pool;
   const pPb = Protobuf.load('dist/main.proto');
   pPb.then((root) => Common.bootstrapPb(root));
-  gPool = pool;
   socket = Sio(location.origin.replace(':8000', '') + ':3000', {query: {authKey}});
   socket.on('svrSettings', (svrData) => {
     svrSettings.deser(svrData);
     guiMgr.refresh();
   });
-  botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool, null);
   let firstSubmitted = false;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
     renderSplash({
@@ -1024,7 +839,7 @@ export function main(pool) {
         // OK to resolve multiple times
         resolveSubmit([name, char]);
         // Let Promise.all handle the first one
-        if (firstSubmitted) startGame(name, char);
+        if (firstSubmitted) startGame(name, char, onJoin, updateExtras, mkDebugText);
         firstSubmitted = true;
       },
       shown: !autoStartName
@@ -1035,6 +850,6 @@ export function main(pool) {
   Promise.all([pFirstSubmit, pConnected, pPb])
     .then(([firstSubmit, _]) => {
       const [name, char] = firstSubmit;
-      return startGame(name, char);
+      return startGame(name, char, onJoin, updateExtras, mkDebugText);
     });
 }

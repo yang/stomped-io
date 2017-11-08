@@ -4,7 +4,7 @@ import * as Common from './common';
 import {
   addBody,
   AddEnt, assert, baseHandler,
-  Bcast, Block, BotMgr, Burster,
+  Bcast, Block, Burster,
   clearArray, Dir, Ent, EntMgr,
   Event, GameState, genStyles, getLogger, getRandomIntRange, ids, KillEv,
   Lava,
@@ -22,6 +22,7 @@ import * as fs from 'fs';
 import {Chance} from 'chance';
 import * as Case from 'case';
 import * as Leet from 'leet';
+import {BotMgr} from "./common-admin";
 
 const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));

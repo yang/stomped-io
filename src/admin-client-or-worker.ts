@@ -1,4 +1,5 @@
-import {Bot, GameState, getLogger, serSimResults} from "./common";
+import {GameState, getLogger, serSimResults} from "./common";
+import {Bot} from "./common-admin";
 
 const isWebWorker = typeof WorkerGlobalScope !== 'undefined' &&
   self instanceof WorkerGlobalScope;
