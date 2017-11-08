@@ -1,4 +1,6 @@
-module.exports = {
+const MinifyPlugin = require("babel-minify-webpack-plugin");
+const merge = require('webpack-merge');
+const baseConfig = {
   entry: './src/client-or-worker.ts',
   output: {
     filename: 'bundle.js',
@@ -18,3 +20,18 @@ module.exports = {
     ]
   }
 };
+module.exports = [
+  merge(baseConfig, {
+    name: 'dev'
+  }),
+  merge(baseConfig, {
+    name: 'prod',
+    output: {
+      filename: 'bundle.min.js',
+      path: __dirname + '/dist'
+    },
+    plugins: [
+      new MinifyPlugin({}, {})
+    ]
+  })
+];
