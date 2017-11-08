@@ -6,7 +6,8 @@ const baseConfig = {
   },
   output: {
     filename: '[name].js',
-    path: __dirname + '/dist'
+    path: __dirname + '/dist',
+    sourceMapFilename: 'maps/[file].map'
   },
   // Enable sourcemaps for debugging webpack's output.
   devtool: "source-map",
@@ -31,7 +32,8 @@ module.exports = [
     },
     output: {
       filename: '[name].js',
-      path: __dirname + '/build'
+      path: __dirname + '/build',
+      sourceMapFilename: 'maps/[file].map'
     }
   }),
   merge(baseConfig, {
@@ -41,7 +43,8 @@ module.exports = [
     ],
     output: {
       filename: 'bundle.js',
-      path: __dirname + '/dist'
+      path: __dirname + '/dist',
+      sourceMapFilename: 'maps/[file].map'
     }
   })
 ];
