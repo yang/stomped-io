@@ -23,6 +23,8 @@ import {Chance} from 'chance';
 import * as Case from 'case';
 import * as Leet from 'leet';
 import {BotMgr} from "./common-admin";
+import * as net from "net";
+import * as repl from "repl";
 
 const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
@@ -500,3 +502,11 @@ create();
 console.log('listening');
 
 io.listen(3000);
+
+net.createServer(function (socket) {
+  repl.start({
+    prompt: "node via TCP socket> ",
+    input: socket,
+    output: socket
+  }).on('exit', () => socket.end());
+}).listen(5001, "localhost");
