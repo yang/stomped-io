@@ -55,9 +55,18 @@ const botNames = fs
   .readFileSync('src/botnames.txt', 'utf8')
   .trim()
   .split('\n');
-const botNameGen = chance.shuffle(botNames)
-  .map(name => permuteName(name))
-  [Symbol.iterator]();
+const botNamesProcessed = chance.shuffle(botNames)
+  .map(name => permuteName(name));
+
+function* genBotNames() {
+  while (true) {
+    for (let name of botNamesProcessed) {
+      yield name;
+    }
+  }
+}
+
+const botNameGen = genBotNames();
 
 class Client {
   id = ids.next().value;

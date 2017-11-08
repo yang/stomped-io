@@ -61,6 +61,7 @@ import {
   WorldState
 } from "./common";
 import * as Signals from "signals";
+import {Chance} from 'chance';
 
 export class Bot {
   target: Vec2;
@@ -519,7 +520,7 @@ export class Bot {
   private playStart = now();
 
   checkDeath() {
-    if (this.isDead() && now() - this.playStart < this.keepPlayingFor + 5000) {
+    if (this.isDead() && (!this.keepPlayingFor || now() - this.playStart < this.keepPlayingFor + 5000)) {
       this.player = this.onRejoin();
     }
   }
@@ -527,6 +528,7 @@ export class Bot {
 
 export class BotMgr {
   bots: Bot[] = [];
+  chance = new Chance(0);
 
   constructor(public styleGen,
               public entMgr: EntMgr,
@@ -554,11 +556,23 @@ export class BotMgr {
   }
 
   makeBot(isDumb: boolean) {
-    const name = this.nameGen ? this.nameGen.next().value : 'bot';
-    const player = this.joinGame(name);
+    const period = this.chance.integer({min: 3, max: 30}) * 60 * 1000;
+    const self = this;
+    function* genNames() {
+      let name: string, lastSwitch: number;
+      while (true) {
+        if (!name || now() - lastSwitch > period) {
+          name = self.nameGen ? self.nameGen.next().value : 'bot';
+          lastSwitch = now();
+        }
+        yield name;
+      }
+    }
+    const names = genNames();
+    const player = this.joinGame(names.next().value);
     const bot = new Bot(
-      player, this.gameState, this.socket, this.pool, isDumb, 8 * 60 * 1000,
-      () => this.joinGame(name)
+      player, this.gameState, this.socket, this.pool, isDumb, null,
+      () => this.joinGame(names.next().value)
     );
     bot.target = new Vec2(0, 0);
     this.bots.push(bot);
