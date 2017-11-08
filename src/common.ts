@@ -956,6 +956,10 @@ export class WorldState {
 
 export const enum Dir { Left, Right }
 
+export function opp(dir: Dir) {
+  return dir == Dir.Left ? Dir.Right : Dir.Left;
+}
+
 export function restoreBody(ent, bodyState) {
   ent.bod.setPosition(copyVec(bodyState.pos));
   ent.bod.setLinearVelocity(copyVec(bodyState.vel));

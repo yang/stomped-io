@@ -34,7 +34,7 @@ import {
   InputEvent,
   iterBodies,
   Ledge,
-  now,
+  now, opp,
   pathDivergenceEps,
   Player,
   plPosFromEnt,
@@ -74,6 +74,7 @@ export class Bot {
   simRunning = false;
   initPlan: [Dir, number][];
   onSim = new Signals.Signal();
+  chance = new Chance(0);
 
   constructor(public player: Player,
               public gameState: GameState,
@@ -117,7 +118,10 @@ export class Bot {
         // so next round we will look for someone new
         this.lastDumbTime = 0;
       }
-      this.reallySetInput(this.lastNearest.x <= me.x ? Dir.Left : Dir.Right, currTime);
+      const dir = this.lastNearest.x <= me.x ? Dir.Left : Dir.Right;
+      // Randomly diverging from plan helps add some unpredictability and also prevents getting stuck in the same
+      // thing, e.g. a big bot pinning you against a wall forever.
+      this.reallySetInput(this.chance.bool({likelihood: 10}) ? opp(dir) : dir, currTime);
       this.lastDirChange = currTime;
     }
   }
