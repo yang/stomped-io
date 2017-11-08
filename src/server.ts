@@ -25,14 +25,15 @@ import * as Leet from 'leet';
 import {BotMgr} from "./common-admin";
 import * as net from "net";
 import * as repl from "repl";
+import * as Faker from 'faker';
 
 const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
 
 const chance = new Chance(0);
 
-function permuteName(name: string) {
-  switch (chance.integer({min: 0, max: 6})) {
+function permuteNameLeet(name: string) {
+  switch (chance.weighted([0,1,2,3,4,5,6], [10, 30, 10, 10, 4, 4, 4])) {
     case 0:
       return name;
     case 1:
@@ -42,31 +43,82 @@ function permuteName(name: string) {
     case 3:
       return Case.random(name);
     case 4:
-      return Leet.convert(name);
+      return Leet.convert(name).replace(/z[0o]rz/i, '');
     case 5:
-      return Leet.convert(name).toLowerCase();
+      return Leet.convert(name).toLowerCase().replace(/z[o0]rz/i, '');
     case 6:
-      return Case.random(Leet.convert(name));
+      return Case.random(Leet.convert(name)).replace(/z[o0]rz/i, '');
     default:
       throw new Error();
   }
 }
-const botNames = fs
+function permuteNameBasic(name: string) {
+  switch (chance.weighted([0,1,2,3], [20, 50, 10, 10])) {
+    case 0:
+      return name;
+    case 1:
+      return name.toLowerCase();
+    case 2:
+      return name.toUpperCase();
+    case 3:
+      return Case.random(name);
+  }
+}
+function maybeCrunch(name: string) {
+  return chance.bool({likelihood: 30}) ? name.replace(/ /g,'') : name;
+}
+const gamerNames = fs
   .readFileSync('src/botnames.txt', 'utf8')
   .trim()
-  .split('\n');
-const botNamesProcessed = chance.shuffle(botNames)
-  .map(name => permuteName(name));
+  .split('\n')
+  .map(permuteNameLeet)
+  .map(maybeCrunch);
+const moreNames = fs.readFileSync('src/morenames.txt', 'utf8')
+  .trim()
+  .split('\n')
+  .map(permuteNameBasic)
+  .map(maybeCrunch);
 
 function* genBotNames() {
+  Faker.seed(0);
   while (true) {
-    for (let name of botNamesProcessed) {
-      yield name;
+    switch (chance.weighted([0,1,2,3], [20,10,50,20])) {
+      case 0:
+        // chars
+        const length = chance.weighted([1,2,3,4,5,6], [10,5,5,2,2,2])
+        const repeat = chance.bool({likelihood: 40});
+        const syms = '@#$%^&*()-_=+\'";:<>/=?+`[]{}\\|';
+        const anums = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!~-';
+        const chars = _.times(repeat ? 1 : length, () => chance.character({
+          pool: chance.bool({likelihood: 90}) ? anums : syms
+        })).join('');
+        const repeated = repeat ? _.repeat(chars, length) : chars;
+        yield repeated;
+        break;
+      case 1:
+        // common name
+        yield permuteNameBasic(Faker.name.firstName());
+        break;
+      case 2:
+        // gamer names
+        yield chance.pickone(gamerNames);
+        break;
+      case 3:
+        // morenames.txt
+        yield chance.pickone(moreNames);
+        break;
     }
   }
 }
 
 const botNameGen = genBotNames();
+
+if (process.argv[2] == 'preview-names') {
+  for (let i = 0; i < 300; i++) {
+    console.log(botNameGen.next().value);
+  }
+  process.exit(0);
+}
 
 class Client {
   id = ids.next().value;

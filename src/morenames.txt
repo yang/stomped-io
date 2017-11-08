@@ -2,7 +2,6 @@ hi
 hey
 hello
 123
-.
 stomperoni
 dis
 what
@@ -16,6 +15,7 @@ your daddy
 don't stomp me
 nobody
 someone
+something
 bye
 feed me
 spider man
@@ -28,3 +28,20 @@ stomped
 stomper
 asdf
 sdf
+stomp you
+sup
+killa
+uh
+huh
+yum
+yeeee
+ya
+yeh
+yeah
+yep
+nope
+lala
+lalalal
+lol
+haha
+heh

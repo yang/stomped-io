@@ -63,6 +63,10 @@
   version "0.6.3"
   resolved "https://registry.yarnpkg.com/@types/dat-gui/-/dat-gui-0.6.3.tgz#2285a22ee28fbed05f3932dda9144d18c9903b5d"
 
+"@types/faker@^4.1.1":
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/@types/faker/-/faker-4.1.1.tgz#989666efde54c07b7f960a552b5fceb5d5e570e0"
+
 "@types/flatbuffers@^1.6.4":
   version "1.6.4"
   resolved "https://registry.yarnpkg.com/@types/flatbuffers/-/flatbuffers-1.6.4.tgz#db925f0ba7e732ff7f33c002660490fa2429577b"

@@ -8,6 +8,7 @@
     "@types/chance": "^0.7.35",
     "@types/classnames": "^2.2.3",
     "@types/dat-gui": "^0.6.3",
+    "@types/faker": "^4.1.1",
     "@types/flatbuffers": "^1.6.4",
     "@types/lodash": "^4.14.74",
     "@types/protobufjs": "^5.0.31",
@@ -59,7 +60,8 @@
     "server": "ts-node --inspect src/server.ts",
     "server-watch": "node-dev -r ts-node/register src/server.ts",
     "test": "jest",
-    "watch-test": "jest --watch"
+    "watch-test": "jest --watch",
+    "preview-names": "ts-node src/server.ts preview-names"
   },
   "jest": {
     "transform": {
