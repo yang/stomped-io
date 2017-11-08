@@ -1,5 +1,7 @@
 const MinifyPlugin = require("babel-minify-webpack-plugin");
 const merge = require('webpack-merge');
+const webpack = require('webpack');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const baseConfig = {
   entry: {
     client: './src/admin-client-or-worker.ts'
@@ -39,7 +41,16 @@ module.exports = [
   merge(baseConfig, {
     name: 'prod',
     plugins: [
-      new MinifyPlugin({}, {})
+      // 6M -> 5.3M
+      new webpack.DefinePlugin({
+        'process.env': {
+          'NODE_ENV': JSON.stringify('production')
+        }
+      }),
+      // No gain
+      // new webpack.optimize.DedupePlugin(),
+      new MinifyPlugin({}, {}),
+      // new BundleAnalyzerPlugin(),
     ],
     output: {
       filename: 'bundle.js',
