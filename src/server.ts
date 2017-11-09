@@ -203,7 +203,7 @@ function bcast() {
     if (ent instanceof Player) {
       if (ev.killerId) {
         const killer = players.find(e => e.id == ev.killerId);
-        console.log(killer.describe(), 'killed', ent.describe());
+        getLogger('kills').log(killer.describe(), 'killed', ent.describe());
       }
     }
   }
@@ -272,7 +272,6 @@ function bcast() {
         if (b.type == "Player") {
           (entDiff as any).player = _.pick(entDiff, 'name','size','currentSquishTime','state');
           if (_.isNumber(entDiff.dir)) {
-            console.log((b as Player).name, 'dir', entDiff.dir);
             (entDiff as any).player.dirLeft = entDiff.dir == Dir.Left;
           }
         }
@@ -492,12 +491,13 @@ io.use(function(socket, next) {
 });
 
 io.on('connection', (socket: SocketIO.Socket) => {
+  const log = getLogger('net');
   const client = new Client(socket);
   clients.push(client);
-  console.log('client', client.id, 'connected');
+  log.log('client', client.id, 'connected');
 
   if (admins.has(socket)) {
-    console.log('client', client.id, 'is an admin');
+    log.log('client', client.id, 'is an admin');
 
     socket.emit('svrSettings', Common.settings.ser());
 
@@ -507,7 +507,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
   }
 
   socket.on('disconnect', () => {
-    console.log('client', client.id, 'disconnected');
+    log.log('client', client.id, 'disconnected');
   });
 
   socket.on('ding', (data) => {
@@ -519,7 +519,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
     socket.on('disconnect', () => destroy(player));
 
-    console.log('player', player.describe(), 'with style', player.style, `joined (client ${client.id})`);
+    log.log('player', player.describe(), 'with style', player.style, `joined (client ${client.id})`);
 
     // TODO create player-joined event
 

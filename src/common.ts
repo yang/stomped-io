@@ -33,7 +33,7 @@ export class Logger {
 
 export class LogHandler {
   buffer = [];
-  enabled = new Set<string>();
+  enabled = new Set<string>(['net']);
   doBuffer = false;
   doCBuffer = true;
   cBuffer = new CBuffer(8192);

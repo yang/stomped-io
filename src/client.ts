@@ -297,11 +297,6 @@ function initEnts() {
   guiMgr.refresh();
 }
 
-function trace(x) {
-  console.log(x);
-  return x;
-}
-
 function inputsToDir() {
   const dir = cursors.left.isDown ? Dir.Left : Dir.Right;
   if (cp.instantTurn) {
@@ -550,7 +545,7 @@ function update(extraSteps, mkDebugText) {
             if (theEnt instanceof Player && remEnt.killerId !== null) {
               const killed = players.find(p => p.id == remEnt.id);
               const killer = players.find(p => p.id == remEnt.killerId);
-              console.log(killer.describe(), 'killed', killed.describe());
+              getLogger('kills').log(killer.describe(), 'killed', killed.describe());
               if (killed == me) {
                 notify(`You got stomped by ${killer.name}!`);
                 setTimeout(() => {
@@ -597,7 +592,6 @@ function update(extraSteps, mkDebugText) {
         if (ent instanceof Player) {
           const dir = ((aMap.get(ent.id) || {}) as Player).dir;
           if (_.isNumber(dir) && (ent != me || !cp.instantTurn)) {
-            console.log(ent.name, ent.dir, '<--', dir);
             ent.dir = dir;
           }
         }
@@ -815,7 +809,6 @@ function startGame(name: string, char: string, onJoin: (socket) => void, updateE
           if (ent.player) {
             _.assign(ent, ent.player);
             if (_.isBoolean(ent.dirLeft)) {
-              console.log(ent.name, ent.dir, ent.dirLeft);
               ent.dir = ent.dirLeft ? Dir.Left : Dir.Right;
             }
           }
