@@ -40,17 +40,27 @@ module.exports = [
   }),
   merge(baseConfig, {
     name: 'prod',
+    entry: {
+      client: './src/client-runner.ts'
+    },
     plugins: [
-      // 6M -> 5.3M
+      // 5.8M -> 5.1M
       new webpack.DefinePlugin({
         'process.env': {
           'NODE_ENV': JSON.stringify('production')
         }
       }),
+
       // No gain
       // new webpack.optimize.DedupePlugin(),
-      new MinifyPlugin({}, {}),
-      // new BundleAnalyzerPlugin(),
+
+      // 5.1M -> 1.5M (.4M gz)
+      new webpack.optimize.UglifyJsPlugin()
+
+      // 5.1M -> 1.5M, breaks Planck import, and runs many times slower!
+      // new MinifyPlugin({}, {})
+
+      // new BundleAnalyzerPlugin()
     ],
     output: {
       filename: 'bundle.js',
