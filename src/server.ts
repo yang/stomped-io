@@ -350,7 +350,7 @@ function updateLedges() {
   }
   for (let baseX = 3 * ledgeWidth; baseX < Common.gameWorld.width - 3 * ledgeWidth; baseX += 3 * ledgeWidth) {
     const xCenters = genXCenters();
-    for (let y = lowestY; y > 2 * ledgeSpacing; y -= ledgeSpacing) {
+    for (let y = lowestY; y > 3 * ledgeSpacing; y -= ledgeSpacing) {
       const xCenter = baseX + xCenters.next().value;
       const x = xCenter - ledgeWidth / 2;
       const ledge = new Ledge(x, y, getRandomIntRange(5, 10));
