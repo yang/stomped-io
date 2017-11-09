@@ -446,7 +446,7 @@ function backToSplash() {
 let moveName = function (player) {
   const text = playerToName.get(player);
   text.x = player.midDispPos().x;
-  text.y = player.y - 16;
+  text.y = player.dispPos().y - 16;
   return text;
 };
 
