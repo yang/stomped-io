@@ -104,6 +104,7 @@ export class ControlPanel {
   camHeight = 800;
   spectate = false;
   doPings = true;
+  doUpdatePl = false;
   backToSplash() { backToSplash(); }
   testNotif() { notify('Testing!'); }
 }
@@ -614,8 +615,16 @@ function update(extraSteps, mkDebugText) {
       feedInputs(player);
     }
 
+    // For whatever reason, the updateSprite functions were eating up a lot of CPU.  Rather than run it for e.g. every
+    // star in existence, limit to just what's visible or almost visible, for a dramatic speedup.
+    const padding = 200;
+    const possiblyVisible = (ent: Ent) =>
+      game.camera.view.left / game.world.scale.x - padding < ent.x && ent.x < game.camera.view.right / game.world.scale.x + padding &&
+      game.camera.view.top / game.world.scale.y - padding < ent.y && ent.y < game.camera.view.bottom / game.world.scale.y + padding;
+    const updateSpriteAndMaybePlFromEnt = cp.doUpdatePl ? updateSpriteAndPlFromEnt : updateSpriteFromEnt;
     for (let ent of getEnts()) {
-      updateSpriteAndPlFromEnt(ent);
+      if (possiblyVisible(ent))
+        updateSpriteAndMaybePlFromEnt(ent);
     }
   }
 

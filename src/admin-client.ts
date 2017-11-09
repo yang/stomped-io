@@ -151,6 +151,7 @@ export class GuiMgr {
       cliOpts.add(cp, 'spectate'),
       cliOpts.add(cp, 'backToSplash'),
       cliOpts.add(cp, 'doPings'),
+      cliOpts.add(cp, 'doUpdatePl'),
       cliOpts.add(cp, 'boundCameraAboveGround'),
       cliOpts.add(cp, 'showScores').onFinishChange(() => scoreText.text = ''),
       cliOpts.add(cp, 'showIds').onFinishChange(() =>
