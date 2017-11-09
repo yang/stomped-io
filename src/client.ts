@@ -629,9 +629,15 @@ function update(extraSteps, mkDebugText) {
       game.camera.view.left / game.world.scale.x - padding < ent.x && ent.x < game.camera.view.right / game.world.scale.x + padding &&
       game.camera.view.top / game.world.scale.y - padding < ent.y && ent.y < game.camera.view.bottom / game.world.scale.y + padding;
     const updateSpriteAndMaybePlFromEnt = cp.doUpdatePl ? updateSpriteAndPlFromEnt : updateSpriteFromEnt;
+    // We must hide the sprites of non-visible (far-off) Ents, or else they just linger in the last place we rendered
+    // them.
     for (let ent of getEnts()) {
-      if (possiblyVisible(ent))
+      if (!(ent instanceof Player || ent instanceof Star) || possiblyVisible(ent)) {
+        entToSprite.get(ent).alpha = 1;
         updateSpriteAndMaybePlFromEnt(ent);
+      } else {
+        entToSprite.get(ent).alpha = 0;
+      }
     }
   }
 
