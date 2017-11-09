@@ -539,7 +539,8 @@ io.on('connection', (socket: SocketIO.Socket) => {
     // TODO create player-joined event
 
     socket.emit('joined',
-      _(lastSnapshot).extend({ents: lastSnapshot.ents.concat([player.ser()])}).value()
+      _(lastSnapshot).extend({ents: lastSnapshot.ents.concat([player.ser()])}).value(),
+      player.id
     );
 
     socket.on('input', (data) => {
