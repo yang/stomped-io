@@ -387,8 +387,8 @@ function tryRemove(id: number, ents: Ent[], instantly = false) {
       } else {
         sprite.alpha = 1;
         activeStarGroup.add(sprite);
-        game.add.tween(sprite.scale).to({x: sprite.scale.x * 4, y: sprite.scale.y * 4}, 100, Phaser.Easing.Quadratic.Out, true);
-        game.add.tween(sprite).to({y: sprite.y - 50}, 500, Phaser.Easing.Quadratic.Out, true);
+        game.add.tween(sprite.scale).to({x: sprite.scale.x * 2, y: sprite.scale.y * 2}, 100, Phaser.Easing.Quadratic.Out, true);
+        game.add.tween(sprite).to({y: sprite.y - 80}, 500, Phaser.Easing.Quadratic.Out, true);
         game.add.tween(sprite).to({alpha: 0}, 500, Phaser.Easing.Quadratic.In, true, 300);
         setTimeout(() => removeSprite(), 1000);
       }
