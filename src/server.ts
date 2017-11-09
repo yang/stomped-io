@@ -151,7 +151,7 @@ const botMgr = new BotMgr(styleGen, entMgr, gameState, null, null, botNameGen);
 const doRun = !runLocally, doAddPlayers = !runLocally; // doRun = save-batteries mode
 
 let lastBcastTime = null;
-const bcastPeriod = 1 / 20, regenStarPeriod = 1;
+const bcastPeriod = 1 / 20, updateStarsPeriod = 1;
 let tick = 0, bcastNum = 0;
 
 function initSnap() {
@@ -401,7 +401,7 @@ function updateLedges() {
   }
 }
 
-const doStars = true, gridDim = 200, expPerGrid = doStars ? 10 : 0;
+const doStars = true, gridDim = 500, expPerGrid = doStars ? 10 : 0;
 function updateStars(gameState: GameState, bootstrap: boolean) {
   getLogger('stars').log('regenerating stars');
   const gridCounts: Star[][][] = [];
@@ -434,7 +434,7 @@ function updateStars(gameState: GameState, bootstrap: boolean) {
         );
         gridCounts[x][y].push(star);
       }
-      const target = gridCounts[x][y].length * .1 + expPerGrid * .9;
+      const target = gridCounts[x][y].length * .9 + expPerGrid * .1;
       while (gridCounts[x][y].length > target) {
         const star = gridCounts[x][y].shift();
         gameState.destroy(star);
@@ -465,7 +465,7 @@ function create() {
   if (doRun) {
     setInterval(bcast, bcastPeriod * 1000);
     setInterval(update, updatePeriod * 1000);
-    setInterval(() => updateStars(gameState, false), regenStarPeriod * 1000);
+    setInterval(() => updateStars(gameState, false), updateStarsPeriod * 1000);
   }
 
   Common.create(gameState);
