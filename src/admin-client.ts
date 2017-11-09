@@ -103,6 +103,7 @@ export class GuiMgr {
     this.svrOpts.open();
     const svrOpts = this.svrOpts;
     const svrControllers = [
+      svrOpts.add(svrSettings, 'burstLimit'),
       svrOpts.add(svrSettings, 'doSmashes'),
       svrOpts.add(svrSettings, 'doProtobuf'),
       svrOpts.add(svrSettings, 'doDiff'),

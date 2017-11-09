@@ -114,6 +114,7 @@ export class ServerSettings {
   doDiff = true;
   doProtobuf = true;
   doSmashes = false;
+  burstLimit = 100;
   ser() {
     return _({}).assign(this);
   }
@@ -285,7 +286,7 @@ export function makeStar(x: number, y: number, gameState: GameState, xformer = _
 
 export function makeBurst(x: number, y: number, count: number, gameState: GameState) {
   const stars = [];
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < Math.min(settings.burstLimit, count); i++) {
     const star = makeStar(x,y,gameState, (star) => {
       star.bod.setLinearVelocity(Pl.Vec2(
         getRandomNum(-10,10),
