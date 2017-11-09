@@ -346,7 +346,8 @@ function onEntAdded(ent: Ent) {
   } else if (ent instanceof Ledge) {
     mkSprite(platforms, 'ground');
   } else if (ent instanceof Star) {
-    mkSprite(starGroup, 'star');
+    const sprite = mkSprite(starGroup, 'star');
+    sprite.anchor.setTo(.5, .5);
   } else if (ent instanceof Block) {
     mkSprite(platforms, 'ground');
   } else {
@@ -666,6 +667,7 @@ export function updateSpriteFromEnt(ent) {
     [sprite.x, sprite.y] = ent.dispPos().add(ent.dispDims().div(2)).toTuple();
   }
   [sprite.width, sprite.height] = ent.dispDims().toTuple();
+  sprite.angle = ent.dispAngle();
 }
 
 export function feedInputs(player: Player) {

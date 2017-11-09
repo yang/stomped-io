@@ -2,6 +2,7 @@ import * as Pl from 'planck-js';
 import * as _ from 'lodash';
 import * as Signals from 'signals';
 import * as CBuffer from 'CBuffer';
+import * as Chance from 'chance';
 
 CBuffer.prototype.findIndex = function(pred) {
   for (let i = 0; i < this.length; i++) {
@@ -476,6 +477,7 @@ export class Ent extends Serializable {
   dims() { return new Vec2(this.width, this.height); }
   dispDims() { return this.dims(); }
   dispPos(): Vec2 { return this.pos().add(this.dims().sub(this.dispDims()).div(2)); }
+  dispAngle() { return 0; }
   midDispPos(): Vec2 { return this.dispPos().add(this.dispDims().div(2)); }
   isDirty() { return this.dirty; }
 }
@@ -557,11 +559,38 @@ export class Block extends Ent {
   }
 }
 
+const gChance = new Chance();
 export class Star extends Ent {
   width = 16;
   height = 16;
+  dispPosOffset = getRandomInt(0,1000);
+  dispDimOffset = getRandomInt(0,1000);
+  dispAngleOffset = getRandomInt(0,1000);
+  dispPosDist = getRandomInt(0,5);
+  dispPosScaler = gChance.floating({min: .5, max: 1.5});
+  dispDimScaler = gChance.floating({min: .5, max: 1.5});
+  dispAngleScaler = gChance.floating({min: .5, max: 1.5}) * gChance.pickone([1,-1]);
   constructor(public x: number, public y: number) {super();}
-  dispDims(): Vec2 { return super.dispDims().mul(2); }
+  ser(): this { return _.omit(super.ser(),
+    'dispDimOffset', 'dispAngleOffset', 'dispPosOffset',
+    'dispDimScaler', 'dispAngleScaler', 'dispPosScaler',
+    'dispPosDist'); }
+  now() { return now(); }
+  dispPos() {
+    const t = this.dispPosScaler * this.now() + this.dispPosOffset;
+    return super.dispPos().add(new Vec2(
+      Math.sin(Math.PI * t / 1000),
+      Math.cos(Math.PI * t / 1000)
+    ).sub(new Vec2(.5, .5)).mul(this.dispPosDist));
+  }
+  dispDims(): Vec2 {
+    const t = this.dispDimScaler * this.now() + this.dispDimOffset;
+    return super.dispDims().mul(2 + 1 + Math.sin(Math.PI * t / 1000));
+  }
+  dispAngle() {
+    const t =  this.dispAngleScaler * this.now() + this.dispAngleOffset;
+    return t / 10;
+  }
 }
 
 const burstDur = 1;
