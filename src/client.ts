@@ -335,7 +335,7 @@ function onEntAdded(ent: Ent) {
     sprite.animations.add('left', [3, 4, 3, 5], 10, true);
     sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     const style = ent.id == meId ?
-      { font: "14px Arial", fill: "#ffff44", stroke: "#ffff44", align: "center", fontWeight: 'bold'} :
+      { font: "14px Arial", fill: "#ffff00", stroke: "#ffff44", align: "center", fontWeight: 'bold'} :
       { font: "14px Arial", fill: "#cccccc", stroke: "#cccccc", align: "center"};
     const text = game.add.text(0, 0, ent.name, style, nameGroup);
     text.anchor.x = text.anchor.y = 0.5;
