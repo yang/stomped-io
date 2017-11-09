@@ -377,7 +377,7 @@ export function create(gameState: GameState) {
           uniqueHit(player, star, () => {
             postStep(() => {
               player.grow(.1);
-              if (destroy) destroy(star);
+              if (destroy) destroy(star, player);
             });
           });
         } else if (bB.getUserData() instanceof Ledge && settings.oneWayLedges) {

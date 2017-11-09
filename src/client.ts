@@ -162,7 +162,7 @@ function preload() {
   }
 }
 
-var platforms, starGroup, playerGroup, nameGroup, lavaGroup;
+var platforms, starGroup, playerGroup, nameGroup, lavaGroup, activeStarGroup;
 var cursors;
 
 var stars;
@@ -236,6 +236,7 @@ function create() {
   playerGroup = game.add.group();
   nameGroup = game.add.group();
   lavaGroup = game.add.group();
+  activeStarGroup = game.add.group();
 
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
@@ -385,6 +386,17 @@ function tryRemove(id: number, ents: Ent[], instantly = false) {
         setTimeout(() => {
           removeSpriteAndName();
         }, 2000);
+    } else if (ent instanceof Star) {
+      if (instantly) {
+        removeSprite();
+      } else {
+        sprite.alpha = 1;
+        activeStarGroup.add(sprite);
+        game.add.tween(sprite.scale).to({x: sprite.scale.x * 4, y: sprite.scale.y * 4}, 100, Phaser.Easing.Quadratic.Out, true);
+        game.add.tween(sprite).to({y: sprite.y - 50}, 500, Phaser.Easing.Quadratic.Out, true);
+        game.add.tween(sprite).to({alpha: 0}, 500, Phaser.Easing.Quadratic.In, true, 300);
+        setTimeout(() => removeSprite(), 1000);
+      }
     } else {
       removeSprite();
     }
@@ -533,8 +545,9 @@ function update(extraSteps, mkDebugText) {
           case 'RemEnt':
             const remEnt = ev as RemEnt;
             const id = remEnt.id;
-            assert(getEnts().find(e => e.id == id));
-            if (remEnt.killerId !== null) {
+            const theEnt = getEnts().find(e => e.id == id);
+            assert(theEnt);
+            if (theEnt instanceof Player && remEnt.killerId !== null) {
               const killed = players.find(p => p.id == remEnt.id);
               const killer = players.find(p => p.id == remEnt.killerId);
               console.log(killer.describe(), 'killed', killed.describe());
@@ -552,7 +565,7 @@ function update(extraSteps, mkDebugText) {
             }
             // Do actual removals after additions (since we may be removing just-added Ents) and after
             // notifications have been displayed.
-            later.push(() => removeEnt(id));
+            later.push(() => removeEnt(id, !remEnt.killerId));
             break;
           case 'StartSmash':
             const startSmash = ev as StartSmash;
