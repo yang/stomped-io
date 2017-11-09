@@ -234,7 +234,16 @@ function bcast() {
   let allSers: Ent[], dirtySers: Ent[];
   const dirtyEnts = getEnts().filter(p => p.isDirty());
   if (lastSnapshot) {
-    const newSers = events.filter(ev => ev.type == 'AddEnt').map(ev => (ev as AddEnt).ent);
+    // Note: we need to explicitly filter out the new Entities here that were immediately destroyed, or else they will
+    // leak into the snapshot and end up staying around forever *on the server*.  So while any currently connected
+    // clients will properly remove the ent as instructed by the RemEnt event, any future connecting clients will get a
+    // world state that includes all these ents.  This would typically manifest as a star burst where many of the stars
+    // were immediately removed (and then the clients would fetch a world that had these very dense identically-
+    // positioned stars).
+    const newSers = events
+      .filter(ev => ev.type == 'AddEnt' &&
+        !removed.has((ev as AddEnt).ent.id))
+      .map(ev => (ev as AddEnt).ent);
     dirtySers = dirtyEnts.map(p => p.ser());
     const newOrDirtySers = _.unionBy(newSers, dirtySers, (ent) => ent.id);
     const newOrDirtySersById = new Map(newOrDirtySers.map<[number, Ent]>(p => [p.id, p]));
@@ -243,6 +252,12 @@ function bcast() {
       // GC destroyed ents
       !removed.has(p.id)
     ).concat(newOrDirtySers);
+    if (process.env.NODE_ENV != 'production') {
+      assert(_.isEqual(
+        gameState.getEnts().map(e => e.id).sort(),
+        allSers.map(s => s.id).sort()
+      ));
+    }
   } else {
     dirtySers = allSers = getEnts().map(p => p.ser());
   }
