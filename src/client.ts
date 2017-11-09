@@ -662,11 +662,11 @@ function updateSpriteAndPlFromEnt(ent) {
 export function updateSpriteFromEnt(ent) {
   const sprite = entToSprite.get(ent);
   if (sprite.anchor.x == 0) {
-    [sprite.x, sprite.y] = ent.dispPos().toTuple();
+    ({x: sprite.x, y: sprite.y} = ent.dispPos());
   } else {
-    [sprite.x, sprite.y] = ent.dispPos().add(ent.dispDims().div(2)).toTuple();
+    ({x: sprite.x, y: sprite.y} = ent.dispPos().add(ent.dispDims().div(2)));
   }
-  [sprite.width, sprite.height] = ent.dispDims().toTuple();
+  ({x: sprite.width, y: sprite.height} = ent.dispDims());
   sprite.angle = ent.dispAngle();
 }
 
