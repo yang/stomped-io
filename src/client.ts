@@ -651,9 +651,10 @@ ${mkDebugText(ptr, currentPlayer)}
       game.camera.view.top / game.world.scale.y - padding < ent.y && ent.y < game.camera.view.bottom / game.world.scale.y + padding;
     const updateSpriteAndMaybePlFromEnt = cp.doUpdatePl ? updateSpriteAndPlFromEnt : updateSpriteFromEnt;
     // We must hide the sprites of non-visible (far-off) Ents, or else they just linger in the last place we rendered
-    // them.
+    // them.  Also, we should *always* render the current player, since if you switch away from the tab and back later,
+    // the Ent may have long exited the visible area.
     for (let ent of getEnts()) {
-      if (!(ent instanceof Player || ent instanceof Star) || possiblyVisible(ent)) {
+      if (!(ent instanceof Player || ent instanceof Star) || possiblyVisible(ent) || ent == me) {
         entToSprite.get(ent).alpha = 1;
         updateSpriteAndMaybePlFromEnt(ent);
       } else {
