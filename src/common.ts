@@ -549,7 +549,7 @@ export class Player extends Ent {
   }
 }
 
-export const ledgeWidth = 300, ledgeHeight = 24;
+export const ledgeWidth = 300, ledgeHeight = 10;
 
 export class Ledge extends Ent {
   width = ledgeWidth;
