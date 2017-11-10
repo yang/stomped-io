@@ -132,6 +132,14 @@ export class ServerSettings {
 export const settings = new ServerSettings();
 
 export let alwaysMoveLeft = false;
+export const maxNameLen = 32;
+
+export const playerStyles = [
+  'white',
+  'red',
+  'yellow',
+  'green'
+];
 
 export class Timer {
   aborted = false;

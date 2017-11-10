@@ -10,8 +10,8 @@ import {
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth, makeStar, now, pb,
-  Player,
+  ledgeWidth, makeStar, maxNameLen, now, pb,
+  Player, playerStyles,
   RemEnt, runLocally, serSimResults, Star,
   updateEntPhysFromPl,
   updatePeriod,
@@ -530,7 +530,8 @@ io.on('connection', (socket: SocketIO.Socket) => {
   });
 
   socket.on('join', (playerData) => {
-    const player = makePlayer(playerData.name, playerData.char);
+    assert(playerStyles.includes(playerData.char));
+    const player = makePlayer(playerData.name.slice(0, maxNameLen), playerData.char);
 
     socket.on('disconnect', () => destroy(player));
 

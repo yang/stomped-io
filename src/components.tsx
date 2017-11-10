@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import {Component} from "react";
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
+import {maxNameLen, playerStyles} from "./common";
 
 interface SplashState {
   name: string;
@@ -20,12 +21,7 @@ export class Splash extends React.Component {
   state: SplashState;
   props: SplashProps;
   inputEl: HTMLInputElement;
-  chars = [
-    'white',
-    'red',
-    'yellow',
-    'green'
-  ];
+  chars = playerStyles;
   constructor(props) {
     super(props);
     if (0/1) {
@@ -76,6 +72,7 @@ export class Splash extends React.Component {
           placeholder={'Enter a nickname'}
           autoFocus={true}
           disabled={this.state.disabled}
+          maxLength={maxNameLen}
         />
         <br/>
         <div className={'gallery'}>{
