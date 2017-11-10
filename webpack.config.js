@@ -55,7 +55,9 @@ module.exports = [
       // new webpack.optimize.DedupePlugin(),
 
       // 5.1M -> 1.5M (.4M gz)
-      new webpack.optimize.UglifyJsPlugin()
+      new webpack.optimize.UglifyJsPlugin({
+        sourceMap: true
+      })
 
       // 5.1M -> 1.5M, breaks Planck import, and runs many times slower!
       // new MinifyPlugin({}, {})
