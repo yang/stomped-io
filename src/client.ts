@@ -568,7 +568,7 @@ ${mkDebugText(ptr, currentPlayer)}
               const killer = players.find(p => p.id == remEnt.killerId);
               getLogger('kills').log(killer.describe(), 'killed', killed.describe());
               if (killed == me) {
-                notify(`You got stomped by ${killer.name}!`);
+                notify(`You got stomped by\n${killer.name}!`);
                 setTimeout(() => {
                   cp.currentPlayer = players.indexOf(killer);
                   follow(entToSprite.get(killer));
@@ -576,7 +576,7 @@ ${mkDebugText(ptr, currentPlayer)}
                 if (!cp.spectate)
                   setTimeout(backToSplash, 2000);
               } else if (killer == me) {
-                notify(`You stomped ${killed.name}!`)
+                notify(`You stomped\n${killed.name}!`)
               }
             }
             // Do actual removals after additions (since we may be removing just-added Ents) and after
