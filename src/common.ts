@@ -439,8 +439,9 @@ export const ids = genIds();
 
 export abstract class Serializable {
   type: string;
-  constructor() {
-    this.type = this.constructor.name;
+  // Explicitly pass the type names for items Serialized in the production client (where class names are mangled).
+  constructor(typeName?) {
+    this.type = typeName || this.constructor.name;
   }
   ser(): this { return this; }
   deser(data) { _.merge(this, data); }
@@ -627,11 +628,11 @@ export class Burster {
 export class Event extends Serializable {}
 
 export class StartSmash extends Event {
-  constructor(public playerId: number) { super(); }
+  constructor(public playerId: number) { super("StartSmash"); }
 }
 
 export class InputEvent extends Event {
-  constructor(public dir: Dir) { super(); }
+  constructor(public dir: Dir) { super("InputEvent"); }
 }
 
 export class KillEv extends Event {
