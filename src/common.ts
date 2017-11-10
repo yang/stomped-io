@@ -29,6 +29,12 @@ CBuffer.prototype.filter = function(pred) {
 export class Logger {
   constructor(public name: string, public handler: LogHandler) {}
   log(...args) { this.handler.log(this.name, args); }
+  warn(...args) {
+    // TODO note this will double print if flag is an enabled one.
+    // TODO also we do not distinguish in the buffers between normal and warning logs.
+    console.warn(...args);
+    this.handler.log(this.name, args);
+  }
 }
 
 export class LogHandler {

@@ -536,16 +536,19 @@ ${mkDebugText(ptr, currentPlayer)}
         'total buffered', timeline.length
       );
     if (nextBcastIdx <= 0) {
-      console.warn('off end of timeline');
+      getLogger('timeline').warn('off end of timeline');
       return;
     }
     const nextBcast: Bcast = timeline.get(nextBcastIdx);
     const prevBcast: Bcast = timeline.get(nextBcastIdx - 1);
 
-    // Catch up on additions/removals
-    if (!timeline.find(bcast => bcast.bcastNum == clientState.lastBcastNum + 1)) {
-      console.warn('skipped over bcastNum', clientState.lastBcastNum + 1, '- no longer on timeline, smallest kept is', timeline.first().bcastNum);
+    // Figure out if we have jumped beyond the newest available bcast.
+    // (If we had fallen behind the oldest available bcast, that would have been caught above.)
+    if (timeline.first().bcastNum > clientState.lastBcastNum + 1) {
+      getLogger('timeline').warn('target bcastNum', clientState.lastBcastNum + 1, 'is older than oldest on timeline,', timeline.first().bcastNum);
     }
+
+    // Catch up on additions/removals
     const toProcess = timeline.filter(bcast =>
       clientState.lastBcastNum < bcast.bcastNum && bcast.bcastNum <= prevBcast.bcastNum
     );
