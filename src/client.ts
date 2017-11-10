@@ -116,8 +116,6 @@ export const svrSettings = new ServerSettings();
 
 export const styleGen = genStyles();
 
-const timelineLimit = 32;
-
 export var game, gPool;
 
 export const gameState = new GameState(undefined, destroy2);
@@ -844,9 +842,6 @@ function startGame(name: string, char: string, onJoin: (socket) => void, updateE
             }
           }
         }
-      }
-      if (timeline.length > timelineLimit) {
-        timeline.shift();
       }
       if (localBcast) {
         bcastBuffer.push(bcast);
