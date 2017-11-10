@@ -246,20 +246,8 @@ let extraSteps = function (currentPlayer: Player, updating: boolean, currTime: n
 let mkDebugText = function (ptr: Vec2, currentPlayer: Player) {
   const bot = getBot(currentPlayer);
   return `
-FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
-${players.length} players
-Delta: ${delta}
-Mouse: ${vecStr(ptr)}
-Game dims: ${vecStr(new Vec2(game.width, game.height))} 
-Scale: ${game.world.scale.x}
-Bounds: world ${game.world.bounds.height} camera ${game.camera.bounds.height}
-
-Current player:
-Position: ${currentPlayer ? vecStr(currentPlayer.pos()) : ''}
-Planck Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
+Bot:
 Target: ${bot && bot.target ? vecStr(bot.target) : ''}
-Size: ${currentPlayer ? currentPlayer.size : ''}
-Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
 Step: ${bot ?
     `${bot.chunkSteps} total ${bot.lastBestSeq ?
       JSON.stringify((([chunk, index, steps]) =>
@@ -268,8 +256,5 @@ Step: ${bot ?
           .extend({index, steps})
           .value())(bot.getCurrChunk(-1))) : ''
       }` : ''}
-Total ${players.length} players
-
-${mkScoreText()}
     `.trim();
 };

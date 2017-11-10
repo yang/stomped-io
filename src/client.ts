@@ -484,7 +484,25 @@ function update(extraSteps, mkDebugText) {
   const targetTime = currTime + delta - timeBuffer;
 
   if (cp.showDebug) {
-    clientState.debugText = mkDebugText(ptr, currentPlayer);
+    clientState.debugText = `
+Total ${players.length} players
+${mkScoreText()}
+
+FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
+Delta: ${delta}
+Mouse: ${vecStr(ptr)}
+Game dims: ${vecStr(new Vec2(game.width, game.height))} 
+Scale: ${game.world.scale.x}
+Bounds: world ${game.world.bounds.height} camera ${game.camera.bounds.height}
+
+Current player:
+Position: ${currentPlayer ? vecStr(currentPlayer.pos()) : ''}
+Planck Velocity: ${currentPlayer ? vecStr(currentPlayer.bod.getLinearVelocity()) : ''}
+Size: ${currentPlayer ? currentPlayer.size : ''}
+Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
+
+${mkDebugText(ptr, currentPlayer)}
+    `.trim();
     showDebugText();
   }
 
