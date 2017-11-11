@@ -36,6 +36,12 @@ module.exports = [
       filename: '[name].js',
       path: __dirname + '/build',
       sourceMapFilename: 'maps/[file].map'
+    },
+    devServer: {
+      contentBase: '.',
+      host: '0.0.0.0',
+      openPage: '/admin.html?debug=1&authKey=SECRET',
+      publicPath: '/build/',
     }
   }),
   merge(baseConfig, {

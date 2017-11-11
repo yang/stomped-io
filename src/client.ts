@@ -871,7 +871,7 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
   gPool = pool;
   const pPb = Protobuf.load('dist/main.proto');
   pPb.then((root) => Common.bootstrapPb(root));
-  socket = Sio(location.origin.replace(':8000', '') + ':3000', {query: {authKey}});
+  socket = Sio(location.origin.replace(/:\d+/, '') + ':3000', {query: {authKey}});
   socket.on('svrSettings', (svrData) => {
     svrSettings.deser(svrData);
     guiMgr.refresh();
