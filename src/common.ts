@@ -134,12 +134,21 @@ export const settings = new ServerSettings();
 export let alwaysMoveLeft = false;
 export const maxNameLen = 32;
 
-export const playerStyles = [
-  'white',
-  'red',
-  'yellow',
-  'green'
+export const playerStyleBases = [
+  'plain',
+  'spacesuit',
+  'robot',
+  'alien',
+  'skeleton',
+  'plumber'
 ];
+
+export const playerStyles = [];
+for (let base of playerStyleBases) {
+  for (let i = 0; i < 3; i++) {
+    playerStyles.push(`${base}-${i}`);
+  }
+}
 
 export class Timer {
   aborted = false;
@@ -958,11 +967,10 @@ export function clamp(x, bound) {
 }
 
 export function* genStyles() {
+  const chance = new Chance(0);
+  const weights = [1,1,1].concat(playerStyles.map(() => 0.1).slice(0, -3));
   while (true) {
-    yield 'white';
-    yield 'red';
-    yield 'yellow';
-    yield 'green';
+    yield chance.weighted(playerStyles, weights);
   }
 }
 

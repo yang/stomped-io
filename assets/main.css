@@ -77,7 +77,7 @@ h1 {
 }
 .gallery {
     width: 800px;
-    height: 130px;
+    height: 140px;
     overflow-x: auto;
     margin: 20px;
     vertical-align: middle;

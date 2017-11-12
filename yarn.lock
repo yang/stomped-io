@@ -123,6 +123,10 @@
   dependencies:
     "@types/node" "*"
 
+"@types/tinycolor2@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@types/tinycolor2/-/tinycolor2-1.4.0.tgz#77792ebbbe8a1c9b291cb949fafeb7de121c4c6a"
+
 CBuffer@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/CBuffer/-/CBuffer-2.0.0.tgz#f956cf65888a8988c69fbe2c94f97003c9b71e1a"
@@ -4985,6 +4989,10 @@ timers-browserify@^2.0.2:
   resolved "https://registry.yarnpkg.com/timers-browserify/-/timers-browserify-2.0.4.tgz#96ca53f4b794a5e7c0e1bd7cc88a372298fa01e6"
   dependencies:
     setimmediate "^1.0.4"
+
+tinycolor2@^1.4.1:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/tinycolor2/-/tinycolor2-1.4.1.tgz#f4fad333447bc0b07d4dc8e9209d8f39a8ac77e8"
 
 tmpl@1.0.x:
   version "1.0.4"

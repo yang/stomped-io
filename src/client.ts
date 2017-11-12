@@ -1,4 +1,4 @@
-import {renderSplash} from "./components";
+import {renderSplash, Splash} from "./components";
 import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
@@ -27,7 +27,7 @@ import {
   Ledge,
   now,
   pb,
-  Player,
+  Player, playerStyles,
   plPosFromEnt,
   ratio,
   RemEnt,
@@ -40,6 +40,7 @@ import {
   world
 } from './common';
 import * as _ from 'lodash';
+import {loadSprites} from "./spriter";
 
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
@@ -133,7 +134,7 @@ gameState.onJumpoff.add((player, other) => {
   }
 });
 
-function preload() {
+function preload(sprites) {
 
   if (!ultraSlim) {
     game.load.image('bg', 'assets/bg.png');
@@ -141,10 +142,27 @@ function preload() {
     game.load.image('ground', 'assets/ledge.png');
     game.load.image('star', 'assets/star.png');
     game.load.image('lava', 'assets/lava.png');
-    game.load.spritesheet('dude-white', 'dist/assets/player-white.png', 567, 756);
-    game.load.spritesheet('dude-red', 'dist/assets/player-red.png', 567, 756);
-    game.load.spritesheet('dude-yellow', 'dist/assets/player-yellow.png', 567, 756);
-    game.load.spritesheet('dude-green', 'dist/assets/player-green.png', 567, 756);
+    // game.load.spritesheet('dude-white', 'dist/assets/player-white.png', 567, 756);
+    // game.load.spritesheet('dude-red', 'dist/assets/player-red.png', 567, 756);
+    // game.load.spritesheet('dude-yellow', 'dist/assets/player-yellow.png', 567, 756);
+    // game.load.spritesheet('dude-green', 'dist/assets/player-green.png', 567, 756);
+    // game.load.image('dude-white', 'designs/player-test.svg');
+    // game.load.image('dude-red', 'designs/player-test.svg');
+    // game.load.image('dude-yellow', 'designs/player-test.svg');
+    // game.load.image('dude-green', 'designs/player-test.svg');
+    for (let char of Object.keys(sprites)) {
+      for (let i = 0; i < sprites[char].length; i++) {
+        const variant = sprites[char][i];
+        for (let j = 0; j < variant.length; j++) {
+          const data = variant[j];
+          game.cache.addImage(`dude-${char}-${i}-${j}`, data.src, data);
+        }
+      }
+    }
+    // game.load.spritesheet('dude-white', 'designs/player-alien.svg', 567, 756);
+    // game.load.spritesheet('dude-red', 'designs/player-cutout.svg', 567, 756);
+    // game.load.spritesheet('dude-yellow', 'designs/player-robot.svg', 567, 756);
+    // game.load.spritesheet('dude-green', 'designs/player-masked.svg', 567, 756);
     game.stage.disableVisibilityChange = true;
   } else {
     game.load.image('bg', 'assets/ledge.png');
@@ -330,8 +348,10 @@ function onEntAdded(ent: Ent) {
     const sprite = mkSprite(playerGroup, `dude-${ent.style}`);
     // [sprite.anchor.x, sprite.anchor.y] = [.5, .5];
     sprite.anchor.setTo(.5, .5);
-    sprite.animations.add('left', [3, 4, 3, 5], 10, true);
-    sprite.animations.add('right', [0, 1, 0, 2], 10, true);
+    sprite.animations.add('left', [3,4,3,5], 10, true);
+    sprite.animations.add('right', [0,1,0,2], 10, true);
+    // sprite.animations.add('left', [3, 4, 3, 5], 10, true);
+    // sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     const style = ent.id == meId ?
       { font: "14px Arial", fill: "#ffff00", stroke: "#ffff44", align: "center", fontWeight: 'bold'} :
       { font: "14px Arial", fill: "#cccccc", stroke: "#cccccc", align: "center"};
@@ -447,9 +467,31 @@ let moveName = function (player) {
   return text;
 };
 
+let firstUpdate = true;
 
 
 function update(extraSteps, mkDebugText) {
+
+  if (firstUpdate) {
+    firstUpdate = false;
+    for (let char of playerStyles) {
+      const {width, height} = game.cache.getImage(`dude-${char}-0`);
+      const bmd = game.add.bitmapData(6 * width, height);
+      for (let i = 0; i < 3; i++) {
+        const sprite = game.make.sprite(0, 0, `dude-${char}-${i}`);
+        // Need to translate one full image width over to the right from where we expect to draw, since the scale of -1
+        // is based around the left of the sprite (and setting anchorX = 0.5 doesn't work).
+        bmd.draw(sprite, width * i, 0);
+      }
+      for (let i = 0; i < 3; i++) {
+        const sprite = game.make.sprite(0, 0, `dude-${char}-${i}`);
+        // Need to translate one full image width over to the right from where we expect to draw, since the scale of -1
+        // is based around the left of the sprite (and setting anchorX = 0.5 doesn't work).
+        bmd.copy(sprite, 0, 0, width, height, width * (i + 3 + 1), 0, width, height, 0, 0, 0, -1);
+      }
+      game.cache.addSpriteSheet(`dude-${char}`, '', bmd.canvas, width, height, 6, 0, 0);
+    }
+  }
 
   // Phaser stupidly grows game.world.bounds to at least cover game.width/.height
   // (which I understand as the canvas size) even if world is scaled.
@@ -777,7 +819,7 @@ function render() {
 export type UpdateExtrasFn = (currentPlayer: Player, updating: boolean, currTime: number) => void;
 
 let meId: number;
-function startGame(name: string, char: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText) {
+function startGame(name: string, char: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
   socket.emit('join', {name, char});
 
   if (cp.doPings) {
@@ -803,7 +845,7 @@ function startGame(name: string, char: string, onJoin: (socket) => void, updateE
             // This is needed to keep the camera on the player. Camera doesn't register game rescales.
             follow(entToSprite.get(me));
           },
-          preload: preload,
+          preload: () => preload(sprites),
           create: function () {
             if (!ultraSlim) {
               this.scale.setResizeCallback(this.onResize, this);
@@ -869,30 +911,36 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
   guiMgr = _guiMgr;
   gPool = pool;
   const pPb = Protobuf.load('dist/main.proto');
+  let sprites;
+  const pSprites = loadSprites().then(s => sprites = s);
   pPb.then((root) => Common.bootstrapPb(root));
   socket = Sio(location.origin.replace(/:\d+/, '') + ':3000', {query: {authKey}});
   socket.on('svrSettings', (svrData) => {
     svrSettings.deser(svrData);
     guiMgr.refresh();
   });
-  let firstSubmitted = false;
+  let firstSubmitted = false, pRootComponent: Promise<Splash>;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
-    renderSplash({
+    pRootComponent = renderSplash({
       onSubmit: (name, char) => {
         // OK to resolve multiple times
         resolveSubmit([name, char]);
         // Let Promise.all handle the first one
-        if (firstSubmitted) startGame(name, char, onJoin, updateExtras, mkDebugText);
+        if (firstSubmitted) startGame(name, char, onJoin, updateExtras, mkDebugText, sprites);
         firstSubmitted = true;
       },
       shown: !autoStartName
-    }).then(root => rootComponent = root);
+    });
+    pRootComponent.then(root => rootComponent = root);
     if (autoStartName) { resolveSubmit([autoStartName, 'white']); }
   });
+  Promise.all([pSprites, pRootComponent]).then(([sprites, rootComponent]) =>
+    rootComponent.setImgs(sprites)
+  );
   const pConnected = new Promise<any>((resolve) => socket.on('connect', resolve));
-  Promise.all([pFirstSubmit, pConnected, pPb])
-    .then(([firstSubmit, _]) => {
+  Promise.all([pFirstSubmit, pConnected, pPb, pSprites])
+    .then(([firstSubmit, connected, pb, _sprites]) => {
       const [name, char] = firstSubmit;
-      return startGame(name, char, onJoin, updateExtras, mkDebugText);
+      return startGame(name, char, onJoin, updateExtras, mkDebugText, _sprites);
     });
 }

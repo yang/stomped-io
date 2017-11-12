@@ -3,13 +3,14 @@ import * as ReactDOM from 'react-dom';
 import {Component} from "react";
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
-import {maxNameLen, playerStyles} from "./common";
+import {clearArray, maxNameLen, playerStyles} from "./common";
 
 interface SplashState {
   name: string;
   shown: boolean;
   disabled: boolean;
   char: string;
+  charToVariants: any
 }
 
 interface SplashProps {
@@ -21,7 +22,10 @@ export class Splash extends React.Component {
   state: SplashState;
   props: SplashProps;
   inputEl: HTMLInputElement;
+  galleryEl: HTMLDivElement;
+  galleryItemEls = new Map<string, HTMLDivElement>();
   chars = playerStyles;
+  afterUpdates = [];
   constructor(props) {
     super(props);
     if (0/1) {
@@ -33,7 +37,8 @@ export class Splash extends React.Component {
       name: '',
       shown: props.shown,
       disabled: false,
-      char: new Chance().pickone(this.chars)
+      char: new Chance().pickone(this.chars.slice(0,3)),
+      charToVariants: null
     };
   }
   private handleChange = (e) => {
@@ -47,9 +52,15 @@ export class Splash extends React.Component {
   componentDidUpdate() {
     // Must do after element is rendered - see
     // https://stackoverflow.com/questions/26556436/react-after-render-code
-    setTimeout(() => this.inputEl.focus(), 100);
+    setTimeout(() => this.inputEl.focus(), 10);
+    if (this.afterUpdates.length > 0) {
+      const funcs = this.afterUpdates.slice();
+      clearArray(this.afterUpdates);
+      setTimeout(() => funcs.forEach(f => f()), 10);
+    }
   }
   show() {
+    this.afterUpdates.push(this.scrollToChar);
     this.setState({shown: true, disabled: false});
     document.getElementById('mount-point').style.display = '';
   }
@@ -60,6 +71,14 @@ export class Splash extends React.Component {
   chooseChar = (char: string) => {
     this.setState({char});
   };
+  scrollToChar = () => {
+    const item = this.galleryItemEls.get(this.state.char);
+    this.galleryEl.scrollLeft = item.offsetLeft - this.galleryEl.offsetLeft - this.galleryEl.clientWidth / 2 + item.clientWidth / 2;
+  };
+  setImgs(mapping) {
+    this.afterUpdates.push(this.scrollToChar);
+    this.setState({charToVariants: mapping});
+  }
   render() {
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
@@ -75,30 +94,35 @@ export class Splash extends React.Component {
           maxLength={maxNameLen}
         />
         <br/>
-        <div className={'gallery'}>{
-          this.chars.map(char =>
-            <div className={classnames({
-              'gallery-item': true,
-              'gallery-item--selected': this.state.char == char
-            })}>
+        <div className={'gallery'} ref={el => this.galleryEl = el}>{
+          this.state.charToVariants && this.chars.map(char => {
+            const [charBase, variant] = char.split('-');
+            return <div
+              key={char}
+              ref={el => this.galleryItemEls.set(char, el)}
+              className={classnames({
+                'gallery-item': true,
+                'gallery-item--selected': this.state.char == char
+              })}
+            >
               <a href={"#"} onMouseDown={() => this.chooseChar(char)}>
-                <img className='gallery-img' src={`dist/assets/player-${char}.png`}/>
+                <img className='gallery-img' src={this.state.charToVariants[charBase][+variant][0].src}/>
               </a>
-            </div>
-          )
+            </div>;
+          })
         }</div>
         <br/>
         <button
           className={'submit-btn'}
           type={'submit'}
-          disabled={this.state.disabled}>Play!</button>
+          disabled={!this.state.charToVariants || this.state.disabled}>Play!</button>
       </form>
     </div>;
   }
 }
 
 export function renderSplash({onSubmit, shown}: SplashProps) {
-  return new Promise<Component>((resolve) =>
+  return new Promise<Splash>((resolve) =>
     ReactDOM.render(
       <Splash onSubmit={onSubmit} shown={shown} ref={resolve}/>,
       document.getElementById('mount-point')
