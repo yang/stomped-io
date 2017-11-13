@@ -66,19 +66,15 @@ Instructions tested on Ubuntu 16.04:
     . ~/.node/bounce/bin/activate
     npm install -g yarn
 
-    # Deployment prep
-    git archive --format zip -o bounce.zip master
-    rsync -ril dist/ DEST:dist/
-    rsync -ril bounce.zip DEST:
-    ssh DEST
-      mkdir -p bounce
-      cd bounce
-      unzip ../bounce.zip
+    # Deployment - specify the IP
+    bash -x tools/deploy.bash 45.79.94.70
+
+On the host:
 
     # One-time host app setup
-    ln -s ../dist/
+    cd bounce/
     mkdir -p web/
-    for i in index.html assets/ dist/ ; do
+    for i in index.html assets/ dist/ designs/ ; do
         ln -s ../$i web/
     done
 
