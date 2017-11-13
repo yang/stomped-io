@@ -83,6 +83,8 @@ export class Splash extends React.Component {
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
       <p className={'subhead'}>
+        Use your mouse to steer your bouncer through the low-gravity arena!
+        <br/>
         Collect stars to grow bigger.
         <br/>
         Stomp other players to get their stars.
