@@ -273,8 +273,8 @@ function create() {
 
 let follow = function (sprite: any) {
   game.camera.follow(sprite, Phaser.Camera.FOLLOW_PLATFORMER);
-  const zone = game.camera.deadzone;
-  game.camera.deadzone = new Phaser.Rectangle(game.camera.width / 2, zone.y, 0, zone.height);
+  const ymargin = Math.min(game.camera.height / 2, Math.max(game.camera.height / 3, cp.camHeight / 3));
+  game.camera.deadzone = new Phaser.Rectangle(game.camera.width / 2, ymargin, 0, game.camera.height - 2 * ymargin);
 };
 
 function initEnts() {
