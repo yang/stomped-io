@@ -111,6 +111,7 @@ export function* cumsum(xs: number[]) {
 }
 
 export class ServerSettings {
+  dt = 1 / 20 / 1.3;
   accel = 25;
   doOsc = false;
   oscDist = gameWorld.width / 8 * 2;
@@ -703,10 +704,9 @@ export function createBody(world: Pl.World, ent, type, fixtureOpts = {}) {
 }
 
 let lastTime = null;
-export const dt = 1 / 20 / 1;
 export const updatePeriod = 1 / 20 / 1;
 // physics timestep per real timestep
-export const timeWarp = dt / updatePeriod;
+export const timeWarp = settings.dt / updatePeriod;
 
 export let doAsserts = true;
 export function setDoAsserts(x: boolean) { doAsserts = x; }
@@ -749,7 +749,7 @@ export function oscillate(ledge: Ledge, time: number) {
   ledge.bod.setLinearVelocity(Pl.Vec2(Math.cos(time * 2 * Math.PI / ledge.oscPeriod) * +settings.doOsc * settings.oscDist / 2 / ratio, 0));
 }
 
-export function update(gameState: GameState, _dt: number = dt, _world: Pl.World = world) {
+export function update(gameState: GameState, _dt: number = settings.dt, _world: Pl.World = world) {
   gameState.timerMgr.advanceBy(_dt);
 
   // TODO we're feeding inputs every physics tick here, but we send inputs to
@@ -784,7 +784,7 @@ export function update(gameState: GameState, _dt: number = dt, _world: Pl.World 
 
   gameState.time += _dt;
 
-  return dt;
+  return _dt;
 }
 
 // Cannot use getAABB(0) because that is the collision detection box, which stretches based on the velocity!
@@ -1085,7 +1085,7 @@ export const simPeriod = 3000;
 
 //const chunk = 1 / 5, horizon = 6 / 5;
 export const chunk = 1, horizon = 6;
-export const simDt = dt;
+export const simDt = settings.dt;
 
 // This enables easier debugging---no runaway server-side simulation while setting breakpoints, no skipped frames,
 // no latency/interpolation, exact same resutls between predicted and actual physics.
@@ -1095,7 +1095,7 @@ export function setRunLocally(x: boolean) {
 }
 
 if (replayMode == ReplayMode.STEPS)
-  assert(simDt == dt);
+  assert(simDt == settings.dt);
 
 export const pathDivergenceEps = .1;
 export const steadySimComputeTimeAllowance = 1;

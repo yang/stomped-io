@@ -13,7 +13,6 @@ import {
   clearArray,
   Dir,
   doLava,
-  dt,
   Ent,
   EntMgr,
   enumerate,
@@ -299,7 +298,7 @@ let follow = function (sprite: any) {
 function initEnts() {
   const initSnap = timeline.get(0);
 
-  gameState.time = initSnap.tick * dt;
+  gameState.time = initSnap.tick * svrSettings.dt;
 
   const {ents} = initSnap;
   for (let ent of ents) {
