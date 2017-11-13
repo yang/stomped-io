@@ -601,10 +601,16 @@ export class Star extends Ent {
   dispDimScaler = gChance.floating({min: .5, max: 1.5});
   dispAngleScaler = gChance.floating({min: .5, max: 1.5}) * gChance.pickone([1,-1]);
   constructor(public x: number, public y: number) {super();}
-  ser(): this { return _.omit(super.ser(),
-    'dispDimOffset', 'dispAngleOffset', 'dispPosOffset',
-    'dispDimScaler', 'dispAngleScaler', 'dispPosScaler',
-    'dispPosDist'); }
+  ser(): this {
+    return {
+      id: this.id,
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+      type: 'Star'
+    } as this;
+  }
   now() { return now(); }
   dispPos() {
     const t = this.dispPosScaler * this.now() + this.dispPosOffset;
