@@ -584,7 +584,7 @@ export class BotMgr {
   }
 
   private joinGame = (name: string) => {
-    console.log('bot', name, 'joining');
+    getLogger('bot').log('bot', name, 'joining');
     const entMgr = this.entMgr, gameState = this.gameState;
     const player = entMgr.addPlayer(_.assign({}, new Player(
       name,
