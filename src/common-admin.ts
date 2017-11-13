@@ -573,24 +573,25 @@ export class BotMgr {
       }
     }
     const names = genNames();
-    const player = this.joinGame(names.next().value);
+    const style = this.styleGen.next().value;
+    const player = this.joinGame(names.next().value, style);
     const bot = new Bot(
       player, this.gameState, this.socket, this.pool, isDumb, null,
-      () => this.joinGame(names.next().value)
+      () => this.joinGame(names.next().value, style)
     );
     bot.target = new Vec2(0, 0);
     this.bots.push(bot);
     return bot;
   }
 
-  private joinGame = (name: string) => {
+  private joinGame = (name: string, style: string) => {
     getLogger('bot').log('bot', name, 'joining');
     const entMgr = this.entMgr, gameState = this.gameState;
     const player = entMgr.addPlayer(_.assign({}, new Player(
       name,
       getRandomIntRange(0, gameWorld.width),
       50,
-      this.styleGen.next().value
+      style
     )));
     player.dir = Dir.Left;
     return player;
