@@ -55,21 +55,28 @@ Deployment
 
 Open ports 80, 3000.
 
-Instructions tested on Ubuntu 16.04:
+Instructions tested on Ubuntu 16.04.
+
+On the host:
 
     # One-time setup
-    sudo apt install nginx virtualenvwrapper unzip
-    # log out and back in
+    sudo apt install nginx virtualenvwrapper unzip apache2-utils
+
+    # Log out and back in
     mkvirtualenv bounce
     pip install nodeenv
     nodeenv -n 6.11.2 ~/.node/bounce/
     . ~/.node/bounce/bin/activate
     npm install -g yarn
 
+    sudo htpasswd -c /etc/apache2/bounce.htpasswd yang
+
+From your client:
+
     # Deployment - specify the IP
     bash -x tools/deploy.bash 45.79.94.70
 
-On the host:
+Back on the host:
 
     # One-time host app setup
     cd bounce/
@@ -90,4 +97,9 @@ nginx
       listen 80;
       root /home/yang/bounce/web;
       index index.html index.htm index.nginx-debian.html;
+
+      location /dist/maps/ {
+        auth_basic "Admin Area";
+        auth_basic_user_file /etc/apache2/bounce.htpasswd;
+      }
     }
