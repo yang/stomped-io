@@ -17,7 +17,7 @@ module.exports = merge(baseConfig, {
   devServer: {
     contentBase: '.',
     host: '0.0.0.0',
-    openPage: '/admin.html?debug=1&authKey=SECRET',
+    openPage: 'admin.html?debug=1&authKey=SECRET',
     publicPath: '/build/',
   }
 });
