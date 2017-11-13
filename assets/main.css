@@ -7,6 +7,10 @@ html, body, #mount-point {
     margin: 0;
     color: #ff8800;
 }
+body {
+    /* IE insists on displaying scrollbars for some reason */
+    overflow: hidden;
+}
 #mount-point {
     position: fixed;
 }
