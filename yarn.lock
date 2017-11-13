@@ -127,10 +127,6 @@
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@types/tinycolor2/-/tinycolor2-1.4.0.tgz#77792ebbbe8a1c9b291cb949fafeb7de121c4c6a"
 
-"@types/url-search-params@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@types/url-search-params/-/url-search-params-0.10.0.tgz#35bc203a928f309cfbe52d2ca68bac3985f2c493"
-
 CBuffer@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/CBuffer/-/CBuffer-2.0.0.tgz#f956cf65888a8988c69fbe2c94f97003c9b71e1a"
