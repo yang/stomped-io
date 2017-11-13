@@ -73,6 +73,9 @@ On the host:
 
 From your client:
 
+    # Start once
+    yarn watch
+
     # Deployment - specify the IP
     bash -x tools/deploy.bash 45.79.94.70
 
@@ -81,7 +84,7 @@ Back on the host:
     # One-time host app setup
     cd bounce/
     mkdir -p web/
-    for i in index.html assets/ dist/ designs/ ; do
+    for i in index.html admin.html assets/ build/ designs/ dist/ ; do
         ln -s ../$i web/
     done
 
@@ -97,6 +100,11 @@ nginx
       listen 80;
       root /home/yang/bounce/web;
       index index.html index.htm index.nginx-debian.html;
+
+      location /build/ {
+        auth_basic "Admin Area";
+        auth_basic_user_file /etc/apache2/bounce.htpasswd;
+      }
 
       location /dist/maps/ {
         auth_basic "Admin Area";
