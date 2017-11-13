@@ -10,6 +10,15 @@ html, body, #mount-point {
 body {
     /* IE insists on displaying scrollbars for some reason */
     overflow: hidden;
+    font-family: Arial;
+}
+.subhead {
+    line-height: 20px;
+    text-align: center;
+    font-size: 14px;
+    /*text-transform: uppercase;*/
+    font-weight: bold;
+    color: #ddbbdd;
 }
 #mount-point {
     position: fixed;
@@ -31,6 +40,7 @@ body {
 h1 {
     font-family: 'Luckiest Guy', cursive;
     font-size: 96px;
+    margin: 0;
 }
 .splash-form {
     text-align: center;

@@ -82,6 +82,13 @@ export class Splash extends React.Component {
   render() {
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
+      <p className={'subhead'}>
+        Collect stars to grow bigger.
+        <br/>
+        Stomp other players to get their stars.
+        <br/>
+        Don't get stomped!
+      </p>
       <form className='splash-form' onSubmit={this.handleSubmit}>
         <input
           className={'name-input'}
