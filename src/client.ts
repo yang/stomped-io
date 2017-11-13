@@ -46,12 +46,7 @@ import * as URLSearchParams from 'url-search-params';
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
 const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-split');
 
-// require('protobufjs/dist/protobuf-light');
-// const PB = require('proto!./main.proto');
-
-// import {load} from 'protobufjs';
 const Protobuf = require('protobufjs');
-// import Timer = NodeJS.Timer;
 
 const searchParams = new URLSearchParams(window.location.search);
 const authKey = searchParams.get('authKey') || '';
@@ -142,14 +137,6 @@ function preload(sprites) {
     game.load.image('ground', 'assets/ledge.png');
     game.load.image('star', 'assets/star.png');
     game.load.image('lava', 'assets/lava.png');
-    // game.load.spritesheet('dude-white', 'dist/assets/player-white.png', 567, 756);
-    // game.load.spritesheet('dude-red', 'dist/assets/player-red.png', 567, 756);
-    // game.load.spritesheet('dude-yellow', 'dist/assets/player-yellow.png', 567, 756);
-    // game.load.spritesheet('dude-green', 'dist/assets/player-green.png', 567, 756);
-    // game.load.image('dude-white', 'designs/player-test.svg');
-    // game.load.image('dude-red', 'designs/player-test.svg');
-    // game.load.image('dude-yellow', 'designs/player-test.svg');
-    // game.load.image('dude-green', 'designs/player-test.svg');
     for (let char of Object.keys(sprites)) {
       for (let i = 0; i < sprites[char].length; i++) {
         const variant = sprites[char][i];
@@ -159,10 +146,6 @@ function preload(sprites) {
         }
       }
     }
-    // game.load.spritesheet('dude-white', 'designs/player-alien.svg', 567, 756);
-    // game.load.spritesheet('dude-red', 'designs/player-cutout.svg', 567, 756);
-    // game.load.spritesheet('dude-yellow', 'designs/player-robot.svg', 567, 756);
-    // game.load.spritesheet('dude-green', 'designs/player-masked.svg', 567, 756);
     game.stage.disableVisibilityChange = true;
   } else {
     game.load.image('bg', 'assets/ledge.png');
@@ -191,8 +174,7 @@ export var me: Player;
 export const players = gameState.players;
 const ledges = gameState.ledges;
 
-// const timeline = new CBuffer<Bcast>(8);
-const timeline = new CBuffer(1024); // : Bcast[] = [];
+const timeline = new CBuffer(1024);
 
 // This may get called multiple times on same object in a single frame when multiple entities collide with something.
 function destroy2(ent) {
@@ -346,12 +328,9 @@ function onEntAdded(ent: Ent) {
   }
   if (ent instanceof Player) {
     const sprite = mkSprite(playerGroup, `dude-${ent.style}`);
-    // [sprite.anchor.x, sprite.anchor.y] = [.5, .5];
     sprite.anchor.setTo(.5, .5);
     sprite.animations.add('left', [3,4,3,5], 10, true);
     sprite.animations.add('right', [0,1,0,2], 10, true);
-    // sprite.animations.add('left', [3, 4, 3, 5], 10, true);
-    // sprite.animations.add('right', [0, 1, 0, 2], 10, true);
     const style = ent.id == meId ?
       { font: "14px Arial", fill: "#ffff00", stroke: "#ffff44", align: "center", fontWeight: 'bold'} :
       { font: "14px Arial", fill: "#cccccc", stroke: "#cccccc", align: "center"};
@@ -637,18 +616,11 @@ ${mkDebugText(ptr, currentPlayer)}
             const startSmash = ev as StartSmash;
             const player = gameState.players.find(p => p.id == startSmash.playerId);
             player.state = 'startingSmash';
-            // const sprite = entToSprite.get(player);
-            // game.timer.add(200, () => sprite.state = 'normal');
             break;
           case 'StompEv':
             const p = gameState.players.find(p => p.id == ev.playerId);
-            // const emitter = game.add.emitter(p.dispPos().x, p.dispPos().y, 50);
-            // emitter.makeParticles('star');
-            // emitter.setAlpha(1, 0, 400);
-            // emitter.setScale(starScale.x, 5 * starScale.x, starScale.y, 5 * starScale.y, 400);
-            // ({x: emitter.width, y: emitter.height} = p.dispDims());
-            // emitter.start(false, 1000, 1, ev.count);
 
+            // Can't use particle emitter since it doesn't support delayed fading out.
             for (let i = 0; i < Math.min(ev.count, 30); i++) {
               const dims = p.dispDims();
               const area = new Vec2(dims.x, dims.y / 2);
@@ -658,7 +630,6 @@ ${mkDebugText(ptr, currentPlayer)}
                 star.anchor.setTo(.5, .5);
                 star.width = 3 * Star.width;
                 star.height = 3 * Star.height;
-                // star.scale.setTo(3 * starScale.x, 3 * starScale.y);
                 consumeStarSprite(star);
                 setTimeout(() => star.destroy(), 1000);
               }, 100 / 10 * i);
