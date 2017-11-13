@@ -41,6 +41,7 @@ import {
 } from './common';
 import * as _ from 'lodash';
 import {loadSprites} from "./spriter";
+import * as URLSearchParams from 'url-search-params';
 
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');

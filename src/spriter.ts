@@ -155,13 +155,18 @@ export function loadSprites() {
   return Promise.all(pSprites).then(sprites => Object.assign({}, ...sprites));
 }
 
+// .children doesn't work in IE.
+function children(x: any) {
+  return Array.from(x.childNodes).filter((el: any) => el.nodeType != 3);
+}
+
 function genSprites(charName, ev) {
   const char = chars.find(char => char.name == charName);
   const obj = ev.target as HTMLObjectElement;
   const defaultBbox = [150,200];
   const variantImgs = [];
 
-  const baseSvg = obj.contentDocument.children[0] as SVGElement;
+  const baseSvg = obj.contentDocument.querySelector('svg') as SVGElement;
   for (let variant of char.variants) {
     // document.body.innerHTML += baseSvg.outerHTML;
     // const svg = document.body.children[document.body.children.length - 1] as SVGElement;
@@ -177,12 +182,17 @@ function genSprites(charName, ev) {
     // This is document, but if it were in object then document would be different.
     const doc = svg.ownerDocument;
 
+    // [*|label="bg"] selector doesn't work in IE.
+    const getGroup = (label) =>
+      Array.from(doc.querySelectorAll('g'))
+        .find(el => (el.attributes['inkscape:label'] || {} as any).nodeValue == label);
+
     // Always remove the background.
-    doc.querySelector('[*|label="bg"]').remove();
+    getGroup('bg').remove();
 
     // Replace colors.
     for (let swatch of Object.keys(variant)) {
-      for (let stop of Array.from(doc.getElementById(swatch).children)) {
+      for (let stop of Array.from(children(doc.getElementById(swatch)))) {
         (stop as SVGStopElement).style.stopColor = variant[swatch];
       }
     }
@@ -205,9 +215,9 @@ function genSprites(charName, ev) {
     const imgs = [];
     for (let xform of legXforms) {
       // Move the legs.
-      const frontLeg = doc.querySelector('[*|label="front leg 2"]').children[0] as SVGGElement;
+      const frontLeg = children(getGroup('front leg 2'))[0] as SVGGElement;
       if (xform.front) frontLeg.setAttribute('transform', xform.front);
-      const rearLeg = doc.querySelector('[*|label="rear leg 2"]').children[0] as SVGGElement;
+      const rearLeg = children(getGroup('rear leg 2'))[0] as SVGGElement;
       if (xform.rear) rearLeg.setAttribute('transform', xform.rear);
       // rearLeg.setAttribute('transform', 'rotate(-20,145.18059,259.20158)');
       // rearLeg.setAttribute('transform', 'rotate(20,63.669944,170.81067)');
