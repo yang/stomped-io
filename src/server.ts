@@ -82,7 +82,7 @@ const moreNames = fs.readFileSync('src/morenames.txt', 'utf8')
 function* genBotNames() {
   Faker.seed(0);
   while (true) {
-    switch (chance.weighted([0,1,2,3], [20,10,50,20])) {
+    switch (chance.weighted([0,1,2,3], [20,10,20,20])) {
       case 0:
         // chars
         const length = chance.weighted([1,2,3,4,5,6], [10,5,5,2,2,2])
