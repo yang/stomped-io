@@ -12,7 +12,7 @@ import {
   ledgeHeight,
   ledgeWidth, makeStar, maxNameLen, now, pb,
   Player, playerStyles,
-  RemEnt, runLocally, serSimResults, Star,
+  RemEnt, runLocally, serSimResults, Star, StompEv,
   updateEntPhysFromPl,
   updatePeriod,
   world
@@ -133,6 +133,7 @@ const io = Sio();
 
 const gameState = new GameState(undefined, destroy);
 gameState.onEntCreated.add(ent => ent instanceof Star && events.push(new AddEnt(ent).ser()));
+gameState.onStomp.add((player, count) => events.push(new StompEv(player.id, count).ser()));
 
 // already-serialized
 const events: Event[] = [];

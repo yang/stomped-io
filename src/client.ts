@@ -374,6 +374,15 @@ function onEntAdded(ent: Ent) {
 
 export const entMgr = new EntMgr(world, gameState, onEntAdded);
 
+function consumeStarSprite(sprite) {
+  activeStarGroup.add(sprite);
+  game.add.tween(sprite.scale).to({
+    x: sprite.scale.x * 5,
+    y: sprite.scale.y * 5
+  }, 400, Phaser.Easing.Quadratic.Out, true);
+  game.add.tween(sprite).to({alpha: 0}, 400, Phaser.Easing.Linear.In, true, 300);
+}
+
 function tryRemove(id: number, ents: Ent[], instantly = false) {
   const i = _(ents).findIndex((p) => p.id == id);
   if (i >= 0) {
@@ -405,10 +414,7 @@ function tryRemove(id: number, ents: Ent[], instantly = false) {
       if (instantly) {
         removeSprite();
       } else {
-        sprite.alpha = 1;
-        activeStarGroup.add(sprite);
-        game.add.tween(sprite.scale).to({x: sprite.scale.x * 5, y: sprite.scale.y * 5}, 400, Phaser.Easing.Quadratic.Out, true);
-        game.add.tween(sprite).to({alpha: 0}, 400, Phaser.Easing.Linear.In, true, 300);
+        consumeStarSprite(sprite);
         setTimeout(() => removeSprite(), 1000);
       }
     } else {
@@ -468,7 +474,7 @@ let moveName = function (player) {
 };
 
 let firstUpdate = true;
-
+let starScale: Vec2;
 
 function update(extraSteps, mkDebugText) {
 
@@ -491,6 +497,9 @@ function update(extraSteps, mkDebugText) {
       }
       game.cache.addSpriteSheet(`dude-${char}`, '', bmd.canvas, width, height, 6, 0, 0);
     }
+
+    const starImg = game.cache.getImage('star');
+    starScale = new Vec2(Star.width / starImg.width, Star.height / starImg.height);
   }
 
   // Phaser stupidly grows game.world.bounds to at least cover game.width/.height
@@ -630,6 +639,31 @@ ${mkDebugText(ptr, currentPlayer)}
             player.state = 'startingSmash';
             // const sprite = entToSprite.get(player);
             // game.timer.add(200, () => sprite.state = 'normal');
+            break;
+          case 'StompEv':
+            const p = gameState.players.find(p => p.id == ev.playerId);
+            // const emitter = game.add.emitter(p.dispPos().x, p.dispPos().y, 50);
+            // emitter.makeParticles('star');
+            // emitter.setAlpha(1, 0, 400);
+            // emitter.setScale(starScale.x, 5 * starScale.x, starScale.y, 5 * starScale.y, 400);
+            // ({x: emitter.width, y: emitter.height} = p.dispDims());
+            // emitter.start(false, 1000, 1, ev.count);
+
+            for (let i = 0; i < Math.min(ev.count, 30); i++) {
+              const dims = p.dispDims();
+              const area = new Vec2(dims.x, dims.y / 2);
+              const pos = p.dispPos().add(new Vec2(dims.x / 2, 0.75 * dims.y));
+              setTimeout(() => {
+                const star = game.add.sprite(pos.x + (Math.random() - .5) * area.x, pos.y + (Math.random() - .5) * area.y, 'star');
+                star.anchor.setTo(.5, .5);
+                star.width = 3 * Star.width;
+                star.height = 3 * Star.height;
+                // star.scale.setTo(3 * starScale.x, 3 * starScale.y);
+                consumeStarSprite(star);
+                setTimeout(() => star.destroy(), 1000);
+              }, 100 / 10 * i);
+            }
+
             break;
         }
       }

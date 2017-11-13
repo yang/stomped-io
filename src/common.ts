@@ -206,6 +206,7 @@ export class GameState {
   public bursters: Burster[] = [];
   onJumpoff = new Signals.Signal();
   onEntCreated = new Signals.Signal();
+  onStomp = new Signals.Signal();
   constructor(public world: Pl.World = gWorld, public destroy: (killed: Ent, killer?: Ent) => void = () => {}) {}
   getEnts() {
     return (<Ent[]>this.players).concat(this.ledges).concat(this.stars).concat(this.blocks);
@@ -361,6 +362,7 @@ export function create(gameState: GameState) {
                 const impact = Math.min(playerA.size, playerB.size);
                 playerB.grow(-impact);
                 playerA.grow(impact / 2);
+                gameState.onStomp.dispatch(playerA, Math.round(impact / 2 * 10));
                 makeBurst(playerB.x, playerB.y,impact / 2 * 10, gameState);
                 playerB.state = 'normal';
                 if (playerB.size < 1) {
@@ -587,8 +589,10 @@ export class Block extends Ent {
 
 const gChance = new Chance();
 export class Star extends Ent {
-  width = 16;
-  height = 16;
+  static readonly width = 16;
+  static readonly height = 16;
+  width = Star.width;
+  height = Star.height;
   dispPosOffset = getRandomInt(0,1000);
   dispDimOffset = getRandomInt(0,1000);
   dispAngleOffset = getRandomInt(0,1000);
@@ -650,6 +654,10 @@ export class Burster {
 }
 
 export class Event extends Serializable {}
+
+export class StompEv extends Event {
+  constructor(public playerId: number, public count: number) { super("StompEv"); }
+}
 
 export class StartSmash extends Event {
   constructor(public playerId: number) { super("StartSmash"); }
