@@ -198,17 +198,23 @@ function genSprites(charName, ev) {
     }
 
     const legXforms = [
+      // straight legs
+      // corresponds to 'front/rear leg 1' in SVGs
       {
-        front: 'matrix(0.93969262,0.31610954,-0.34202014,0.86850382,-11.589168,-19.476532)',
-        rear: 'translate(-16.544342,13.364791)'
+        front: 'matrix(0.93969262,0.31610954,-0.34202014,0.86850382,-4.1056212,-19.476532)',
+        rear: 'translate(-26.700584,13.364791)'
       },
+      // front leg behind (wide apart)
+      // corresponds to 'front/rear leg' in SVGs
       {
         front: 'matrix(0.73580248,0.6644864,-0.65987246,0.66018557,89.79583,-24.29899)',
         rear: 'rotate(-20,145.18059,259.20158)'
       },
+      // front leg in front (crossed over, narrower)
+      // corresponds to 'front/rear leg 2' in SVGs
       {
-        front: 'translate(-80.486673,-4.0873532)',
-        rear: 'rotate(20,54.674111,119.79276)'
+        front: 'translate(-76.867115,-4.0873532)',
+        rear: 'rotate(20,49.905563,92.748988)'
       },
     ];
 
