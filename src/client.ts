@@ -919,7 +919,7 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
   let sprites;
   const pSprites = loadSprites().then(s => sprites = s);
   pPb.then((root) => Common.bootstrapPb(root));
-  socket = Sio(location.origin.replace(/:\d+/, '') + ':3000', {query: {authKey}});
+  socket = Sio(location.origin, {query: {authKey}});
   socket.on('svrSettings', (svrData) => {
     svrSettings.deser(svrData);
     guiMgr.refresh();
