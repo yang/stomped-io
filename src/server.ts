@@ -532,7 +532,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
   socket.on('join', (playerData) => {
     assert(playerStyles.includes(playerData.char));
-    const player = makePlayer(playerData.name.slice(0, maxNameLen), playerData.char);
+    const player = makePlayer(playerData.name.trim().slice(0, maxNameLen) || 'Anonymous Stomper', playerData.char);
 
     socket.on('disconnect', () => destroy(player));
 

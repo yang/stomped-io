@@ -122,7 +122,7 @@ export class Splash extends React.Component {
         <button
           className={'submit-btn'}
           type={'submit'}
-          disabled={!this.state.charToVariants || this.state.disabled}>Play!</button>
+          disabled={!this.state.charToVariants || this.state.disabled || this.state.name.trim() == ''}>Play!</button>
       </form>
     </div>;
   }
