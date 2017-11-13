@@ -57,10 +57,10 @@
     "webpack-merge": "^4.1.1"
   },
   "scripts": {
-    "build-dev": "webpack --config-name dev",
-    "build-prod": "webpack --config-name prod",
-    "watch": "webpack --progress --colors --watch --config-name dev",
-    "dev": "webpack-dev-server --open",
+    "build-dev": "webpack --config webpack.dev.config.js",
+    "build-prod": "webpack --config webpack.prod.config.js",
+    "watch": "webpack --progress --colors --watch --config webpack.dev.config.js",
+    "dev": "webpack-dev-server --config webpack.dev.config.js --open",
     "server": "ts-node --inspect src/server.ts",
     "server-watch": "node-dev -r ts-node/register src/server.ts",
     "test": "jest",
