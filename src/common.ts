@@ -98,7 +98,7 @@ export const world = Pl.World(Pl.Vec2(0, gravity));
 const gWorld = world;
 
 export const gameWorld = {
-  width: 4000,
+  width: 16000,
   height: 2000
 };
 

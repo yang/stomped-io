@@ -77,6 +77,7 @@ From your client:
     yarn watch
 
     # Deployment - specify the IP
+    # You must commit your work before deploying!
     bash -x tools/deploy.bash 45.79.94.70
 
 Back on the host:
