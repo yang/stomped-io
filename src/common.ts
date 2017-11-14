@@ -111,7 +111,7 @@ export function* cumsum(xs: number[]) {
 }
 
 export class ServerSettings {
-  dt = 1 / 20 / 1.3;
+  dt = 0.045; // slow down a smidge from 1 / 20 = .05;
   accel = 25;
   doOsc = false;
   oscDist = gameWorld.width / 8 * 2;
