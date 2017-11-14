@@ -111,6 +111,17 @@ function* genBotNames() {
   }
 }
 
+function* unusedNames() {
+  // TODO still could be using this name, but just respawning
+  const iter = genBotNames();
+  while (true) {
+    const name = iter.next().value;
+    if (!gameState.players.find(p => p.name == name)) {
+      yield name;
+    }
+  }
+}
+
 const botNameGen = genBotNames();
 
 if (process.argv[2] == 'preview-names') {
