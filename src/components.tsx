@@ -126,6 +126,7 @@ export class Splash extends React.Component {
           type={'submit'}
           disabled={!this.state.charToVariants || this.state.disabled || this.state.name.trim() == ''}>Play!</button>
       </form>
+      <a className={"more-io-games"} href={"http://iogames.space"} target={"_blank"}>More io Games</a>
     </div>;
   }
 }
