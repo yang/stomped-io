@@ -17,7 +17,10 @@
    version="1.1"
    id="svg1376"
    inkscape:version="0.92.2 5c3e80d, 2017-08-06"
-   sodipodi:docname="thumbnail.svg">
+   sodipodi:docname="thumbnail.svg"
+   inkscape:export-filename="/Users/yang/proj/game/bouncer-game/designs/thumbnail.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
   <defs
      id="defs1370">
     <linearGradient
@@ -827,7 +830,7 @@
      inkscape:cx="700.17274"
      inkscape:cy="573.10952"
      inkscape:document-units="mm"
-     inkscape:current-layer="g7203"
+     inkscape:current-layer="layer5"
      showgrid="false"
      inkscape:window-width="2048"
      inkscape:window-height="1027"
@@ -919,7 +922,8 @@
        y="48.883083"
        ry="0"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
+       inkscape:export-ydpi="96"
+       inkscape:label="thumbnail" />
     <rect
        style="opacity:1;fill:#2a113e;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.96439219;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect9529"
