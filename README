@@ -71,6 +71,8 @@ On the host:
 
     sudo htpasswd -c /etc/apache2/bounce.htpasswd yang
 
+Set up letsencrypt, and edit the nginx config to look like the one in tools/.
+
 From your client:
 
     # Start once
