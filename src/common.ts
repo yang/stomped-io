@@ -641,7 +641,7 @@ export class Burster {
     // curr velocity = ? = last velocity / (1 - last progress) * curr progress
     const lastProgress = this.elapsed / burstDur,
       currProgress = (this.elapsed + dt) / burstDur,
-      factor = this.elapsed >= burstDur ? 0 : (1 - currProgress) / (1 - lastProgress);
+      factor = this.elapsed + dt >= burstDur ? 0 : (1 - currProgress) / (1 - lastProgress);
     for (let ent of this.ents) {
       if (ent.bod.getFixtureList()) {
         if (this.elapsed > .2)
