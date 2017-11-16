@@ -229,11 +229,22 @@ function genSprites(charName, ev) {
       // rearLeg.setAttribute('transform', 'rotate(20,63.669944,170.81067)');
 
       // Snapshot to raster.
-      // const img = document.createElement('img');
+
+      // Note how we are replacing a bad version attribute.  Once, in a Chrome instance that was asking to be
+      // restarted to pick up an update, I saw that the character sprites were all empty.  Debugging revealed that
+      // the SVG had (among seemingly many other differences from a working Chrome instance) an extra un-namespaced
+      // version attribute.  This is actually supposed to be an inkscape:version attribute, but it was overriding
+      // the SVG version (a proper one is just `version="1.1"`), causing the SVG parser to throw up.  So we
+      // force-wipe it.
+
+      // TODO This is not very robust, as it looks for a fixed version.
       const img = new Image();
-      img.src = `data:image/svg+xml;base64,${btoa(svg.outerHTML)}`;
+      img.src = `data:image/svg+xml;base64,${btoa(svg.outerHTML.replace(' version="0.92.2 5c3e80d, 2017-08-06"', ''))}`;
       imgs.push(img);
-      // document.body.appendChild(img);
+
+      // const imgE = document.createElement('img');
+      // imgE.src = `data:image/svg+xml;base64,${btoa(svg.outerHTML.replace(' version="0.92.2 5c3e80d, 2017-08-06"', ''))}`;
+      // document.body.appendChild(imgE);
     }
 
     // Hide the SVG.
