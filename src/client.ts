@@ -741,8 +741,9 @@ ${_(gameState.players)
       p => -p.size,
       p => p.name
     ])
-    .filter((p, i) => i < 10 || me == p)
-    .map((p, i) => `${i + 1}. ${showScore(p)} -- ${p.name} ${p == me ? '<---' : ''}`)
+    .map((p, i) => [i,p] as [number, Player])
+    .filter(([i, p]) => i < 10 || me == p)
+    .map(([i, p]) => `${i + 1}. ${showScore(p)} -- ${p.name} ${p == me ? '<---' : ''}`)
     .join('\n')}`;
 };
 
