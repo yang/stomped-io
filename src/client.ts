@@ -595,13 +595,18 @@ ${mkDebugText(ptr, currentPlayer)}
             if (theEnt instanceof Player && remEnt.killerId !== null) {
               const killed = players.find(p => p.id == remEnt.id);
               const killer = players.find(p => p.id == remEnt.killerId);
-              getLogger('kills').log(killer.describe(), 'killed', killed.describe());
+              // TODO working around bug where killer might not be found - not sure how this is possible yet, but Sentry has surfaced it a few times.
+              getLogger('kills').log(killer ? killer.describe() : remEnt.killerId, 'killed', killed.describe());
               if (killed == me) {
-                notify(`You got stomped by\n${killer.name}!`);
-                setTimeout(() => {
-                  cp.currentPlayer = players.indexOf(killer);
-                  follow(entToSprite.get(killer));
-                }, 0);
+                if (killer) {
+                  notify(`You got stomped by\n${killer.name}!`);
+                  setTimeout(() => {
+                    cp.currentPlayer = players.indexOf(killer);
+                    follow(entToSprite.get(killer));
+                  }, 0);
+                } else {
+                  notify(`You got stomped!`);
+                }
                 if (!cp.spectate)
                   setTimeout(backToSplash, 2000);
               } else if (killer == me) {
