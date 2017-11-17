@@ -66,8 +66,8 @@ export class LogHandler {
     return this.toText(this.buffer);
   }
   // For convenient copy(baseHandler.cBufferToText()) in browser console (for analysis in e.g. pandas)
-  cBufferToText() {
-    return this.toText(this.cBuffer.toArray());
+  cBufferToText(limit: number) {
+    return this.toText(this.cBuffer.toArray().slice(-limit));
   }
 }
 
