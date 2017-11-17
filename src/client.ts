@@ -620,19 +620,21 @@ ${mkDebugText(ptr, currentPlayer)}
           case 'StompEv':
             const p = gameState.players.find(p => p.id == ev.playerId);
 
-            // Can't use particle emitter since it doesn't support delayed fading out.
-            for (let i = 0; i < Math.min(ev.count, 30); i++) {
-              const dims = p.dispDims();
-              const area = new Vec2(dims.x, dims.y / 2);
-              const pos = p.dispPos().add(new Vec2(dims.x / 2, 0.75 * dims.y));
-              setTimeout(() => {
-                const star = game.add.sprite(pos.x + (Math.random() - .5) * area.x, pos.y + (Math.random() - .5) * area.y, 'star');
-                star.anchor.setTo(.5, .5);
-                star.width = 3 * Star.width;
-                star.height = 3 * Star.height;
-                consumeStarSprite(star);
-                setTimeout(() => star.destroy(), 1000);
-              }, 100 / 10 * i);
+            if (p) {
+              // Can't use particle emitter since it doesn't support delayed fading out.
+              for (let i = 0; i < Math.min(ev.count, 30); i++) {
+                const dims = p.dispDims();
+                const area = new Vec2(dims.x, dims.y / 2);
+                const pos = p.dispPos().add(new Vec2(dims.x / 2, 0.75 * dims.y));
+                setTimeout(() => {
+                  const star = game.add.sprite(pos.x + (Math.random() - .5) * area.x, pos.y + (Math.random() - .5) * area.y, 'star');
+                  star.anchor.setTo(.5, .5);
+                  star.width = 3 * Star.width;
+                  star.height = 3 * Star.height;
+                  consumeStarSprite(star);
+                  setTimeout(() => star.destroy(), 1000);
+                }, 100 / 10 * i);
+              }
             }
 
             break;
