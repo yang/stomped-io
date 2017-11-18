@@ -212,7 +212,7 @@ function getEnts(): Ent[] {
   return gameState.getEnts();
 }
 
-let dbgRementSent = true;
+let dbgRementSent = false;
 const rementSent = new Map<number, RemEnt>();
 
 let lastSnapshot: Bcast = null;
