@@ -184,6 +184,7 @@ function update() {
     for (let i = 0; i < initBots; i++) {
       setTimeout(() => botMgr.makeBot(true), 500 * i);
     }
+    firstUpdate = false;
   }
 
   const currTime = now();
