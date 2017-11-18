@@ -176,7 +176,16 @@ function initSnap() {
   }
 }
 
+let firstUpdate = true;
+let initBots = 40;
+
 function update() {
+  if (firstUpdate) {
+    for (let i = 0; i < initBots; i++) {
+      setTimeout(() => botMgr.makeBot(true), 500 * i);
+    }
+  }
+
   const currTime = now();
   for (let bot of botMgr.bots) {
     bot.checkDeath();
