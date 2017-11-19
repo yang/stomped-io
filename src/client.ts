@@ -101,6 +101,7 @@ export class ControlPanel {
   spectate = false;
   doPings = true;
   doUpdatePl = false;
+  smashFrames = 12;
   backToSplash() { backToSplash(); }
   testNotif() { notify('Testing!'); }
 }
@@ -765,7 +766,8 @@ export function updateSpriteFromEnt(ent) {
     ({x: sprite.x, y: sprite.y} = ent.dispPos().add(ent.dispDims().div(2)));
   }
   ({x: sprite.width, y: sprite.height} = ent.dispDims());
-  sprite.angle = ent.dispAngle();
+  if (!(ent instanceof Player))
+    sprite.angle = ent.dispAngle();
 }
 
 export function feedInputs(player: Player) {
@@ -781,7 +783,7 @@ export function feedInputs(player: Player) {
     else sprite.frame = 3;
   }
   if (player.state == 'startingSmash') {
-    sprite.angle += 360 / 8;
+    sprite.angle += 360 / cp.smashFrames;
     if (sprite.angle == 0) {
       player.state = 'normal';
     }

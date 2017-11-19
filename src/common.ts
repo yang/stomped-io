@@ -120,7 +120,7 @@ export class ServerSettings {
   oneWayLedges = true;
   doDiff = true;
   doProtobuf = true;
-  doSmashes = false;
+  doSmashes = true;
   burstLimit = 100;
   ser() {
     return _({}).assign(this);
