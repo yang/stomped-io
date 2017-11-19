@@ -126,7 +126,7 @@ export class ServerSettings {
   speedupDur = 3;
   speedupDropPeriod = .1;
   holdForSpeedups = true;
-  speedup = 2;
+  speedup = 1.5;
   burstLimit = 100;
   ser() {
     return _({}).assign(this);
@@ -265,7 +265,7 @@ export class GameState {
   startSpeedup(player: Player) {
     if (settings.doSpeedups && player.state == 'normal' && player.size >= 1.1) {
       player.state = 'speeding';
-      player.bod.setGravityScale(settings.speedup * 2);
+      player.bod.setGravityScale(settings.speedup * settings.speedup);
       updateVel(player.bod, v => v.mul(settings.speedup));
       this.dropStar(player);
       player.dropInterval = this.timerMgr.interval(settings.speedupDropPeriod, () => {
