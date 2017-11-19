@@ -83,13 +83,13 @@ export class Splash extends React.Component {
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
       <p className={'subhead'}>
-        Use your mouse to steer your character through the low-gravity arena!
+        Use your mouse to steer your jumper left/right through the arena.
         <br/>
         Collect stars to grow bigger.
         <br/>
-        Stomp other players to get their stars.
+        When larger, hold down your mouse button for a speed boost.
         <br/>
-        Don't get stomped!
+        Stomp other players to take their stars.  Don't get stomped!
       </p>
       <form className='splash-form' onSubmit={this.handleSubmit}>
         <input

@@ -16,7 +16,7 @@ import {
   updateEntPhysFromPl,
   updatePeriod, updateVel,
   settings,
-  world
+  world, setNotConsumable, setConsumable
 } from './common';
 import * as Pl from 'planck-js';
 import * as fs from 'fs';
@@ -529,6 +529,7 @@ io.use(function(socket, next) {
 });
 
 function stopSpeedup(player: Player | Player) {
+  player.dropInterval.cancel();
   if (!player.dead) {
     player.state = 'normal';
     player.bod.setGravityScale(1);
@@ -536,6 +537,17 @@ function stopSpeedup(player: Player | Player) {
   }
 }
 
+let dropStar = function (player: Player | Player) {
+  if (player.dead || player.size <= 1) {
+    stopSpeedup(player);
+    return;
+  }
+  const pos = player.midDispPos();
+  const star = makeStar(pos.x, pos.y, gameState);
+  setNotConsumable(star);
+  setTimeout(() => setConsumable(star), 200);
+  player.grow(-.1);
+};
 io.on('connection', (socket: SocketIO.Socket) => {
   const log = getLogger('net');
   const client = new Client(socket);
@@ -582,10 +594,14 @@ io.on('connection', (socket: SocketIO.Socket) => {
           player.dir = ev.dir;
         } else {
           if (ev.type == 'StartSpeedup') {
-            if (settings.doSpeedups && player.state == 'normal' && ev.playerId == player.id) {
+            if (settings.doSpeedups && player.state == 'normal' && ev.playerId == player.id && player.size >= 1.1) {
               player.state = 'speeding';
               player.bod.setGravityScale(settings.speedup * 2);
               updateVel(player.bod, v => v.mul(settings.speedup));
+              dropStar(player);
+              player.dropInterval = gameState.timerMgr.interval(settings.speedupDropPeriod, () => {
+                dropStar(player);
+              });
               if (!settings.holdForSpeedups) {
                 gameState.timerMgr.wait(settings.speedupDur, () => {
                   stopSpeedup(player);

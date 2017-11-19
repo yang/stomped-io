@@ -108,6 +108,7 @@ export class GuiMgr {
       svrOpts.add(svrSettings, 'doSmashes'),
       svrOpts.add(svrSettings, 'doSpeedups'),
       svrOpts.add(svrSettings, 'speedup'),
+      svrOpts.add(svrSettings, 'speedupDropPeriod'),
       svrOpts.add(svrSettings, 'holdForSpeedups'),
       svrOpts.add(svrSettings, 'speedupDur'),
       svrOpts.add(svrSettings, 'doProtobuf'),

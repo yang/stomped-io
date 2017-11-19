@@ -124,6 +124,7 @@ export class ServerSettings {
   doSmashes = true;
   doSpeedups = true;
   speedupDur = 3;
+  speedupDropPeriod = .1;
   holdForSpeedups = true;
   speedup = 2;
   burstLimit = 100;
@@ -163,6 +164,11 @@ export class Timer {
   cancel() { this.aborted = true; }
 }
 
+export class IntervalTimer {
+  nextTimer: Timer;
+  cancel() { this.nextTimer.cancel(); }
+}
+
 class SortedSet<T> {
   xs: T[] = [];
   constructor(public cmp: (a:T,b:T) => number) {}
@@ -185,17 +191,31 @@ export class TimerMgr {
         x.callback();
       this.timers.remove(x);
     }
-    this.timers.xs = toKeep;
     this.time = time;
   }
   advanceBy(dt: number) {
     return this.advanceTo(this.time + dt);
   }
   at(time: number, callback: () => void) {
-    this.timers.add(new Timer(time, callback));
+    const timer = new Timer(time, callback);
+    this.timers.add(timer);
+    return timer;
   }
   wait(dur: number, callback: () => void) {
-    this.at(this.time + dur, callback);
+    return this.at(this.time + dur, callback);
+  }
+  interval(period: number, callback: () => void) {
+    const int = new IntervalTimer();
+    const reschedule = () => {
+      int.nextTimer = this.wait(period, () => {
+        callback();
+        // We could have canceled the interval from within the callback.
+        if (!int.nextTimer.aborted)
+          reschedule();
+      });
+    };
+    reschedule();
+    return int;
   }
 }
 
@@ -314,6 +334,25 @@ export function makeStar(x: number, y: number, gameState: GameState, xformer = _
   return star;
 }
 
+export function setConsumable(ent: Ent) {
+  if (ent.bod)
+    ent.bod.getFixtureList().setFilterData({
+      categoryBits: 1,
+      maskBits: 65535,
+      filterGroupIndex: 0
+    });
+}
+
+export let setNotConsumable = function (star) {
+  if (star.bod) {
+    star.bod.getFixtureList().setFilterData({
+      categoryBits: 1,
+      maskBits: 0,
+      filterGroupIndex: 0
+    });
+  }
+};
+
 export function makeBurst(x: number, y: number, count: number, gameState: GameState) {
   const stars = [];
   for (let i = 0; i < Math.min(settings.burstLimit, count); i++) {
@@ -322,11 +361,7 @@ export function makeBurst(x: number, y: number, count: number, gameState: GameSt
         getRandomNum(-10,10),
         getRandomNum(-10,10)
       ));
-      star.bod.getFixtureList().setFilterData({
-        categoryBits: 1,
-        maskBits: 0,
-        filterGroupIndex: 0
-      });
+      setNotConsumable(star);
       star.vel.x = star.bod.getLinearVelocity().x * ratio;
       star.vel.y = star.bod.getLinearVelocity().y * ratio;
     });
@@ -506,7 +541,7 @@ export class Ent extends Serializable {
   id = ids.next().value;
   bod?: Pl.Body;
   dirty = false;
-  ser(): this { return <this>_.omit(this, 'bod', 'stack', 'timers', 'dirty'); }
+  ser(): this { return <this>_.omit(this, 'bod', 'stack', 'timers', 'dirty', 'dropInterval'); }
   pos() { return new Vec2(this.x, this.y); }
   dims() { return new Vec2(this.width, this.height); }
   dispDims() { return this.dims(); }
@@ -536,6 +571,7 @@ export class Player extends Ent {
   currentSquishTime: number = null;
   dead = false;
   smashStart: number = null;
+  dropInterval: IntervalTimer;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
 
   dispDims() {
@@ -651,11 +687,7 @@ export class Burster {
     for (let ent of this.ents) {
       if (ent.bod.getFixtureList()) {
         if (this.elapsed > .2)
-          ent.bod.getFixtureList().setFilterData({
-            categoryBits: 1,
-            maskBits: 65535,
-            filterGroupIndex: 0
-          });
+          setConsumable(ent);
         updateVel(ent.bod, ({x, y}) => Pl.Vec2(x * factor, y * factor));
         ent.dirty = true;
       }
