@@ -746,7 +746,7 @@ export function mkScoreText() {
 ${_(gameState.players)
     .sortBy([
       p => -p.size,
-      p => p.name
+      p => p.id
     ])
     .map((p, i) => [i,p] as [number, Player])
     .filter(([i, p]) => i < 10 || me == p)
