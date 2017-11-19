@@ -112,6 +112,7 @@ export class GuiMgr {
       svrOpts.add(svrSettings, 'doOsc'),
       svrOpts.add(svrSettings, 'oscDist'),
       svrOpts.add(svrSettings, 'smashSpeed'),
+      svrOpts.add(svrSettings, 'smashDelay'),
       svrOpts.add(svrSettings, 'maxFallSpeed'),
       svrOpts.add(svrSettings, 'oneWayLedges')
     ];

@@ -575,7 +575,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
           if (Common.settings.doSmashes) {
             // Ignore/distrust its id param.
             player.state = 'startingSmash';
-            gameState.timerMgr.wait(.2, () => player.state = 'smashing');
+            gameState.timerMgr.wait(Common.settings.smashDelay, () => player.state = 'smashing');
             events.push(ev);
           }
         }
