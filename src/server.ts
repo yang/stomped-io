@@ -572,7 +572,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
         if (ev.type == 'InputEvent') {
           player.dir = ev.dir;
         } else if (ev.type == 'StartSmash') {
-          if (Common.settings.doSmashes) {
+          if (Common.settings.doSmashes && player.state == 'normal') {
             // Ignore/distrust its id param.
             player.state = 'startingSmash';
             gameState.timerMgr.wait(Common.settings.smashDelay, () => player.state = 'smashing');
