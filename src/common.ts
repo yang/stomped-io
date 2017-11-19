@@ -369,7 +369,7 @@ export function makeStar(x: number, y: number, gameState: GameState, xformer = _
 }
 
 export function setConsumable(ent: Ent) {
-  if (ent.bod)
+  if (ent.bod && ent.bod.getFixtureList())
     ent.bod.getFixtureList().setFilterData({
       categoryBits: 1,
       maskBits: 65535,
@@ -378,7 +378,7 @@ export function setConsumable(ent: Ent) {
 }
 
 export let setNotConsumable = function (star) {
-  if (star.bod) {
+  if (star.bod && star.bod.getFixtureList()) {
     star.bod.getFixtureList().setFilterData({
       categoryBits: 1,
       maskBits: 0,
