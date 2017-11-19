@@ -123,6 +123,14 @@ export class Bot {
       // thing, e.g. a big bot pinning you against a wall forever.
       this.reallySetInput(this.chance.bool({likelihood: 10}) ? opp(dir) : dir, currTime);
       this.lastDirChange = currTime;
+      if (this.player.size > 2 && this.chance.bool({likelihood: 10})) {
+        const dur = this.chance.floating({min: 1, max: 5});
+        this.gameState.startSpeedup(this.player);
+        const origPlayer = this.player;
+        this.gameState.timerMgr.wait(dur, () =>
+          this.player == origPlayer && this.gameState.stopSpeedup(this.player)
+        );
+      }
     }
   }
 

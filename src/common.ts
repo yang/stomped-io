@@ -262,6 +262,40 @@ export class GameState {
     this.stars = t2bs.get(Star);
     [this.lava] = t2bs.get(Lava);
   }
+  startSpeedup(player: Player) {
+    if (settings.doSpeedups && player.state == 'normal' && player.size >= 1.1) {
+      player.state = 'speeding';
+      player.bod.setGravityScale(settings.speedup * 2);
+      updateVel(player.bod, v => v.mul(settings.speedup));
+      this.dropStar(player);
+      player.dropInterval = this.timerMgr.interval(settings.speedupDropPeriod, () => {
+        this.dropStar(player);
+      });
+      if (!settings.holdForSpeedups) {
+        this.timerMgr.wait(settings.speedupDur, () => {
+          this.stopSpeedup(player);
+        });
+      }
+    }
+  }
+  stopSpeedup(player: Player) {
+    player.dropInterval && player.dropInterval.cancel();
+    if (settings.holdForSpeedups && player.state == 'speeding' && !player.dead) {
+      player.state = 'normal';
+      player.bod.setGravityScale(1);
+    }
+  }
+  dropStar(player: Player) {
+    if (player.dead || player.size <= 1) {
+      this.stopSpeedup(player);
+      return;
+    }
+    const pos = player.midDispPos();
+    const star = makeStar(pos.x, pos.y, this);
+    setNotConsumable(star);
+    setTimeout(() => setConsumable(star), 200);
+    player.grow(-.1);
+  }
 }
 
 export function pushAll(xs, ys) {

@@ -528,26 +528,6 @@ io.use(function(socket, next) {
   return next();
 });
 
-function stopSpeedup(player: Player | Player) {
-  player.dropInterval.cancel();
-  if (!player.dead) {
-    player.state = 'normal';
-    player.bod.setGravityScale(1);
-    events.push(new StopSpeedup(player.id));
-  }
-}
-
-let dropStar = function (player: Player | Player) {
-  if (player.dead || player.size <= 1) {
-    stopSpeedup(player);
-    return;
-  }
-  const pos = player.midDispPos();
-  const star = makeStar(pos.x, pos.y, gameState);
-  setNotConsumable(star);
-  setTimeout(() => setConsumable(star), 200);
-  player.grow(-.1);
-};
 io.on('connection', (socket: SocketIO.Socket) => {
   const log = getLogger('net');
   const client = new Client(socket);
@@ -594,24 +574,12 @@ io.on('connection', (socket: SocketIO.Socket) => {
           player.dir = ev.dir;
         } else {
           if (ev.type == 'StartSpeedup') {
-            if (settings.doSpeedups && player.state == 'normal' && ev.playerId == player.id && player.size >= 1.1) {
-              player.state = 'speeding';
-              player.bod.setGravityScale(settings.speedup * 2);
-              updateVel(player.bod, v => v.mul(settings.speedup));
-              dropStar(player);
-              player.dropInterval = gameState.timerMgr.interval(settings.speedupDropPeriod, () => {
-                dropStar(player);
-              });
-              if (!settings.holdForSpeedups) {
-                gameState.timerMgr.wait(settings.speedupDur, () => {
-                  stopSpeedup(player);
-                });
-              }
-              events.push(ev);
+            if (ev.playerId == player.id) {
+              gameState.startSpeedup(player);
             }
           } else if (ev.type == 'StopSpeedup') {
-            if (settings.holdForSpeedups && player.state == 'speeding' && ev.playerId == player.id) {
-              stopSpeedup(player);
+            if (ev.playerId == player.id) {
+              gameState.stopSpeedup(player);
             }
           } else if (ev.type == 'StartSmash') {
             if (settings.doSmashes && player.state == 'normal' && ev.playerId == player.id) {
