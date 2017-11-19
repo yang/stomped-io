@@ -33,6 +33,7 @@ message Player {
         normal = 0;
         startingSmash = 1;
         smashing = 2;
+        speeding = 3;
     }
 }
 

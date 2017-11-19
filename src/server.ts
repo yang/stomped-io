@@ -14,7 +14,7 @@ import {
   Player, playerStyles,
   RemEnt, runLocally, serSimResults, Star, StompEv,
   updateEntPhysFromPl,
-  updatePeriod,
+  updatePeriod, updateVel,
   world
 } from './common';
 import * as Pl from 'planck-js';
@@ -571,8 +571,19 @@ io.on('connection', (socket: SocketIO.Socket) => {
       for (let ev of data.events) {
         if (ev.type == 'InputEvent') {
           player.dir = ev.dir;
+        } else if (ev.type == 'StartSpeedup') {
+          if (Common.settings.doSpeedups && player.state == 'normal' && ev.playerId == player.id) {
+            player.state = 'speeding';
+            player.bod.setGravityScale(Common.settings.speedup * 2);
+            updateVel(player.bod, v => v.mul(Common.settings.speedup));
+            gameState.timerMgr.wait(Common.settings.speedupDur, () => {
+              player.state = 'normal';
+              player.bod.setGravityScale(1);
+            });
+            events.push(ev);
+          }
         } else if (ev.type == 'StartSmash') {
-          if (Common.settings.doSmashes && player.state == 'normal') {
+          if (Common.settings.doSmashes && player.state == 'normal' && ev.playerId == player.id) {
             // Ignore/distrust its id param.
             player.state = 'startingSmash';
             gameState.timerMgr.wait(Common.settings.smashDelay, () => player.state = 'smashing');

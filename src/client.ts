@@ -34,7 +34,7 @@ import {
   ServerSettings,
   setInputsByDir,
   Star,
-  StartSmash,
+  StartSmash, StartSpeedup,
   Vec2,
   world
 } from './common';
@@ -261,7 +261,7 @@ function create() {
     key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
   }
 
-  game.input.onDown.add(startSmash);
+  game.input.onDown.add(actionButton);
 
   // The notification banner
   notifText = game.add.text(16, 16, '', { fontSize: '48px', fill: '#fff', align: 'center', boundsAlignH: "center", boundsAlignV: "middle" });
@@ -315,8 +315,8 @@ export function getEnts() {
   return gameState.getEnts();
 }
 
-function startSmash() {
-  events.push(new StartSmash(me.id));
+function actionButton() {
+  events.push(svrSettings.doSpeedups ? new StartSpeedup(me.id) : new StartSmash(me.id));
 }
 
 function onEntAdded(ent: Ent) {

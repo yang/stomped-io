@@ -122,6 +122,9 @@ export class ServerSettings {
   doDiff = true;
   doProtobuf = true;
   doSmashes = true;
+  doSpeedups = true;
+  speedupDur = 3;
+  speedup = 2;
   burstLimit = 100;
   ser() {
     return _({}).assign(this);
@@ -354,9 +357,10 @@ export function create(gameState: GameState) {
         if (veq(m.normal, Pl.Vec2(0,-1).mul(reverse ? -1 : 1))) {
           log.log('jumping', playerA, bB.getUserData());
           gameState.onJumpoff.dispatch(playerA, bB.getUserData());
-          playerA.state = 'normal';
+          if (playerA.state == 'startingSmash' || playerA.state == 'smashing')
+            playerA.state = 'normal';
           postStep(() => {
-            updateVel(bA, ({x,y}) => Pl.Vec2(x,8));
+            updateVel(bA, ({x,y}) => Pl.Vec2(x, 8 * (playerA.state == 'speeding' ? settings.speedup : 1)));
             if (bB.getUserData() instanceof Player) {
               const playerB: Player = bB.getUserData();
               uniqueHit(playerA, playerB, () => {
@@ -670,6 +674,10 @@ export class StartSmash extends Event {
   constructor(public playerId: number) { super("StartSmash"); }
 }
 
+export class StartSpeedup extends Event {
+  constructor(public playerId: number) { super("StartSpeedup"); }
+}
+
 export class InputEvent extends Event {
   constructor(public dir: Dir) { super("InputEvent"); }
 }
@@ -729,29 +737,32 @@ export function assert(pred, msg = "Assertion failed") {
   if (doAsserts && !pred) throw new Error(msg);
 }
 
-function updateVel(bod, f) {
+export function updateVel(bod, f) {
   bod.setLinearVelocity(f(bod.getLinearVelocity()));
 }
 
 function feedInputs(player: Player, dt: number, gameState: GameState) {
 
+  const speedup = player.state == 'speeding' ? settings.speedup : 1;
+  const speedLim = 5 * speedup;
+
   if (player.state == 'startingSmash') {
     updateVel(player.bod, (old) => Pl.Vec2(0, 0));
   } else if (player.state == 'smashing') {
     updateVel(player.bod, (old) => Pl.Vec2(0, -settings.smashSpeed));
-  } else if (player.state == 'normal') {
+  } else if (player.state == 'normal' || player.state == 'speeding') {
     if (player.dir == Dir.Left || alwaysMoveLeft) {
       //  Move to the left
-      updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.max(x - settings.accel * dt, -5), y));
+      updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.max(x - settings.accel * dt * speedup, -speedLim), y));
     } else if (player.dir == Dir.Right) {
       //  Move to the right
-      updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 5), y));
+      updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.min(x + settings.accel * dt * speedup, speedLim), y));
     } else {
       ////  Reset the players velocity (movement)
       if (player.bod.getLinearVelocity().x < 0) {
-        updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.min(x + settings.accel * dt, 0), y));
+        updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.min(x + settings.accel * dt * speedup, 0), y));
       } else {
-        updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.max(x - settings.accel * dt, 0), y));
+        updateVel(player.bod, ({x, y}) => Pl.Vec2(Math.max(x - settings.accel * dt * speedup, 0), y));
       }
     }
   } else {
@@ -785,7 +796,9 @@ export function update(gameState: GameState, _dt: number = settings.dt, _world: 
   // Clear this after every step!
   entToHitter.clear();
   for (let player of gameState.players) {
-    updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, player.state == 'smashing' ? settings.smashSpeed : settings.maxFallSpeed)));
+    const fallSpeedLimit = player.state == 'smashing' ? settings.smashSpeed :
+      player.state == 'speeding' ? settings.speedup * settings.maxFallSpeed : settings.maxFallSpeed;
+    updateVel(player.bod, ({x,y}) => Pl.Vec2(x, clamp(y, fallSpeedLimit)));
     if (
       doLava &&
       player.bod.getFixtureList().getAABB(0).lowerBound.y <=
