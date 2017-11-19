@@ -124,6 +124,7 @@ export class ServerSettings {
   doSmashes = true;
   doSpeedups = true;
   speedupDur = 3;
+  holdForSpeedups = true;
   speedup = 2;
   burstLimit = 100;
   ser() {
@@ -676,6 +677,10 @@ export class StartSmash extends Event {
 
 export class StartSpeedup extends Event {
   constructor(public playerId: number) { super("StartSpeedup"); }
+}
+
+export class StopSpeedup extends Event {
+  constructor(public playerId: number) { super("StopSpeedup"); }
 }
 
 export class InputEvent extends Event {

@@ -34,7 +34,7 @@ import {
   ServerSettings,
   setInputsByDir,
   Star,
-  StartSmash, StartSpeedup,
+  StartSmash, StartSpeedup, StopSpeedup,
   Vec2,
   world
 } from './common';
@@ -262,6 +262,7 @@ function create() {
   }
 
   game.input.onDown.add(actionButton);
+  game.input.onUp.add(actionRelease);
 
   // The notification banner
   notifText = game.add.text(16, 16, '', { fontSize: '48px', fill: '#fff', align: 'center', boundsAlignH: "center", boundsAlignV: "middle" });
@@ -317,6 +318,11 @@ export function getEnts() {
 
 function actionButton() {
   events.push(svrSettings.doSpeedups ? new StartSpeedup(me.id) : new StartSmash(me.id));
+}
+
+function actionRelease() {
+  if (svrSettings.doSpeedups && svrSettings.holdForSpeedups)
+    events.push(new StopSpeedup(me.id));
 }
 
 function onEntAdded(ent: Ent) {

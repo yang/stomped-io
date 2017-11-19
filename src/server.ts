@@ -12,7 +12,7 @@ import {
   ledgeHeight,
   ledgeWidth, makeStar, maxNameLen, now, pb,
   Player, playerStyles,
-  RemEnt, runLocally, serSimResults, Star, StompEv,
+  RemEnt, runLocally, serSimResults, Star, StompEv, StopSpeedup,
   updateEntPhysFromPl,
   updatePeriod, updateVel,
   world
@@ -527,6 +527,14 @@ io.use(function(socket, next) {
   return next();
 });
 
+function stopSpeedup(player: Player | Player) {
+  if (!player.dead) {
+    player.state = 'normal';
+    player.bod.setGravityScale(1);
+    events.push(new StopSpeedup(player.id));
+  }
+}
+
 io.on('connection', (socket: SocketIO.Socket) => {
   const log = getLogger('net');
   const client = new Client(socket);
@@ -576,11 +584,16 @@ io.on('connection', (socket: SocketIO.Socket) => {
             player.state = 'speeding';
             player.bod.setGravityScale(Common.settings.speedup * 2);
             updateVel(player.bod, v => v.mul(Common.settings.speedup));
-            gameState.timerMgr.wait(Common.settings.speedupDur, () => {
-              player.state = 'normal';
-              player.bod.setGravityScale(1);
-            });
+            if (!Common.settings.holdForSpeedups) {
+              gameState.timerMgr.wait(Common.settings.speedupDur, () => {
+                stopSpeedup(player);
+              });
+            }
             events.push(ev);
+          }
+        } else if (ev.type == 'StopSpeedup') {
+          if (Common.settings.holdForSpeedups && player.state == 'speeding' && ev.playerId == player.id) {
+            stopSpeedup(player);
           }
         } else if (ev.type == 'StartSmash') {
           if (Common.settings.doSmashes && player.state == 'normal' && ev.playerId == player.id) {
