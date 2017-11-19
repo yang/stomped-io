@@ -15,6 +15,7 @@ import {
   RemEnt, runLocally, serSimResults, Star, StompEv, StopSpeedup,
   updateEntPhysFromPl,
   updatePeriod, updateVel,
+  settings,
   world
 } from './common';
 import * as Pl from 'planck-js';
@@ -293,7 +294,7 @@ function bcast() {
     buf: null
   });
   const diff: Bcast = _(snapshot).clone();
-  if (lastSnapshot && Common.settings.doDiff) {
+  if (lastSnapshot && settings.doDiff) {
     const lastById = new Map(lastSnapshot.ents.map<[number, Ent]>(e => [e.id, e]));
     diff.isDiff = true;
     diff.ents = [];
@@ -315,13 +316,13 @@ function bcast() {
       }
     }
   }
-  if (Common.settings.doProtobuf) {
+  if (settings.doProtobuf) {
     assert(!pb.Bcast.verify({ents: diff.ents}));
     const msg = pb.Bcast.create({ents: diff.ents});
     diff.buf = pb.Bcast.encode(msg).finish();
     diff.ents = null;
   }
-  const data = Common.settings.doProtobuf ? diff : JSON.stringify(diff);
+  const data = settings.doProtobuf ? diff : JSON.stringify(diff);
 
   // broadcast
   for (let client of clients) {
@@ -397,7 +398,7 @@ function updateLedges() {
       Common.gameWorld.height - ledgeSpacing : lastLedge.y - ledgeSpacing;
 
     const numCols = 2;
-    const margin = +Common.settings.doOsc * Common.settings.oscDist / 2 + ledgeWidth;
+    const margin = +settings.doOsc * settings.oscDist / 2 + ledgeWidth;
     const [spawnMin, spawnMax] = [margin, Common.gameWorld.width - margin];
     const spawnWidth = spawnMax - spawnMin;
     const colWidth = spawnWidth / numCols;
@@ -544,10 +545,10 @@ io.on('connection', (socket: SocketIO.Socket) => {
   if (admins.has(socket)) {
     log.log('client', client.id, 'is an admin');
 
-    socket.emit('svrSettings', Common.settings.ser());
+    socket.emit('svrSettings', settings.ser());
 
     socket.on('svrSettings', (svrData) => {
-      Common.settings.deser(svrData);
+      settings.deser(svrData);
     });
   }
 
@@ -579,28 +580,30 @@ io.on('connection', (socket: SocketIO.Socket) => {
       for (let ev of data.events) {
         if (ev.type == 'InputEvent') {
           player.dir = ev.dir;
-        } else if (ev.type == 'StartSpeedup') {
-          if (Common.settings.doSpeedups && player.state == 'normal' && ev.playerId == player.id) {
-            player.state = 'speeding';
-            player.bod.setGravityScale(Common.settings.speedup * 2);
-            updateVel(player.bod, v => v.mul(Common.settings.speedup));
-            if (!Common.settings.holdForSpeedups) {
-              gameState.timerMgr.wait(Common.settings.speedupDur, () => {
-                stopSpeedup(player);
-              });
+        } else {
+          if (ev.type == 'StartSpeedup') {
+            if (settings.doSpeedups && player.state == 'normal' && ev.playerId == player.id) {
+              player.state = 'speeding';
+              player.bod.setGravityScale(settings.speedup * 2);
+              updateVel(player.bod, v => v.mul(settings.speedup));
+              if (!settings.holdForSpeedups) {
+                gameState.timerMgr.wait(settings.speedupDur, () => {
+                  stopSpeedup(player);
+                });
+              }
+              events.push(ev);
             }
-            events.push(ev);
-          }
-        } else if (ev.type == 'StopSpeedup') {
-          if (Common.settings.holdForSpeedups && player.state == 'speeding' && ev.playerId == player.id) {
-            stopSpeedup(player);
-          }
-        } else if (ev.type == 'StartSmash') {
-          if (Common.settings.doSmashes && player.state == 'normal' && ev.playerId == player.id) {
-            // Ignore/distrust its id param.
-            player.state = 'startingSmash';
-            gameState.timerMgr.wait(Common.settings.smashDelay, () => player.state = 'smashing');
-            events.push(ev);
+          } else if (ev.type == 'StopSpeedup') {
+            if (settings.holdForSpeedups && player.state == 'speeding' && ev.playerId == player.id) {
+              stopSpeedup(player);
+            }
+          } else if (ev.type == 'StartSmash') {
+            if (settings.doSmashes && player.state == 'normal' && ev.playerId == player.id) {
+              // Ignore/distrust its id param.
+              player.state = 'startingSmash';
+              gameState.timerMgr.wait(settings.smashDelay, () => player.state = 'smashing');
+              events.push(ev);
+            }
           }
         }
       }
