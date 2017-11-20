@@ -87,7 +87,7 @@ export class Splash extends React.Component {
         <br/>
         Collect stars to grow bigger.
         <br/>
-        When larger, hold down your mouse button for a speed boost.
+        Click to smash downward.
         <br/>
         Stomp other players to take their stars.  Don't get stomped!
       </p>
