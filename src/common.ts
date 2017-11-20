@@ -232,6 +232,7 @@ export class GameState {
   onJumpoff = new Signals.Signal();
   onEntCreated = new Signals.Signal();
   onStomp = new Signals.Signal();
+  onStartSmash = new Signals.Signal();
   constructor(public world: Pl.World = gWorld, public destroy: (killed: Ent, killer?: Ent) => void = () => {}) {}
   getEnts() {
     return (<Ent[]>this.players).concat(this.ledges).concat(this.stars).concat(this.blocks);
@@ -261,6 +262,21 @@ export class GameState {
     this.ledges = t2bs.get(Ledge);
     this.stars = t2bs.get(Star);
     [this.lava] = t2bs.get(Lava);
+  }
+  startAction(player: Player) {
+    return settings.doSpeedups ? this.startSpeedup(player) :
+      settings.doSmashes ? this.startSmash(player) : null;
+  }
+  stopAction(player: Player) {
+    return settings.doSpeedups ? this.stopSpeedup(player) : null;
+  }
+  startSmash(player: Player) {
+    if (settings.doSmashes && player.state == 'normal') {
+      // Ignore/distrust its id param.
+      player.state = 'startingSmash';
+      this.timerMgr.wait(settings.smashDelay, () => player.state = 'smashing');
+      this.onStartSmash.dispatch(player);
+    }
   }
   startSpeedup(player: Player) {
     if (settings.doSpeedups && player.state == 'normal' && player.size >= 1.1) {
@@ -735,6 +751,14 @@ export class Event extends Serializable {}
 
 export class StompEv extends Event {
   constructor(public playerId: number, public count: number) { super("StompEv"); }
+}
+
+export class StartAction extends Event {
+  constructor() { super("StartAction"); }
+}
+
+export class StopAction extends Event {
+  constructor() { super("StopAction"); }
 }
 
 export class StartSmash extends Event {

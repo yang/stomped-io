@@ -16,7 +16,7 @@ import {
   updateEntPhysFromPl,
   updatePeriod, updateVel,
   settings,
-  world, setNotConsumable, setConsumable
+  world, setNotConsumable, setConsumable, StartSmash
 } from './common';
 import * as Pl from 'planck-js';
 import * as fs from 'fs';
@@ -146,6 +146,7 @@ const io = Sio();
 const gameState = new GameState(undefined, destroy);
 gameState.onEntCreated.add(ent => ent instanceof Star && events.push(new AddEnt(ent).ser()));
 gameState.onStomp.add((player, count) => events.push(new StompEv(player.id, count).ser()));
+gameState.onStartSmash.add((player) => events.push(new StartSmash(player.id).ser()));
 
 // already-serialized
 const events: Event[] = [];
@@ -573,7 +574,11 @@ io.on('connection', (socket: SocketIO.Socket) => {
         if (ev.type == 'InputEvent') {
           player.dir = ev.dir;
         } else {
-          if (ev.type == 'StartSpeedup') {
+          if (ev.type == 'StartAction') {
+            gameState.startAction(player);
+          } else if (ev.type == 'StopAction') {
+            gameState.stopAction(player);
+          } else if (ev.type == 'StartSpeedup') {
             if (ev.playerId == player.id) {
               gameState.startSpeedup(player);
             }
@@ -582,11 +587,8 @@ io.on('connection', (socket: SocketIO.Socket) => {
               gameState.stopSpeedup(player);
             }
           } else if (ev.type == 'StartSmash') {
-            if (settings.doSmashes && player.state == 'normal' && ev.playerId == player.id) {
-              // Ignore/distrust its id param.
-              player.state = 'startingSmash';
-              gameState.timerMgr.wait(settings.smashDelay, () => player.state = 'smashing');
-              events.push(ev);
+            if (ev.playerId == player.id) {
+              gameState.startSmash(player);
             }
           }
         }

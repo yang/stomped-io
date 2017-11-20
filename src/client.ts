@@ -33,8 +33,8 @@ import {
   runLocally,
   ServerSettings,
   setInputsByDir,
-  Star,
-  StartSmash, StartSpeedup, StopSpeedup,
+  Star, StartAction,
+  StartSmash, StartSpeedup, StopAction, StopSpeedup,
   Vec2,
   world
 } from './common';
@@ -101,7 +101,7 @@ export class ControlPanel {
   spectate = false;
   doPings = true;
   doUpdatePl = false;
-  smashFrames = 12;
+  smashFrames = 8;
   backToSplash() { backToSplash(); }
   testNotif() { notify('Testing!'); }
 }
@@ -317,12 +317,11 @@ export function getEnts() {
 }
 
 function actionButton() {
-  events.push(svrSettings.doSpeedups ? new StartSpeedup(me.id) : new StartSmash(me.id));
+  events.push(new StartAction());
 }
 
 function actionRelease() {
-  if (svrSettings.doSpeedups && svrSettings.holdForSpeedups)
-    events.push(new StopSpeedup(me.id));
+  events.push(new StopAction());
 }
 
 function onEntAdded(ent: Ent) {
