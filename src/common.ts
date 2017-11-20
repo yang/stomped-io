@@ -275,7 +275,10 @@ export class GameState {
     if (settings.doSmashes && player.state == 'normal') {
       // Ignore/distrust its id param.
       player.state = 'startingSmash';
-      this.timerMgr.wait(settings.smashDelay, () => player.state = 'smashing');
+      this.timerMgr.wait(settings.smashDelay, () => {
+        player.state = 'smashing';
+        player.bod.bullet = true;
+      });
       this.onStartSmash.dispatch(player);
     }
   }
@@ -444,8 +447,10 @@ export function create(gameState: GameState) {
         if (veq(m.normal, Pl.Vec2(0,-1).mul(reverse ? -1 : 1))) {
           log.log('jumping', playerA, bB.getUserData());
           gameState.onJumpoff.dispatch(playerA, bB.getUserData());
-          if (playerA.state == 'startingSmash' || playerA.state == 'smashing')
+          if (playerA.state == 'startingSmash' || playerA.state == 'smashing') {
             playerA.state = 'normal';
+            bA.bullet = false;
+          }
           postStep(() => {
             updateVel(bA, ({x,y}) => Pl.Vec2(x, 8 * (playerA.state == 'speeding' ? settings.speedup : 1)));
             if (bB.getUserData() instanceof Player) {
