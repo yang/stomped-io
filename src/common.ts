@@ -117,12 +117,12 @@ export class ServerSettings {
   oscDist = gameWorld.width / 8 * 2;
   maxFallSpeed = 9;
   smashSpeed = 20;
-  smashDelay = .4;
+  smashDelay = .2;
   oneWayLedges = true;
   doDiff = true;
   doProtobuf = true;
   doSmashes = true;
-  doSpeedups = true;
+  doSpeedups = false;
   speedupDur = 3;
   speedupDropPeriod = .1;
   holdForSpeedups = true;
