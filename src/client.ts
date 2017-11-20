@@ -626,7 +626,7 @@ ${mkDebugText(ptr, currentPlayer)}
           case 'StartSmash':
             const startSmash = ev as StartSmash;
             const player = gameState.players.find(p => p.id == startSmash.playerId);
-            player.state = 'startingSmash';
+            if (player) player.state = 'startingSmash';
             break;
           case 'StompEv':
             const p = gameState.players.find(p => p.id == ev.playerId);
