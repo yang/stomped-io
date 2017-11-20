@@ -1,7 +1,8 @@
 import * as Pl from 'planck-js';
 import * as _ from "lodash";
 import {
-  assert,
+  approx,
+  assert, baseHandler,
   bestColors,
   bfs,
   bodiesByType,
@@ -29,9 +30,9 @@ import {
   gameWorld,
   getDir,
   getLogger,
-  getRandomIntRange,
+  getRandomIntRange, gravity,
   horizon,
-  InputEvent,
+  InputEvent, isClose,
   iterBodies,
   Ledge,
   now, opp,
@@ -45,7 +46,7 @@ import {
   ReplayMode,
   restoreBody,
   runLocally,
-  setInputsByDir,
+  setInputsByDir, settings,
   simComputeTimeAllowance,
   simDt,
   simPeriod,
@@ -101,6 +102,7 @@ export class Bot {
   private lastDumbTime = 0;
   private lastNearest: Player = null;
   private lastDirChange = 0;
+  private lastSmash = 0;
 
   dumbPlan() {
     const me = this.player;
@@ -123,13 +125,46 @@ export class Bot {
       // thing, e.g. a big bot pinning you against a wall forever.
       this.reallySetInput(this.chance.bool({likelihood: 10}) ? opp(dir) : dir, currTime);
       this.lastDirChange = currTime;
-      if (this.player.size > 2 && this.chance.bool({likelihood: 10})) {
+      if (settings.doSpeedups && this.player.size > 2 && this.chance.bool({likelihood: 10})) {
         const dur = this.chance.floating({min: 1, max: 5});
         this.gameState.startSpeedup(this.player);
         const origPlayer = this.player;
         this.gameState.timerMgr.wait(dur, () =>
           this.player == origPlayer && this.gameState.stopSpeedup(this.player)
         );
+      }
+      if (settings.doSmashes && this.chance.bool({likelihood: 10})) {
+        this.gameState.startSmash(this.player);
+        this.lastSmash = currTime;
+      }
+    }
+    if (this.lastNearest && !this.lastNearest.dead && settings.doSmashes && currTime - this.lastSmash > 1000) {
+      const mySpeed = this.player.bod.getLinearVelocity().x;
+      const theirSpeedX = this.lastNearest.bod.getLinearVelocity().x;
+      const theirSpeedY = this.lastNearest.bod.getLinearVelocity().y;
+      const horizon = 1 * settings.smashDelay;
+      const theirProjectedX = this.lastNearest.x + ratio * (theirSpeedX * horizon);
+      const theirProjectedY = this.lastNearest.y + ratio * (-theirSpeedY * horizon + 0.5 * -gravity * horizon * horizon);
+      // If the target is moving at the max speed, and they're beneath us, and they'll be ~under us soon.
+      const estGoodSmash =
+        // approx(Math.abs(theirSpeedX), settings.moveSpeedLimit, .5) &&
+        theirProjectedY > this.player.y + this.player.height &&
+        theirProjectedY < this.player.y + 200 &&
+        approx(this.player.x, theirProjectedX, 50) &&
+        true;
+      if (baseHandler.enabled.has('dumbSmash')) {
+        getLogger('dumbSmash').log(
+          'mySpeed', mySpeed, 'theirSpeedX', theirSpeedX,
+          'myX', this.player.x, 'theirX', this.lastNearest.x, 'theirProjectedX', theirProjectedX,
+          'myY', this.player.y + this.player.height * 2, 'theirY', this.lastNearest.y,
+          'theirProjectedY', theirProjectedY,
+          'estGoodSmash', estGoodSmash
+        );
+      }
+      if (estGoodSmash) {
+      // if ((estGoodSmash || this.chance.bool({likelihood: 5}))) {
+        this.gameState.startSmash(this.player);
+        this.lastSmash = currTime;
       }
     }
   }

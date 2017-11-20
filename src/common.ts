@@ -128,6 +128,7 @@ export class ServerSettings {
   holdForSpeedups = true;
   speedup = 1.5;
   burstLimit = 100;
+  moveSpeedLimit = 5;
   ser() {
     return _({}).assign(this);
   }
@@ -839,7 +840,7 @@ export function updateVel(bod, f) {
 function feedInputs(player: Player, dt: number, gameState: GameState) {
 
   const speedup = player.state == 'speeding' ? settings.speedup : 1;
-  const speedLim = 5 * speedup;
+  const speedLim = settings.moveSpeedLimit * speedup;
 
   if (player.state == 'startingSmash') {
     updateVel(player.bod, (old) => Pl.Vec2(0, 0));
@@ -1063,6 +1064,10 @@ function saveRestoreWorld(world: Pl.World) {
 
 export function cloneWorld(world: Pl.World): Pl.World {
   return 1/1 ? saveRestoreWorld(world) : 1/1 ? manuallyCloneWorld(world) : deepCloneWorld(world);
+}
+
+export function approx(a: number, b: number, delta: number) {
+  return Math.abs(a - b) <= delta;
 }
 
 export function isClose(a: number, b: number, eps = 1e-9) {
