@@ -1,3 +1,4 @@
+require('es6-shim');
 import {renderSplash, Splash} from "./components";
 import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
