@@ -2,13 +2,21 @@ const MinifyPlugin = require("babel-minify-webpack-plugin");
 const merge = require('webpack-merge');
 const webpack = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const baseConfig = require('./webpack.base.config');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 module.exports = merge(baseConfig, {
   name: 'prod',
   entry: {
     client: './src/client-runner.ts'
   },
   plugins: [
+    new CleanWebpackPlugin(['dist']),
+
+    new CopyWebpackPlugin([{from: 'src/main.proto', to: 'main.proto'}]),
+
     // 5.8M -> 5.1M
     new webpack.DefinePlugin({
       'process.env': {
@@ -22,16 +30,21 @@ module.exports = merge(baseConfig, {
     // 5.1M -> 1.5M (.4M gz)
     new webpack.optimize.UglifyJsPlugin({
       sourceMap: true
-    })
+    }),
 
     // 5.1M -> 1.5M, breaks Planck import, and runs many times slower!
     // new MinifyPlugin({}, {})
 
     // new BundleAnalyzerPlugin()
+
+    new HtmlWebpackPlugin({
+      template: 'src/index.html',
+      filename: '../index.html'
+    })
   ],
   output: {
-    filename: 'bundle.js',
+    filename: 'bundle.[hash].js',
     path: __dirname + '/dist',
-    sourceMapFilename: 'maps/[file].map'
+    sourceMapFilename: 'maps/[file].[hash].map'
   }
 });
