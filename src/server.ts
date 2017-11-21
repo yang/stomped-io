@@ -153,8 +153,6 @@ const events: Event[] = [];
 const players = gameState.players;
 const ledges = gameState.ledges;
 
-const clients: Client[] = [];
-
 function onEntAdded(ent: Ent) {
   events.push(new AddEnt(ent).ser());
 }
@@ -208,8 +206,6 @@ function update() {
   const endTime = now();
   getLogger('server-jank').log('start', currTime, 'end', endTime, 'elapsed', endTime - currTime);
 }
-
-const playerToSocket = new Map();
 
 function getEnts(): Ent[] {
   return gameState.getEnts();
@@ -527,7 +523,6 @@ io.use(function(socket, next) {
 io.on('connection', (socket: SocketIO.Socket) => {
   const log = getLogger('net');
   const client = new Client(socket);
-  clients.push(client);
   log.log('client', client.id, 'connected');
 
   if (admins.has(socket)) {
