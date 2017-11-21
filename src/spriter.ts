@@ -1,6 +1,6 @@
 import * as Color from 'tinycolor2';
 
-let hidden = true;
+let hidden = true, heavyShim = false;
 
 let hue = '';
 const chars = [
@@ -134,6 +134,9 @@ const chars = [
 ];
 
 export function loadSprites() {
+  if (!!navigator.userAgent.match(/Trident\/7\./)) {
+    return new Promise(() => null);
+  }
   const staging = document.createElement('div');
   // Need to compartmentalize our innerHTML mangling, or else it interferes with dat.GUI.
   document.body.appendChild(staging);
@@ -237,8 +240,21 @@ function genSprites(charName, ev) {
       // the SVG version (a proper one is just `version="1.1"`), causing the SVG parser to throw up.  So we
       // force-wipe it.
 
-      // TODO This is not very robust, as it looks for a fixed version.
+      if (!svg.outerHTML && heavyShim) {
+        Object.defineProperty(SVGElement.prototype, 'outerHTML', {
+          get: function () {
+            var $node, $temp;
+            $temp = document.createElement('div');
+            $node = this.cloneNode(true);
+            $temp.appendChild($node);
+            return $temp.innerHTML;
+          },
+          enumerable: false,
+          configurable: true
+        });
+      }
       const img = new Image();
+      // TODO This is not very robust, as it looks for a fixed version.
       img.src = `data:image/svg+xml;base64,${btoa(svg.outerHTML.replace(' version="0.92.2 5c3e80d, 2017-08-06"', ''))}`;
       imgs.push(img);
 
@@ -257,3 +273,4 @@ function genSprites(charName, ev) {
 
   return variantImgs;
 }
+

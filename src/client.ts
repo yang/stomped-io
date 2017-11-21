@@ -1,4 +1,7 @@
+let heavyShim = false;
 require('es6-shim');
+// This is from ES5-DOM-SHIM
+if (heavyShim) { require('./a'); }
 import {renderSplash, Splash} from "./components";
 import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
