@@ -1308,7 +1308,7 @@ export class EntMgr {
         this.addBlock(ent);
         break;
       default:
-        throw new Error();
+        throw new Error(`unexpected ent type ${ent.type}`);
     }
   }
 
