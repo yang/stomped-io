@@ -326,13 +326,8 @@ function bcast() {
   const data = settings.doProtobuf ? diff : JSON.stringify(diff);
 
   // broadcast
-  for (let client of clients) {
-    const socket = client.socket;
-    if (socket) {
-      socket.emit('bcast', data);
-      getLogger('bcast').log('tick', tick, 'client', client.id, 'snap time', currTime, 'send done time', now(), 'length', data instanceof String ? data.length : data.buf.length);
-    }
-  }
+  io.emit('bcast', data);
+  getLogger('bcast').log('tick', tick, 'snap time', currTime, 'send done time', now(), 'length', data instanceof String ? data.length : data.buf.length);
   clearArray(events);
   bcastNum += 1;
   lastSnapshot = snapshot;
