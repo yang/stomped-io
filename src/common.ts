@@ -456,7 +456,8 @@ export function create(gameState: GameState) {
             if (bB.getUserData() instanceof Player) {
               const playerB: Player = bB.getUserData();
               uniqueHit(playerA, playerB, () => {
-                const impact = Math.min(playerA.size, playerB.size);
+                const damage = Math.max(playerA.size, playerB.size / 2);
+                const impact = Math.min(damage, playerB.size);
                 playerB.grow(-impact);
                 playerA.grow(impact / 2);
                 gameState.onStomp.dispatch(playerA, Math.round(impact / 2 * 10));
