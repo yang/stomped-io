@@ -3,20 +3,22 @@ import * as ReactDOM from 'react-dom';
 import {Component} from "react";
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
-import {clearArray, maxNameLen, playerStyles} from "./common";
+import {clearArray, maxNameLen, playerStyles, Stats} from "./common";
 
 interface SplashState {
   name: string;
   shown: boolean;
   disabled: boolean;
   char: string;
-  charToVariants: any
+  charToVariants: any;
+  stats: Stats;
 }
 
 interface SplashProps {
   onSubmit: (name: string, char: string) => void;
   shown: boolean;
   browserSupported: boolean;
+  stats: Stats;
 }
 
 export class Splash extends React.Component {
@@ -39,7 +41,8 @@ export class Splash extends React.Component {
       shown: props.shown,
       disabled: false,
       char: new Chance().pickone(this.chars.slice(0,3)),
-      charToVariants: null
+      charToVariants: null,
+      stats: props.stats
     };
   }
   private handleChange = (e) => {
@@ -81,10 +84,14 @@ export class Splash extends React.Component {
     this.afterUpdates.push(this.scrollToChar);
     this.setState({charToVariants: mapping});
   }
+  setStats(stats: Stats) {
+    this.setState({stats: stats});
+  }
   render() {
     const isSupported = this.props.browserSupported;
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
+      {this.state.stats && <h2><span className="num">{this.state.stats.players}</span> Players Online</h2>}
       {!isSupported && <p key={'p'} className={'subhead'}>
         Sorry, this game does not work with your browser.
         <br/>
@@ -146,10 +153,10 @@ export class Splash extends React.Component {
   }
 }
 
-export function renderSplash({onSubmit, shown, browserSupported}: SplashProps) {
+export function renderSplash({onSubmit, shown, browserSupported, stats}: SplashProps) {
   return new Promise<Splash>((resolve) =>
     ReactDOM.render(
-      <Splash onSubmit={onSubmit} shown={shown} ref={resolve} browserSupported={browserSupported}/>,
+      <Splash onSubmit={onSubmit} shown={shown} ref={resolve} stats={stats} browserSupported={browserSupported}/>,
       document.getElementById('mount-point')
     )
   );

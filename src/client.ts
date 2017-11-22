@@ -39,7 +39,7 @@ import {
   ServerSettings,
   setInputsByDir,
   Star, StartAction,
-  StartSmash, StartSpeedup, StopAction, StopSpeedup,
+  StartSmash, StartSpeedup, Stats, StopAction, StopSpeedup,
   Vec2,
   world
 } from './common';
@@ -483,6 +483,7 @@ function removeEnt(id: number, instantly = false) {
 }
 
 function backToSplash() {
+  rootComponent.setState({stats: {players: gameState.players.length}});
   rootComponent.show();
 
   for (let ent of getEnts()) {
@@ -982,10 +983,18 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
     loadSprites().then(s => sprites = s) :
     new Promise(() => null);
   socket = connect();
+  let stats: Stats;
+  socket.on('stats', (_stats: Stats) => {
+    stats = _stats;
+    if (rootComponent) {
+      rootComponent.setStats(stats);
+    }
+  });
   let firstSubmitted = false, pRootComponent: Promise<Splash>;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
     pRootComponent = renderSplash({
       browserSupported: browserSupported(),
+      stats: stats,
       onSubmit: (name, char) => {
         // OK to resolve multiple times
         resolveSubmit([name, char]);

@@ -44,8 +44,21 @@ h1 {
     font-size: 96px;
     margin: 0;
 }
+h2 {
+    /*color: #cc6600;*/
+    font-family: 'Luckiest Guy', cursive;
+    color: var(--alt-color);
+    margin: 0;
+}
 .splash-form {
     text-align: center;
+}
+.num {
+    color: var(--alt-color);
+    color: #ff8800;
+    color: white;
+    color: var(--alt-color);
+    font-size: 1.2em;
 }
 .io {
     color: var(--alt-color);

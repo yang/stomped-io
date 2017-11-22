@@ -1286,6 +1286,10 @@ export function deserSimResults({worldStatesData, bestWorldStateIndex, bestPath}
   return results;
 };
 
+export interface Stats {
+  players: number;
+}
+
 export class EntMgr {
   constructor(
     public world: Pl.World,

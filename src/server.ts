@@ -547,6 +547,10 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
   let player;
 
+  socket.emit('stats', {
+    players: gameState.players.length
+  });
+
   socket.on('disconnect', () => {
     log.log('client', client.id, 'disconnected');
     if (player) destroy(player);
