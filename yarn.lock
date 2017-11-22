@@ -45,6 +45,10 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
+"@types/bowser@^1.0.31":
+  version "1.0.31"
+  resolved "https://registry.yarnpkg.com/@types/bowser/-/bowser-1.0.31.tgz#f66b3ef4c07e46184456b9337ef51ef32851575f"
+
 "@types/bytebuffer@*":
   version "5.0.34"
   resolved "https://registry.yarnpkg.com/@types/bytebuffer/-/bytebuffer-5.0.34.tgz#43f7140503a593acc700f818fe23343ae911bcdf"
@@ -887,6 +891,10 @@ boom@5.x.x:
   resolved "https://registry.yarnpkg.com/boom/-/boom-5.2.0.tgz#5dd9da6ee3a5f302077436290cb717d3f4a54e02"
   dependencies:
     hoek "4.x.x"
+
+bowser@^1.8.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/bowser/-/bowser-1.8.1.tgz#49785777e7302febadb1a5b71d9a646520ed310d"
 
 brace-expansion@^1.1.7:
   version "1.1.8"

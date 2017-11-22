@@ -2,6 +2,7 @@ let heavyShim = false;
 require('es6-shim');
 // This is from ES5-DOM-SHIM
 if (heavyShim) { require('./a'); }
+import * as Bowser from 'bowser';
 import {renderSplash, Splash} from "./components";
 import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
@@ -45,6 +46,14 @@ import {
 import * as _ from 'lodash';
 import {loadSprites} from "./spriter";
 import * as URLSearchParams from 'url-search-params';
+
+export let browserSupported = function () {
+  const hasSvgOuterHtml = (() => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg") as SVGElement;
+    return !!svg.outerHTML;
+  })();
+  return !Bowser.msie && hasSvgOuterHtml;
+};
 
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
@@ -967,11 +976,14 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
   gPool = pool;
   const pPb = Protobuf.load('dist/main.proto').then((root) => Common.bootstrapPb(root));
   let sprites;
-  const pSprites = loadSprites().then(s => sprites = s);
+  const pSprites = browserSupported() ?
+    loadSprites().then(s => sprites = s) :
+    new Promise(() => null);
   socket = connect();
   let firstSubmitted = false, pRootComponent: Promise<Splash>;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
     pRootComponent = renderSplash({
+      browserSupported: browserSupported(),
       onSubmit: (name, char) => {
         // OK to resolve multiple times
         resolveSubmit([name, char]);

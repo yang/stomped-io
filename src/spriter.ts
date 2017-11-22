@@ -134,9 +134,6 @@ const chars = [
 ];
 
 export function loadSprites() {
-  if (!!navigator.userAgent.match(/Trident\/7\./)) {
-    return new Promise(() => null);
-  }
   const staging = document.createElement('div');
   // Need to compartmentalize our innerHTML mangling, or else it interferes with dat.GUI.
   document.body.appendChild(staging);

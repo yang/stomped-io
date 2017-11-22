@@ -16,15 +16,8 @@ interface SplashState {
 interface SplashProps {
   onSubmit: (name: string, char: string) => void;
   shown: boolean;
+  browserSupported: boolean;
 }
-
-// This is from https://stackoverflow.com/questions/17907445/how-to-detect-ie11
-const isIE = !!navigator.userAgent.match(/Trident\/7\./);
-const hasSvgOuterHtml = (() => {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg") as SVGElement;
-  return !!svg.outerHTML;
-})();
-const isSupported = !isIE && hasSvgOuterHtml;
 
 export class Splash extends React.Component {
   state: SplashState;
@@ -88,6 +81,7 @@ export class Splash extends React.Component {
     this.setState({charToVariants: mapping});
   }
   render() {
+    const isSupported = this.props.browserSupported;
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
       {!isSupported && <p key={'p'} className={'subhead'}>
@@ -148,10 +142,10 @@ export class Splash extends React.Component {
   }
 }
 
-export function renderSplash({onSubmit, shown}: SplashProps) {
+export function renderSplash({onSubmit, shown, browserSupported}: SplashProps) {
   return new Promise<Splash>((resolve) =>
     ReactDOM.render(
-      <Splash onSubmit={onSubmit} shown={shown} ref={resolve}/>,
+      <Splash onSubmit={onSubmit} shown={shown} ref={resolve} browserSupported={browserSupported}/>,
       document.getElementById('mount-point')
     )
   );
