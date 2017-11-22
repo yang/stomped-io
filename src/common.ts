@@ -1308,7 +1308,7 @@ export class EntMgr {
         this.addBlock(ent);
         break;
       default:
-        throw new Error(`unexpected ent type ${ent.type}`);
+        throw new Error(`unexpected ent type ${ent.type}: ${JSON.stringify(ent)}`);
     }
   }
 
