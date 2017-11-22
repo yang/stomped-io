@@ -74,7 +74,8 @@ export class Splash extends React.Component {
   };
   scrollToChar = () => {
     const item = this.galleryItemEls.get(this.state.char);
-    this.galleryEl.scrollLeft = item.offsetLeft - this.galleryEl.offsetLeft - this.galleryEl.clientWidth / 2 + item.clientWidth / 2;
+    if (item)
+      this.galleryEl.scrollLeft = item.offsetLeft - this.galleryEl.offsetLeft - this.galleryEl.clientWidth / 2 + item.clientWidth / 2;
   };
   setImgs(mapping) {
     this.afterUpdates.push(this.scrollToChar);
@@ -113,6 +114,9 @@ export class Splash extends React.Component {
         <div className={'gallery'} ref={el => this.galleryEl = el}>{
           this.state.charToVariants && this.chars.map(char => {
             const [charBase, variant] = char.split('-');
+            const variantSpriteSheet = this.state.charToVariants[charBase][+variant];
+            if (!variantSpriteSheet) return null;
+            const imgSrc = variantSpriteSheet[0].src;
             return <div
               key={char}
               ref={el => this.galleryItemEls.set(char, el)}
@@ -122,7 +126,7 @@ export class Splash extends React.Component {
               })}
             >
               <a href={"#"} onMouseDown={() => this.chooseChar(char)}>
-                <img className='gallery-img' src={this.state.charToVariants[charBase][+variant][0].src}/>
+                <img className='gallery-img' src={imgSrc}/>
               </a>
             </div>;
           })

@@ -160,6 +160,7 @@ function children(x: any) {
   return Array.from(x.childNodes).filter((el: any) => el.nodeType != 3);
 }
 
+let alertedOnce = false;
 function genSprites(charName, ev) {
   const char = chars.find(char => char.name == charName);
   const obj = ev.target as HTMLObjectElement;
@@ -167,6 +168,13 @@ function genSprites(charName, ev) {
   const variantImgs = [];
 
   const baseSvg = obj.contentDocument.querySelector('svg') as SVGElement;
+  if (!baseSvg) {
+    if (!alertedOnce) {
+      alert("Error loading sprites - please try refreshing the page.");
+      alertedOnce = true;
+    }
+    return [];
+  }
   for (let variant of char.variants) {
     // document.body.innerHTML += baseSvg.outerHTML;
     // const svg = document.body.children[document.body.children.length - 1] as SVGElement;
