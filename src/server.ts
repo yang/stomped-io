@@ -533,6 +533,16 @@ io.on('connection', (socket: SocketIO.Socket) => {
     socket.on('svrSettings', (svrData) => {
       settings.deser(svrData);
     });
+
+    socket.on('makeBot', () => {
+      const bot = botMgr.makeBot(true);
+      socket.emit('botProxy', bot.ser());
+      bot.onSim.add(({worldStates, bestPath, bestWorldState}) => {
+        const botData = bot.ser();
+        const resultsData = serSimResults({worldStates, bestPath, bestWorldState});
+        socket.emit('botPlan', {botData, ...resultsData});
+      });
+    });
   }
 
   socket.on('disconnect', () => {
@@ -583,16 +593,6 @@ io.on('connection', (socket: SocketIO.Socket) => {
           }
         }
       }
-    });
-
-    socket.on('makeBot', () => {
-      const bot = botMgr.makeBot(true);
-      socket.emit('botProxy', bot.ser());
-      bot.onSim.add(({worldStates, bestPath, bestWorldState}) => {
-        const botData = bot.ser();
-        const resultsData = serSimResults({worldStates, bestPath, bestWorldState});
-        socket.emit('botPlan', {botData, ...resultsData});
-      });
     });
   });
 
