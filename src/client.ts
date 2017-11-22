@@ -270,15 +270,17 @@ function create() {
 
   //  Key controls.
   cursors = game.input.keyboard.createCursorKeys();
-  for (let keyName of ['left', 'down', 'right', 'up']) {
+  for (let keyName of ['left', 'right']) {
     const key = cursors[keyName];
     key.onDown.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
     // key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
   }
 
   const space = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-  space.onDown.add(actionButton);
-  space.onUp.add(actionRelease);
+  for (let key of [cursors.down, space]) {
+    key.onDown.add(actionButton);
+    key.onUp.add(actionRelease);
+  }
 
   game.input.onDown.add(actionButton);
   game.input.onUp.add(actionRelease);

@@ -95,7 +95,7 @@ export class Splash extends React.Component {
         <br/>
         Collect stars to grow bigger.  Stomp other players to take their stars.
         <br/>
-        <strong>Click or press space</strong> for a smash attack that drops you straight downward.
+        <strong>Click or press down/space</strong> for a smash attack that drops you straight downward.
         <br/>
         Don't get stomped!
       </p>}
