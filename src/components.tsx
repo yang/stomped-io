@@ -20,6 +20,11 @@ interface SplashProps {
 
 // This is from https://stackoverflow.com/questions/17907445/how-to-detect-ie11
 const isIE = !!navigator.userAgent.match(/Trident\/7\./);
+const hasSvgOuterHtml = (() => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg") as SVGElement;
+  return !!svg.outerHTML;
+})();
+const isSupported = !isIE && hasSvgOuterHtml;
 
 export class Splash extends React.Component {
   state: SplashState;
@@ -85,12 +90,12 @@ export class Splash extends React.Component {
   render() {
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
-      {isIE && <p key={'p'} className={'subhead'}>
-        Sorry, this game does not work with your browser (Internet Explorer).
+      {!isSupported && <p key={'p'} className={'subhead'}>
+        Sorry, this game does not work with your browser.
         <br/>
-        Please try using Microsoft Edge or Chrome (recommended).
+        Please try using a recent version of Chrome (recommended), Firefox, Safari, or Microsoft Edge.
       </p>}
-      {!isIE && <p key='ppp' className={'subhead'}>
+      {isSupported && <p key='ppp' className={'subhead'}>
         Use your mouse to steer your jumper left/right through the arena.
         <br/>
         Collect stars to grow bigger.
@@ -99,7 +104,7 @@ export class Splash extends React.Component {
         <br/>
         Stomp other players to take their stars.  Don't get stomped!
       </p>}
-      {!isIE && <form key={'form'} className='splash-form' onSubmit={this.handleSubmit}>
+      {isSupported && <form key={'form'} className='splash-form' onSubmit={this.handleSubmit}>
         <input
           className={'name-input'}
           ref={(el) => this.inputEl = el}
