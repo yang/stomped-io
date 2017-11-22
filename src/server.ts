@@ -545,8 +545,11 @@ io.on('connection', (socket: SocketIO.Socket) => {
     });
   }
 
+  let player;
+
   socket.on('disconnect', () => {
     log.log('client', client.id, 'disconnected');
+    if (player) destroy(player);
   });
 
   socket.on('ding', (data) => {
@@ -555,9 +558,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
   socket.on('join', (playerData) => {
     assert(playerStyles.includes(playerData.char));
-    const player = makePlayer(playerData.name.trim().slice(0, maxNameLen) || 'Anonymous Stomper', playerData.char);
-
-    socket.on('disconnect', () => destroy(player));
+    player = makePlayer(playerData.name.trim().slice(0, maxNameLen) || 'Anonymous Stomper', playerData.char);
 
     log.log('player', player.describe(), 'with style', player.style, `joined (client ${client.id})`);
 
@@ -567,33 +568,34 @@ io.on('connection', (socket: SocketIO.Socket) => {
       _(lastSnapshot).extend({ents: lastSnapshot.ents.concat([player.ser()])}).value(),
       player.id
     );
+  });
 
-    socket.on('input', (data) => {
-      getLogger('input').log('player', player.describe(), 'sent input for time', data.time);
-      for (let ev of data.events) {
-        if (ev.type == 'InputEvent') {
-          player.dir = ev.dir;
-        } else {
-          if (ev.type == 'StartAction') {
-            gameState.startAction(player);
-          } else if (ev.type == 'StopAction') {
-            gameState.stopAction(player);
-          } else if (ev.type == 'StartSpeedup') {
-            if (ev.playerId == player.id) {
-              gameState.startSpeedup(player);
-            }
-          } else if (ev.type == 'StopSpeedup') {
-            if (ev.playerId == player.id) {
-              gameState.stopSpeedup(player);
-            }
-          } else if (ev.type == 'StartSmash') {
-            if (ev.playerId == player.id) {
-              gameState.startSmash(player);
-            }
+  socket.on('input', (data) => {
+    if (!player) return;
+    getLogger('input').log('player', player.describe(), 'sent input for time', data.time);
+    for (let ev of data.events) {
+      if (ev.type == 'InputEvent') {
+        player.dir = ev.dir;
+      } else {
+        if (ev.type == 'StartAction') {
+          gameState.startAction(player);
+        } else if (ev.type == 'StopAction') {
+          gameState.stopAction(player);
+        } else if (ev.type == 'StartSpeedup') {
+          if (ev.playerId == player.id) {
+            gameState.startSpeedup(player);
+          }
+        } else if (ev.type == 'StopSpeedup') {
+          if (ev.playerId == player.id) {
+            gameState.stopSpeedup(player);
+          }
+        } else if (ev.type == 'StartSmash') {
+          if (ev.playerId == player.id) {
+            gameState.startSmash(player);
           }
         }
       }
-    });
+    }
   });
 
 });
