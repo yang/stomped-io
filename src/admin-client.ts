@@ -36,7 +36,7 @@ import {
   fixtureDims,
   iterBodies,
   iterFixtures,
-  Player,
+  Player, playerStyles,
   ratio,
   runLocally,
   totalSquishTime,
@@ -143,6 +143,9 @@ export class GuiMgr {
 
     const cliOpts = this.cliOpts;
     this.cliControllers = [
+      cliOpts.add(cp, 'hammerCount'),
+      cliOpts.add(cp, 'startHammer'),
+      cliOpts.add(cp, 'stopHammer'),
       cliOpts.add(cp, 'currentPlayer', players.map((p, i) => i)).onFinishChange(() => refollow()),
       cliOpts.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
       cliOpts.add(cp, 'makeBot'),
@@ -173,8 +176,16 @@ export class GuiMgr {
 }
 
 class ControlPanelWithBots extends ControlPanel {
+  pounder = new Pounder();
   makeBot() {
     runLocally ? botMgr.makeBot() : socket.emit('makeBot');
+  }
+  hammerCount = 30;
+  startHammer() {
+    this.pounder.startHammer(this.hammerCount);
+  }
+  stopHammer() {
+    this.pounder.stopHammer();
   }
 }
 
@@ -266,3 +277,34 @@ Step: ${bot ?
       }` : ''}
     `.trim();
 };
+
+class Pounder {
+  hammerToBcasts = new Map<number, number>();
+  sockets = [];
+
+  hammer(i) {
+    const socket = Client.connect();
+    this.sockets.push(socket);
+    socket.on('connect', () => {
+      socket.emit('join', {name: `hammer-${i}`, char: playerStyles[i % playerStyles.length]});
+      socket.on('joined', (initSnap, myId) => {
+        socket.on('bcast', (bcastData) => {
+          this.hammerToBcasts.set(i, +this.hammerToBcasts.get(i) + 1);
+        });
+      });
+    });
+  }
+
+  startHammer(count: number) {
+    for (let i = 0; i < count; i++) {
+      setTimeout(() =>  this.hammer(i), 100);
+    }
+  }
+
+  stopHammer() {
+    for (let socket of this.sockets) {
+      socket.disconnect();
+    }
+    this.sockets = [];
+  }
+}

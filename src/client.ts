@@ -931,6 +931,16 @@ function startGame(name: string, char: string, onJoin: (socket) => void, updateE
 }
 
 let rootComponent;
+export let connect = function () {
+  const addr = location.origin.replace(/:\d+$/, ':3000');
+  const socket = Sio(addr, {query: {authKey}});
+  socket.on('svrSettings', (svrData) => {
+    svrSettings.deser(svrData);
+    guiMgr.refresh();
+  });
+  return socket;
+};
+
 export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText) {
   guiMgr = _guiMgr;
   gPool = pool;
@@ -938,12 +948,7 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
   let sprites;
   const pSprites = loadSprites().then(s => sprites = s);
   pPb.then((root) => Common.bootstrapPb(root));
-  const addr = location.origin.replace(/:\d+$/, ':3000');
-  socket = Sio(addr, {query: {authKey}});
-  socket.on('svrSettings', (svrData) => {
-    svrSettings.deser(svrData);
-    guiMgr.refresh();
-  });
+  socket = connect();
   let firstSubmitted = false, pRootComponent: Promise<Splash>;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
     pRootComponent = renderSplash({
