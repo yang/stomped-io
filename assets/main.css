@@ -1,6 +1,7 @@
 :root {
     --bg: #2A0F3F;
     --alt-color: #b26ee9;
+    --darker-alt-color: #824eb9;
 }
 html, body, #mount-point {
     height: 100%;
@@ -137,10 +138,14 @@ h1 {
     position: absolute;
     bottom: 0;
     left: 0;
-    font-size: 28px;
+    font-size: 24px;
     font-family: 'Luckiest Guy', cursive;
+    padding: 20px;
+    color: var(--darker-alt-color);
+}
+
+.more-io-games a {
     color: #ff8800;
     color: var(--alt-color);
     text-decoration: none;
-    padding: 20px;
 }

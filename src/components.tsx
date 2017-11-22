@@ -140,7 +140,10 @@ export class Splash extends React.Component {
           disabled={!this.state.charToVariants || this.state.disabled || this.state.name.trim() == ''}>Play!</button>
       </form>
       }
-      <a className={"more-io-games"} href={"http://iogames.space/"} target={"_blank"}>More io Games</a>
+      <div className={"more-io-games"}>
+        <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a>&nbsp;
+        (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
+      </div>
     </div>;
   }
 }
