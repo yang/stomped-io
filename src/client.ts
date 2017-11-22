@@ -97,7 +97,7 @@ export class ControlPanel {
   alwaysStep = true;
   showIds = false;
   showScores = !isDebug;
-  useKeyboard = false;
+  useKeyboard = true;
   boundCameraWithinWalls = false;
   boundCameraAboveGround = true;
   camWidth = 1200;
@@ -214,6 +214,8 @@ function notify(content: string) {
   (notifClearer as any) = setTimeout(() => notifText.text = '', 2000);
 }
 
+let ptr;
+
 function create() {
 
   game.world.setBounds(-Common.gameWorld.width,0,3 * Common.gameWorld.width, Common.gameWorld.height);
@@ -257,16 +259,41 @@ function create() {
   scoreText.cameraOffset.setTo(16,16);
   scoreText.lineSpacing = -2;
 
-  //  Our controls.
+  //  Key controls.
   cursors = game.input.keyboard.createCursorKeys();
   for (let keyName of ['left', 'down', 'right', 'up']) {
     const key = cursors[keyName];
     key.onDown.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
-    key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
+    // key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
   }
+
+  const space = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+  space.onDown.add(actionButton);
+  space.onUp.add(actionRelease);
 
   game.input.onDown.add(actionButton);
   game.input.onUp.add(actionRelease);
+
+  // Mouse controls.
+  game.input.addMoveCallback((_ptr, x: number, y: number, isClick) => {
+    // We're manually calculating the mouse pointer position in scaled world coordinates.
+    // game.input.worldX doesn't factor in the world scaling.
+    // Setting game.input.scale didn't seem to do anything.
+    ptr = new Vec2(game.input.x, game.input.y).add(new Vec2(game.camera.x, game.camera.y)).div(game.world.scale.x);
+
+    const dir = ptr.x <= me.x + me.width / 2 ? Dir.Left : Dir.Right;
+    if (dir != getDir(me)) {
+      setInputsByDir(me, dir);
+      socket.emit('input', {time: now(), events: [new InputEvent(me.dir)]});
+    }
+
+    // const dx = game.input.mouse.event.movementX;
+    // const dy = game.input.mouse.event.movementY;
+    // if (this.me) {
+    //   this.me.angle += this.dx / 400;
+    //   this.me.bod.setAngle(-this.me.angle);
+    // }
+  }, {});
 
   // The notification banner
   notifText = game.add.text(16, 16, '', { fontSize: '48px', fill: '#fff', align: 'center', boundsAlignH: "center", boundsAlignV: "middle" });
@@ -513,7 +540,7 @@ function update(extraSteps, mkDebugText) {
   // We're manually calculating the mouse pointer position in scaled world coordinates.
   // game.input.worldX doesn't factor in the world scaling.
   // Setting game.input.scale didn't seem to do anything.
-  const ptr = new Vec2(game.input.x, game.input.y).add(new Vec2(game.camera.x, game.camera.y)).div(game.world.scale.x);
+  // const ptr = new Vec2(game.input.x, game.input.y).add(new Vec2(game.camera.x, game.camera.y)).div(game.world.scale.x);
 
   const currTime = now();
   // if (delta == null && timeline.length > 0)
@@ -527,7 +554,7 @@ ${mkScoreText()}
 
 FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
 Delta: ${delta}
-Mouse: ${vecStr(ptr)}
+Mouse: ${ptr && vecStr(ptr)}
 Game dims: ${vecStr(new Vec2(game.width, game.height))} 
 Scale: ${game.world.scale.x}
 Bounds: world ${game.world.bounds.height} camera ${game.camera.bounds.height}
@@ -541,12 +568,6 @@ Mass: ${currentPlayer ? currentPlayer.bod.getMass() / .1875 : ''}
 ${mkDebugText(ptr, currentPlayer)}
     `.trim();
     showDebugText();
-  }
-
-  const dir = ptr.x <= me.x + me.width / 2 ? Dir.Left : Dir.Right;
-  if (!cp.useKeyboard && dir != getDir(me)) {
-    setInputsByDir(me, dir);
-    socket.emit('input', {time: currTime, events: [new InputEvent(me.dir)]});
   }
 
   let updating = false;
