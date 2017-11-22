@@ -965,10 +965,9 @@ export let connect = function () {
 export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText) {
   guiMgr = _guiMgr;
   gPool = pool;
-  const pPb = Protobuf.load('dist/main.proto');
+  const pPb = Protobuf.load('dist/main.proto').then((root) => Common.bootstrapPb(root));
   let sprites;
   const pSprites = loadSprites().then(s => sprites = s);
-  pPb.then((root) => Common.bootstrapPb(root));
   socket = connect();
   let firstSubmitted = false, pRootComponent: Promise<Splash>;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
