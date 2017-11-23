@@ -502,6 +502,7 @@ function backToSplash() {
   }
 
   game.paused = true;
+  game.input.enabled = false;
   game.canvas.style.display = 'none';
 }
 
@@ -946,6 +947,7 @@ function startGame(name: string, char: string, onJoin: (socket) => void, updateE
     } else {
       game.canvas.style.display = '';
       game.paused = false;
+      game.input.enabled = true;
     }
 
     socket.on('bcast', (bcastData) => {
