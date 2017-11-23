@@ -367,9 +367,16 @@ function actionRelease() {
 }
 
 function onEntAdded(ent: Ent) {
+  if (ent instanceof Player)
+    guiMgr.refresh();
+  return mkSpriteForEnt(ent);
+}
+function mkSpriteForEnt(ent: Ent) {
   function mkSprite(group, spriteArt: string) {
     const [x, y] = ent.dispPos().toTuple();
     const sprite = group.create(x, y, spriteArt);
+    // Setting autoCull didn't really help performance that much.
+    // sprite.autoCull = true;
     [sprite.width, sprite.height] = ent.dispDims().toTuple();
     entToSprite.set(ent, sprite);
     return sprite;
@@ -386,14 +393,15 @@ function onEntAdded(ent: Ent) {
     text.anchor.x = text.anchor.y = 0.5;
     playerToName.set(ent, text);
     moveName(ent);
-    guiMgr.refresh();
+    return sprite;
   } else if (ent instanceof Ledge) {
-    mkSprite(platforms, 'ground');
+    return mkSprite(platforms, 'ground');
   } else if (ent instanceof Star) {
     const sprite = mkSprite(starGroup, 'star');
     sprite.anchor.setTo(.5, .5);
+    return sprite;
   } else if (ent instanceof Block) {
-    mkSprite(platforms, 'ground');
+    return mkSprite(platforms, 'ground');
   } else {
     throw new Error();
   }
@@ -416,39 +424,41 @@ function tryRemove(id: number, ents: Ent[], instantly = false) {
     const ent = ents[i];
     ents.splice(i, 1);
     const sprite = entToSprite.get(ent);
-    const removeSprite = () => {
-      sprite.destroy();
-      entToSprite.delete(ent);
-    };
-    if (ent instanceof Player) {
-      const squishHeight = sprite.height / 5;
-      sprite.y += sprite.height - squishHeight;
-      sprite.x -= sprite.width / 2;
-      sprite.height = squishHeight;
-      sprite.width *= 2;
-      let removeSpriteAndName = function () {
-        removeSprite();
-        playerToName.get(ent).destroy();
-        playerToName.delete(ent);
+    if (sprite) {
+      const removeSprite = () => {
+        sprite.destroy();
+        entToSprite.delete(ent);
       };
-      if (instantly)
-        removeSpriteAndName();
-      else
-        setTimeout(() => {
+      if (ent instanceof Player) {
+        const squishHeight = sprite.height / 5;
+        sprite.y += sprite.height - squishHeight;
+        sprite.x -= sprite.width / 2;
+        sprite.height = squishHeight;
+        sprite.width *= 2;
+        let removeSpriteAndName = function () {
+          removeSprite();
+          playerToName.get(ent).destroy();
+          playerToName.delete(ent);
+        };
+        if (instantly)
           removeSpriteAndName();
-        }, 2000);
-    } else if (ent instanceof Star) {
-      if (instantly) {
-        removeSprite();
+        else
+          setTimeout(() => {
+            removeSpriteAndName();
+          }, 2000);
+      } else if (ent instanceof Star) {
+        if (instantly) {
+          removeSprite();
+        } else {
+          consumeStarSprite(sprite);
+          setTimeout(() => removeSprite(), 1000);
+        }
       } else {
-        consumeStarSprite(sprite);
-        setTimeout(() => removeSprite(), 1000);
+        removeSprite();
       }
-    } else {
-      removeSprite();
+      const label = entToLabel.get(ent);
+      if (label) label.destroy();
     }
-    const label = entToLabel.get(ent);
-    if (label) label.destroy();
     return ent;
   }
   return null;
@@ -496,8 +506,10 @@ function backToSplash() {
 
 let moveName = function (player) {
   const text = playerToName.get(player);
-  text.x = player.midDispPos().x;
-  text.y = player.dispPos().y - 16;
+  if (text) {
+    text.x = player.midDispPos().x;
+    text.y = player.dispPos().y - 16;
+  }
   return text;
 };
 
@@ -750,11 +762,21 @@ ${mkDebugText(ptr, currentPlayer)}
     // them.  Also, we should *always* render the current player, since if you switch away from the tab and back later,
     // the Ent may have long exited the visible area.
     for (let ent of getEnts()) {
+      let sprite = entToSprite.get(ent);
       if (!(ent instanceof Player || ent instanceof Star) || possiblyVisible(ent) || ent == me) {
-        entToSprite.get(ent).alpha = 1;
+        if (!sprite) {
+          entToSprite.set(ent, sprite = mkSpriteForEnt(ent));
+        }
         updateSpriteAndMaybePlFromEnt(ent);
       } else {
-        entToSprite.get(ent).alpha = 0;
+        if (sprite) {
+          sprite.destroy();
+          entToSprite.delete(ent);
+          if (ent instanceof Player) {
+            const name = playerToName.get(ent);
+            name.destroy();
+          }
+        }
       }
     }
   }
@@ -814,23 +836,29 @@ export function updateSpriteFromEnt(ent) {
 
 export function feedInputs(player: Player) {
   const sprite = entToSprite.get(player);
-  if (player.dir == Dir.Left) {
-    sprite.animations.play('left');
-  } else if (player.dir == Dir.Right) {
-    sprite.animations.play('right');
-  } else {
-    //  Stand still
-    sprite.animations.stop();
-    if (sprite.frame < 3) sprite.frame = 0;
-    else sprite.frame = 3;
-  }
-  if (player.state == 'startingSmash') {
-    sprite.angle += 360 / cp.smashFrames;
-    if (sprite.angle == 0) {
-      player.state = 'normal';
+  if (sprite) {
+    if (player.dir == Dir.Left) {
+      sprite.animations.play('left');
+    } else if (player.dir == Dir.Right) {
+      sprite.animations.play('right');
+    } else {
+      //  Stand still
+      sprite.animations.stop();
+      if (sprite.frame < 3) sprite.frame = 0;
+      else sprite.frame = 3;
+    }
+    // This is our hacky approach to spinning the player.
+    if (player.state == 'startingSmash') {
+      sprite.angle += 360 / cp.smashFrames;
+      if (sprite.angle == 0) {
+        player.state = 'normal';
+      }
+    } else {
+      sprite.angle = 0;
     }
   } else {
-    sprite.angle = 0;
+    // This is part of our hacky approach to spinning the player - if there's no sprite, then don't spin at all!
+    player.state = 'normal';
   }
 }
 
