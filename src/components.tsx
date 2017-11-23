@@ -56,7 +56,6 @@ export class Splash extends React.Component {
   componentDidUpdate() {
     // Must do after element is rendered - see
     // https://stackoverflow.com/questions/26556436/react-after-render-code
-    setTimeout(() => this.inputEl.focus(), 10);
     if (this.afterUpdates.length > 0) {
       const funcs = this.afterUpdates.slice();
       clearArray(this.afterUpdates);
@@ -109,7 +108,12 @@ export class Splash extends React.Component {
       {isSupported && <form key={'form'} className='splash-form' onSubmit={this.handleSubmit}>
         <input
           className={'name-input'}
-          ref={(el) => this.inputEl = el}
+          ref={(el) => {if (el) {
+            // For some reason (in Edge) putting this timeout in componentDidUpadte doesn't necessarily work.  Also,
+            // executing immediately rather than timeout doesn't work either.
+            setTimeout(() => el.focus(), 10);
+            this.inputEl = el;
+          }}}
           value={this.state.name}
           onChange={this.handleChange}
           placeholder={'Enter a nickname'}
