@@ -1,5 +1,6 @@
 let heavyShim = false;
 require('es6-shim');
+require('es7-shim');
 require('location-origin');
 // This is from ES5-DOM-SHIM
 if (heavyShim) { require('./a'); }
