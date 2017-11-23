@@ -97,13 +97,11 @@ export class Splash extends React.Component {
         Please try using a recent version of Chrome (recommended), Firefox, Safari, or Microsoft Edge.
       </p>}
       {isSupported && <p key='ppp' className={'subhead'}>
-        <strong>Use your mouse or arrow keys</strong> to steer your jumper left/right through the arena.
+        <strong>Use your mouse or arrow keys</strong> to steer.
         <br/>
-        Collect stars to grow bigger.  Stomp other players to take their stars.
+        Collect stars to grow.  Stomp other players to take their stars.
         <br/>
-        <strong>Click or press down/space</strong> for a smash attack that drops you straight downward.
-        <br/>
-        Don't get stomped!
+        <strong>Click or press down/space</strong> for a smash attack!
       </p>}
       {isSupported && <form key={'form'} className='splash-form' onSubmit={this.handleSubmit}>
         <input
