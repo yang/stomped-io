@@ -359,7 +359,7 @@ function initEnts() {
 
 function inputsToDir() {
   const dir = cursors.left.isDown ? Dir.Left : Dir.Right;
-  if (cp.instantTurn) {
+  if (cp.instantTurn && me) {
     me.dir = dir;
   }
   return dir;
