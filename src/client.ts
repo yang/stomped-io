@@ -322,14 +322,31 @@ let follow = function (sprite: any) {
   game.camera.deadzone = new Phaser.Rectangle(game.camera.width / 2, ymargin, 0, game.camera.height - 2 * ymargin);
 };
 
+function errorReload() {
+  setTimeout(() => {
+    alert("Sorry, there was an unexpected error - reloading....");
+    window.location.reload();
+  }, 1000);
+}
+
 function initEnts() {
   const initSnap = timeline.get(0);
 
   gameState.time = initSnap.tick * svrSettings.dt;
 
+  if (initSnap.isDiff) {
+    errorReload();
+    throw new Error(`initSnap isDiff; timeline length is ${timeline.length}; first non-diff is at ${timeline.indexOf(timeline.find(bcast => !bcast.isDiff))}`);
+  }
+
   const {ents} = initSnap;
-  for (let ent of ents) {
-    entMgr.addEnt(ent);
+  try {
+    for (let ent of ents) {
+      entMgr.addEnt(ent);
+    }
+  } catch (e) {
+    errorReload();
+    throw new Error(`initSnap is not a diff but STILL got this error; timeline length is ${timeline.length}; first non-diff is at ${timeline.indexOf(timeline.find(bcast => !bcast.isDiff))}; initSnap has ${initSnap.ents.length} ents, ${initSnap.ents.filter(e => !e.type).length} of which has no type; orig error: ${e}\n${e.stack}`);
   }
 
   Common.idState.nextId = _.max(getEnts().map(e => e.id)) + 1;
@@ -920,6 +937,7 @@ function startGame(name: string, char: string, onJoin: (socket) => void, updateE
     meId = myId;
     timeline.empty();
     timeline.push(initSnap);
+    getLogger('net').log(`joined, timeline length is`, timeline.length);
 
     if (!game) {
       game = new Phaser.Game({
@@ -1006,6 +1024,7 @@ export let connect = function () {
 };
 
 export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText) {
+  getLogger('main').log('starting main');
   guiMgr = _guiMgr;
   gPool = pool;
   const pPb = Protobuf.load('dist/main.proto').then((root) => Common.bootstrapPb(root));

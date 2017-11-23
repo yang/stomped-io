@@ -24,7 +24,7 @@
   Raven.config('https://89cdf3b3a652420ab4b2d5a1e704d6ef@sentry.io/244077', {
     dataCallback: function(data) {
       data.extra = data.extra || {};
-      data.extra.logs = dbg.baseHandler.cBufferToText(500);
+      data.extra.logs = dbg.baseHandler.cBufferToText(150);
       return data;
     }
   }).install();
