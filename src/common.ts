@@ -589,7 +589,7 @@ export function entPosFromPl(ent, pos = ent.bod.getPosition(), midpoint = false)
   );
 }
 
-export class Ent extends Serializable {
+export abstract class Ent extends Serializable {
   width: number;
   height: number;
   x: number;
@@ -598,7 +598,17 @@ export class Ent extends Serializable {
   id = ids.next().value;
   bod?: Pl.Body;
   dirty = false;
-  ser(): this { return <this>_.omit(this, 'bod', 'stack', 'timers', 'dirty', 'dropInterval'); }
+  // abstract ser(): this; // { return <this>_.omit(this, 'bod', 'stack', 'timers', 'dirty', 'dropInterval'); }
+  ser(): any {
+    return {
+      id: this.id,
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+      type: this.type
+    } as this;
+  }
   pos() { return new Vec2(this.x, this.y); }
   dims() { return new Vec2(this.width, this.height); }
   dispDims() { return this.dims(); }
@@ -630,6 +640,10 @@ export class Player extends Ent {
   smashStart: number = null;
   dropInterval: IntervalTimer;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
+
+  ser() {
+    return Object.assign(super.ser(), {state: this.state, dir: this.dir, size: this.size, name: this.name, style: this.style});
+  }
 
   dispDims() {
     const dims = super.dispDims().mul(1.4);
@@ -700,16 +714,6 @@ export class Star extends Ent {
   dispDimScaler = gChance.floating({min: .5, max: 1.5});
   dispAngleScaler = gChance.floating({min: .5, max: 1.5}) * gChance.pickone([1,-1]);
   constructor(public x: number, public y: number) {super();}
-  ser(): this {
-    return {
-      id: this.id,
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height,
-      type: 'Star'
-    } as this;
-  }
   now() { return now(); }
   dispPos() {
     const t = this.dispPosScaler * this.now() + this.dispPosOffset;
