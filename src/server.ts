@@ -215,6 +215,7 @@ let dbgRementSent = false;
 const rementSent = new Map<number, RemEnt>();
 
 let lastSnapshot: Bcast = null;
+let doVerifySnapshots = false;
 
 function bcast() {
   // TODO move all removal code to update()
@@ -272,7 +273,7 @@ function bcast() {
       // GC destroyed ents
       !removed.has(p.id)
     ).concat(newOrDirtySers);
-    if (process.env.NODE_ENV != 'production') {
+    if (doVerifySnapshots) {
       assert(_.isEqual(
         gameState.getEnts().map(e => e.id).sort(),
         allSers.map(s => s.id).sort()
