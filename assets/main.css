@@ -14,6 +14,10 @@ body {
     overflow: hidden;
     font-family: Arial;
 }
+a {
+    text-decoration: none;
+}
+
 .subhead {
     line-height: 20px;
     text-align: center;
@@ -162,7 +166,6 @@ h2 {
 .more-io-games a {
     color: #ff8800;
     color: var(--alt-color);
-    text-decoration: none;
 }
 
 .featured-youtubers {
@@ -175,7 +178,6 @@ h2 {
 
 .youtube-link {
     color: #dcd;
-    text-decoration: none;
 }
 
 .featured-youtuber-name {
@@ -193,4 +195,16 @@ h2 {
 .youtube-icon {
     width: 32px;
     margin-right: 10px;
+}
+
+.updates {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    font-size: 14px;
+    padding: 20px;
+}
+
+.updates a {
+    color: var(--alt-color);
 }

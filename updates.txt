@@ -1,0 +1,54 @@
+2017-11-24
+==========
+
+- Feature YouTubers!
+- Server handles larger load
+- Fixed a major physics issue! Where if you try to smash down on another player, you could potentially right past them,
+  when it should have been a direct hit.
+- Fixes: strip extraneous sprites
+
+2017-11-23
+==========
+
+- Game runs much faster (2x FPS) in most browsers!
+- Fixes: more browser compat, key handlers, input focus
+
+2017-11-21
+==========
+
+- Add keyboard controls!
+- Fixes: more browser compat, sprite load error detection, init races, mem leaks
+
+2017-11-21
+==========
+
+- Tweak damage accounting
+- Server handles larger load
+- Fixes: more browser compat, mem leaks, cache-busting
+
+2017-11-20
+==========
+
+- Add smash attacks!
+- Fixes: bullet physics for smash attacks
+
+2017-11-19
+==========
+
+- Add (and remove) experimental "speed boost" ability
+- Fixes: leaderboard tweaks
+
+2017-11-18
+==========
+
+- Fixes: mem leak
+
+2017-11-14 through 2017-11-17
+=============================
+
+- Lots o' fixes and production deployment hardening
+
+2017-11-13
+==========
+
+- Released!

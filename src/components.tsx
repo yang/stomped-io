@@ -151,6 +151,9 @@ export class Splash extends React.Component {
         <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a>&nbsp;
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
+      <div className={"updates"}>
+        <a href={"updates.txt"} target={"_blank"}>Changelog</a>
+      </div>
       <div className={'featured-youtubers'}>
         <a className={'youtube-link'} href={'https://www.youtube.com/watch?v=7qVnNp14SAE'} target={'_blank'}>
           Featured YouTuber:
