@@ -16,7 +16,7 @@ import {
   updateEntPhysFromPl,
   updatePeriod, updateVel,
   settings,
-  world, setNotConsumable, setConsumable, StartSmash
+  world, setNotConsumable, setConsumable, StartSmash, AdminStats
 } from './common';
 import * as Pl from 'planck-js';
 import * as fs from 'fs';
@@ -543,6 +543,16 @@ io.on('connection', (socket: SocketIO.Socket) => {
         socket.emit('botPlan', {botData, ...resultsData});
       });
     });
+
+    let sendAdminStats = function () {
+      socket.emit('adminStats', {
+        botIds: botMgr.bots.map(b => b.player.id)
+      } as AdminStats);
+    };
+    sendAdminStats();
+    setInterval(() => {
+      sendAdminStats();
+    }, 1000);
   }
 
   let player;

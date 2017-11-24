@@ -1290,6 +1290,10 @@ export interface Stats {
   players: number;
 }
 
+export interface AdminStats {
+  botIds: number[];
+}
+
 export class EntMgr {
   constructor(
     public world: Pl.World,

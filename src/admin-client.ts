@@ -2,7 +2,7 @@ import * as dat from 'dat.gui/build/dat.gui';
 import * as Client from './client';
 import {
   ControlPanel,
-  cp,
+  cp, defaultNameStyle,
   delta,
   entMgr,
   entToLabel,
@@ -29,10 +29,11 @@ import {
 import {BotMgr} from "./common-admin";
 import * as Common from "./common";
 import {
+  AdminStats,
   baseHandler,
   clearArray,
   defaultColor,
-  deserSimResults,
+  deserSimResults, Ent,
   fixtureDims,
   iterBodies,
   iterFixtures,
@@ -49,8 +50,14 @@ import * as _ from "lodash";
 
 export let botMgr;
 
+export let latestAdminStats = {botIds: []} as AdminStats;
+
 export function main(pool) {
   console.log('This is the admin client!');
+
+  Client.setSpecialStyle((ent: Ent) => {
+    return latestAdminStats && latestAdminStats.botIds.includes(ent.id) ? '#ff0000' : null;
+  });
 
   Client.setCp(new ControlPanelWithBots());
 
@@ -81,6 +88,21 @@ export function main(pool) {
             return false;
           }
         });
+      });
+
+      socket.on('adminStats', (stats: AdminStats) => {
+        latestAdminStats.botIds = _.union(latestAdminStats.botIds, stats.botIds);
+
+        const playerMap = new Map(gameState.players.map(p => [p.id, p] as [number, Player]));
+        for (let id of stats.botIds) {
+          const player = playerMap.get(id);
+          if (player) {
+            const name = Client.playerToName.get(player);
+            if (name) {
+              name.setStyle(Object.assign({}, defaultNameStyle, {fill: 'red'}));
+            }
+          }
+        }
       });
     },
     extraSteps,

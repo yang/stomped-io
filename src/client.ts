@@ -211,7 +211,7 @@ function destroy2(ent) {
 }
 
 export const entToSprite = new Map<Ent, any>();
-const playerToName = new Map<Player, any>();
+export const playerToName = new Map<Player, any>();
 const events: Event[] = [];
 export let onNextBcastPersistentCallbacks = [];
 
@@ -390,6 +390,16 @@ function onEntAdded(ent: Ent) {
     guiMgr.refresh();
   return mkSpriteForEnt(ent);
 }
+
+let specialStyle = function(ent: Ent) {
+  return null;
+};
+export function setSpecialStyle(f) {
+  specialStyle = f;
+}
+
+export const defaultNameStyle = { font: "14px Arial", fill: "#cccccc", stroke: "#cccccc", align: "center"};
+
 function mkSpriteForEnt(ent: Ent) {
   function mkSprite(group, spriteArt: string) {
     const [x, y] = ent.dispPos().toTuple();
@@ -407,7 +417,7 @@ function mkSpriteForEnt(ent: Ent) {
     sprite.animations.add('right', [0,1,0,2], 10, true);
     const style = ent.id == meId ?
       { font: "14px Arial", fill: "#ffff00", stroke: "#ffff44", align: "center", fontWeight: 'bold'} :
-      { font: "14px Arial", fill: "#cccccc", stroke: "#cccccc", align: "center"};
+      Object.assign({}, defaultNameStyle, {fill: specialStyle(ent) || '#cccccc'});
     const text = game.add.text(0, 0, ent.name, style, nameGroup);
     text.anchor.x = text.anchor.y = 0.5;
     playerToName.set(ent, text);
