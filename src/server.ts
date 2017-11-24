@@ -253,7 +253,17 @@ function bcast() {
   // snapshot world
   const currTime = now();
   let allSers: Ent[], dirtySers: Ent[];
-  const dirtyEnts = getEnts().filter(p => p.isDirty());
+  let getDirtyEnts = function () {
+    return getEnts().filter(p => p.isDirty());
+  };
+  const dirtyEnts = getDirtyEnts();
+  let getNewSers = function () {
+    const newSers = events
+      .filter(ev => ev.type == 'AddEnt' &&
+        !removed.has((ev as AddEnt).ent.id))
+      .map(ev => (ev as AddEnt).ent);
+    return newSers;
+  };
   if (lastSnapshot) {
     // Note: we need to explicitly filter out the new Entities here that were immediately destroyed, or else they will
     // leak into the snapshot and end up staying around forever *on the server*.  So while any currently connected
@@ -261,18 +271,18 @@ function bcast() {
     // world state that includes all these ents.  This would typically manifest as a star burst where many of the stars
     // were immediately removed (and then the clients would fetch a world that had these very dense identically-
     // positioned stars).
-    const newSers = events
-      .filter(ev => ev.type == 'AddEnt' &&
-        !removed.has((ev as AddEnt).ent.id))
-      .map(ev => (ev as AddEnt).ent);
+    const newSers = getNewSers();
     dirtySers = dirtyEnts.map(p => p.ser());
     const newOrDirtySers = _.unionBy(newSers, dirtySers, (ent) => ent.id);
     const newOrDirtySersById = new Map(newOrDirtySers.map<[number, Ent]>(p => [p.id, p]));
-    allSers = lastSnapshot.ents.filter(p =>
-      !newOrDirtySersById.has(p.id) &&
-      // GC destroyed ents
-      !removed.has(p.id)
-    ).concat(newOrDirtySers);
+    let updateLastSnapWithNewDirtyRemoved = function () {
+      allSers = lastSnapshot.ents.filter(p =>
+        !newOrDirtySersById.has(p.id) &&
+        // GC destroyed ents
+        !removed.has(p.id)
+      ).concat(newOrDirtySers);
+    };
+    updateLastSnapWithNewDirtyRemoved();
     if (doVerifySnapshots) {
       assert(_.isEqual(
         gameState.getEnts().map(e => e.id).sort(),
@@ -292,28 +302,35 @@ function bcast() {
     buf: null
   });
   const diff: Bcast = _(snapshot).clone();
-  if (lastSnapshot && settings.doDiff) {
+  let mkIdMap = function () {
     const lastById = new Map(lastSnapshot.ents.map<[number, Ent]>(e => [e.id, e]));
-    diff.isDiff = true;
-    diff.ents = [];
-    for (let b of dirtySers) {
-      const a = lastById.get(b.id);
-      // Note we're only diffing dirty ents; new ents that are not dirty should already be covered by
-      // AddEnt.  There are no new ents that are dirty - stars are created after update(), and new
-      // players are TODO there may be new dirty players!?
-      const entDiff: any = Common.objDiff(a, b) as Ent;
-      if (entDiff) {
-        entDiff.id = b.id;
-        diff.ents.push(entDiff);
-        if (b.type == "Player") {
-          (entDiff as any).player = _.pick(entDiff, 'name','size','currentSquishTime','state');
-          if (_.isNumber(entDiff.dir)) {
-            (entDiff as any).player.dirLeft = entDiff.dir == Dir.Left;
+    return lastById;
+  };
+  let getDiffs = function () {
+    if (lastSnapshot && settings.doDiff) {
+      const lastById = mkIdMap();
+      diff.isDiff = true;
+      diff.ents = [];
+      for (let b of dirtySers) {
+        const a = lastById.get(b.id);
+        // Note we're only diffing dirty ents; new ents that are not dirty should already be covered by
+        // AddEnt.  There are no new ents that are dirty - stars are created after update(), and new
+        // players are TODO there may be new dirty players!?
+        const entDiff: any = Common.objDiff(a, b) as Ent;
+        if (entDiff) {
+          entDiff.id = b.id;
+          diff.ents.push(entDiff);
+          if (b.type == "Player") {
+            (entDiff as any).player = _.pick(entDiff, 'name', 'size', 'currentSquishTime', 'state');
+            if (_.isNumber(entDiff.dir)) {
+              (entDiff as any).player.dirLeft = entDiff.dir == Dir.Left;
+            }
           }
         }
       }
     }
-  }
+  };
+  getDiffs();
   if (settings.doProtobuf) {
     assert(!pb.Bcast.verify({ents: diff.ents}));
     const msg = pb.Bcast.create({ents: diff.ents});
