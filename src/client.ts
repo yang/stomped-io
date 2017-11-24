@@ -152,7 +152,7 @@ function preload(sprites) {
     game.load.image('sky', 'assets/bg-grad.png');
     game.load.image('ground', 'assets/ledge.png');
     game.load.image('star', 'assets/star.png');
-    game.load.image('lava', 'assets/lava.png');
+    // game.load.image('lava', 'assets/lava.png');
     for (let char of Object.keys(sprites)) {
       for (let i = 0; i < sprites[char].length; i++) {
         const variant = sprites[char][i];
