@@ -321,7 +321,12 @@ function bcast() {
           entDiff.id = b.id;
           diff.ents.push(entDiff);
           if (b.type == "Player") {
-            (entDiff as any).player = _.pick(entDiff, 'name', 'size', 'currentSquishTime', 'state');
+            (entDiff as any).player = {
+              name: entDiff.name,
+              size: entDiff.size,
+              currentSquishTime: entDiff.currentSquishTime,
+              state: entDiff.state
+            };
             if (_.isNumber(entDiff.dir)) {
               (entDiff as any).player.dirLeft = entDiff.dir == Dir.Left;
             }
