@@ -197,14 +197,15 @@ h2 {
     margin-right: 10px;
 }
 
-.updates {
+.minor-links {
     position: absolute;
     bottom: 0;
     right: 0;
     font-size: 14px;
     padding: 20px;
+    color: var(--darker-alt-color);
 }
 
-.updates a {
+.minor-links a {
     color: var(--alt-color);
 }

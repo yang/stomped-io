@@ -21,6 +21,14 @@ interface SplashProps {
   stats: Stats;
 }
 
+function inIframe () {
+  try {
+    return window.self !== window.top;
+  } catch (e) {
+    return true;
+  }
+}
+
 export class Splash extends React.Component {
   state: SplashState;
   props: SplashProps;
@@ -151,8 +159,10 @@ export class Splash extends React.Component {
         <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a>&nbsp;
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
-      <div className={"updates"}>
+      <div className={"minor-links"}>
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
+        {inIframe() && ' | '}
+        {inIframe() && <a href={"/"} target={"_blank"}>Pop out in new tab</a>}
       </div>
       <div className={'featured-youtubers'}>
         <a className={'youtube-link'} href={'https://www.youtube.com/watch?v=7qVnNp14SAE'} target={'_blank'}>
