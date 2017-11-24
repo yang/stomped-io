@@ -122,6 +122,8 @@ ssl_certificate_key /etc/letsencrypt/live/stomped.io/privkey.pem; # managed by C
         return 301 https://$host$request_uri;
     } # managed by Certbot
 
+expires -1;
+
 }
 
 
