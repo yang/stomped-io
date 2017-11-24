@@ -90,7 +90,7 @@ export class Splash extends React.Component {
     const isSupported = this.props.browserSupported;
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
-      {this.state.stats && <h2><span className="num">{this.state.stats.players}</span> Players Online</h2>}
+      {/*{this.state.stats && <h2><span className="num">{this.state.stats.players}</span> Players Online</h2>}*/}
       {!isSupported && <p key={'p'} className={'subhead'}>
         Sorry, this game does not work with your browser.
         <br/>
