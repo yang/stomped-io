@@ -40,6 +40,16 @@ Misc
 - `moduleResolution: node` is from
   https://github.com/Microsoft/TypeScript/issues/8189
 
+Checklists
+==========
+
+Adding a new character:
+
+- clone player-plain.svg to inherit the correct leg structure, so that spriter can animate them
+- save the new svg as designs/player-XXX.svg
+- add XXX-0 to src/chars.txt and XXX to Common.playerStyleIndividuals
+- add XXX config to Spriter.chars - mind any protrusions, adjust width/height accordingly (or else, clipping!)
+
 Performance
 ===========
 
