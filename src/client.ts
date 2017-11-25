@@ -532,6 +532,8 @@ function backToSplash() {
   game.paused = true;
   game.input.enabled = false;
   game.canvas.style.display = 'none';
+
+  socket.close();
 }
 
 let moveName = function (player) {
@@ -935,6 +937,14 @@ export type UpdateExtrasFn = (currentPlayer: Player, updating: boolean, currTime
 
 let meId: number;
 function startGame(name: string, char: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
+  socket = connect();
+
+  socket.on('stats', (_stats: Stats) => {
+    if (rootComponent) {
+      rootComponent.setStats(_stats);
+    }
+  });
+
   socket.emit('join', {name, char});
 
   if (cp.doPings) {
@@ -1057,14 +1067,7 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
   const pSprites = browserSupported() ?
     loadSprites().then(s => sprites = s) :
     new Promise(() => null);
-  socket = connect();
   let stats: Stats;
-  socket.on('stats', (_stats: Stats) => {
-    stats = _stats;
-    if (rootComponent) {
-      rootComponent.setStats(stats);
-    }
-  });
   let firstSubmitted = false, pRootComponent: Promise<Splash>;
   const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
     pRootComponent = renderSplash({
@@ -1085,9 +1088,8 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
   Promise.all([pSprites, pRootComponent]).then(([sprites, rootComponent]) =>
     rootComponent.setImgs(sprites)
   );
-  const pConnected = new Promise<any>((resolve) => socket.on('connect', resolve));
-  Promise.all([pFirstSubmit, pConnected, pPb, pSprites])
-    .then(([firstSubmit, connected, pb, _sprites]) => {
+  Promise.all([pFirstSubmit, pPb, pSprites])
+    .then(([firstSubmit, pb, _sprites]) => {
       const [name, char] = firstSubmit;
       return startGame(name, char, onJoin, updateExtras, mkDebugText, _sprites);
     });
