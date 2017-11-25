@@ -411,7 +411,8 @@ function mkSpriteForEnt(ent: Ent) {
     return sprite;
   }
   if (ent instanceof Player) {
-    const sprite = mkSprite(playerGroup, `dude-${ent.style}`);
+    const char = playerStyles.includes(ent.style) ? ent.style : 'plain-0';
+    const sprite = mkSprite(playerGroup, `dude-${char}`);
     sprite.anchor.setTo(.5, .5);
     sprite.animations.add('left', [3,4,3,5], 10, true);
     sprite.animations.add('right', [0,1,0,2], 10, true);

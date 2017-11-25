@@ -165,6 +165,10 @@ for (let sty of playerStyleIndividuals) {
   playerStyles.push(`${sty}-0`);
 }
 
+export function setPlayerStyles(styles: string[]) {
+  replaceArray(playerStyles, styles);
+}
+
 export class Timer {
   aborted = false;
   id = ids.next().value;
@@ -326,7 +330,7 @@ export class GameState {
 }
 
 export function pushAll(xs, ys) {
-  xs.splice(xs.length, 0, ys);
+  xs.splice(xs.length, 0, ...ys);
 }
 
 export function clearArray(xs) {
@@ -1113,8 +1117,8 @@ export function clamp(x, bound) {
 
 export function* genStyles() {
   const chance = new Chance(0);
-  const weights = [1,1,1].concat(playerStyles.map(() => 0.1).slice(0, -3));
   while (true) {
+    const weights = [1,1,1].concat(playerStyles.map(() => 0.1).slice(0, -3));
     yield chance.weighted(playerStyles, weights);
   }
 }

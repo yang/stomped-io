@@ -483,6 +483,14 @@ function updateStars(gameState: GameState, bootstrap: boolean) {
 
 const initPlayers = 0;
 
+function reloadPlayerStyles() {
+  const lines = fs
+    .readFileSync('src/chars.txt', 'utf8')
+    .trim()
+    .split('\n');
+  Common.setPlayerStyles(lines);
+}
+
 function create() {
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
@@ -504,6 +512,7 @@ function create() {
     setInterval(bcast, bcastPeriod * 1000);
     setInterval(update, updatePeriod * 1000);
     setInterval(() => updateStars(gameState, false), updateStarsPeriod * 1000);
+    setInterval(reloadPlayerStyles, 1000);
   }
 
   Common.create(gameState);
