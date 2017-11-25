@@ -1,10 +1,13 @@
+2017-11-25
+==========
+
+- Optimize bandwidth - don't stream when not playing
+
 2017-11-24
 ==========
 
 - Feature YouTubers!
 - Server handles larger load
-- Fixed a major physics issue! Where if you try to smash down on another player, you could potentially right past them,
-  when it should have been a direct hit.
 - Fixes: strip extraneous sprites
 
 2017-11-23
