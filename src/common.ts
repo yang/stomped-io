@@ -148,7 +148,11 @@ export const playerStyleBases = [
   'robot',
   'alien',
   'skeleton',
-  'plumber'
+  'plumber',
+];
+
+export const playerStyleIndividuals = [
+  'reddit',
 ];
 
 export const playerStyles = [];
@@ -156,6 +160,9 @@ for (let base of playerStyleBases) {
   for (let i = 0; i < 3; i++) {
     playerStyles.push(`${base}-${i}`);
   }
+}
+for (let sty of playerStyleIndividuals) {
+  playerStyles.push(`${sty}-0`);
 }
 
 export class Timer {

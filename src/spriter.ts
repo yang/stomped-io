@@ -131,6 +131,14 @@ const chars = [
       },
     ]
   },
+  {
+    name: 'reddit',
+    bbox: [150,230],
+    variants: [
+      // white
+      {}
+    ]
+  },
 ];
 
 export function loadSprites() {

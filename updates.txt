@@ -1,6 +1,7 @@
 2017-11-25
 ==========
 
+- New character: Reddit's Snoo!
 - Optimize bandwidth - don't stream when not playing
 
 2017-11-24

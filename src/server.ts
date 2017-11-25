@@ -594,8 +594,8 @@ io.on('connection', (socket: SocketIO.Socket) => {
   });
 
   socket.on('join', (playerData) => {
-    assert(playerStyles.includes(playerData.char));
-    player = makePlayer(playerData.name.trim().slice(0, maxNameLen) || 'Anonymous Stomper', playerData.char);
+    const char = playerStyles.includes(playerData.char) ? playerData.char : 'player-plain-0';
+    player = makePlayer(playerData.name.trim().slice(0, maxNameLen) || 'Anonymous Stomper', char);
 
     log.log('player', player.describe(), 'with style', player.style, `joined (client ${client.id})`);
 
