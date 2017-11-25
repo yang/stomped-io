@@ -135,7 +135,13 @@ const chars = [
     name: 'reddit',
     bbox: [150,230],
     variants: [
-      // white
+      {}
+    ]
+  },
+  {
+    name: 'slender',
+    bbox: [150,200],
+    variants: [
       {}
     ]
   },

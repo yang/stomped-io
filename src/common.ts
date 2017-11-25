@@ -153,6 +153,7 @@ export const playerStyleBases = [
 
 export const playerStyleIndividuals = [
   'reddit',
+  'slender',
 ];
 
 export const playerStyles = [];

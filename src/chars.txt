@@ -17,3 +17,4 @@ alien-2
 skeleton-2
 plumber-2
 reddit-0
+slender-0

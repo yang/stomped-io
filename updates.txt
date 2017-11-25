@@ -1,8 +1,9 @@
 2017-11-25
 ==========
 
-- New character: Reddit's Snoo!
+- New characters: Reddit's Snoo and Slenderman!
 - Optimize bandwidth - don't stream when not playing
+- Fixes: client & server tolerate dynamically added chars
 
 2017-11-24
 ==========
