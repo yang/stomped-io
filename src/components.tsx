@@ -21,7 +21,7 @@ interface SplashProps {
   stats: Stats;
 }
 
-function inIframe () {
+export function inIframe () {
   try {
     return window.self !== window.top;
   } catch (e) {

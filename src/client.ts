@@ -5,7 +5,7 @@ require('location-origin');
 // This is from ES5-DOM-SHIM
 if (heavyShim) { require('./a'); }
 import * as Bowser from 'bowser';
-import {renderSplash, Splash} from "./components";
+import {inIframe, renderSplash, Splash} from "./components";
 import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
@@ -1034,6 +1034,20 @@ export let connect = function () {
   return socket;
 };
 
+function injectAds() {
+  if (!inIframe()) {
+    document.write(`
+  <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: "ca-pub-9481400679587531",
+    enable_page_level_ads: true
+  });
+</script>
+    `);
+  }
+}
+
 export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText) {
   getLogger('main').log('starting main');
   guiMgr = _guiMgr;
@@ -1077,4 +1091,5 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
       const [name, char] = firstSubmit;
       return startGame(name, char, onJoin, updateExtras, mkDebugText, _sprites);
     });
+  injectAds();
 }
