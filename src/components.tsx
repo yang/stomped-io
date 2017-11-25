@@ -160,6 +160,8 @@ export class Splash extends React.Component {
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
       <div className={"minor-links"}>
+        <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`} target={"_blank"}>Share on Twitter</a> |&nbsp;
+        <a href={"https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fstomped.io"} target={"_blank"}>Share on Facebook</a> |&nbsp;
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
         {inIframe() && ' | '}
         {inIframe() && <a href={"/"} target={"_blank"}>Pop out in new tab</a>}
