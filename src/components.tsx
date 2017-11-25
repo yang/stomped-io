@@ -142,7 +142,7 @@ export class Splash extends React.Component {
                 'gallery-item--selected': this.state.char == char
               })}
             >
-              <a href={"#"} onMouseDown={() => this.chooseChar(char)}>
+              <a href={"javascript: void 0"} onMouseDown={() => this.chooseChar(char)}>
                 <img className='gallery-img' src={imgSrc}/>
               </a>
             </div>;
