@@ -4,6 +4,9 @@ import * as classnames from 'classnames';
 import {Chance} from 'chance';
 import {clearArray, maxNameLen, playerStyles, Stats} from "./common";
 import * as Cookies from 'js-cookie';
+// import * as TT from 'tooltip.js';
+
+// const Tooltip = TT.default;
 
 interface SplashState {
   name: string;
@@ -13,6 +16,7 @@ interface SplashState {
   charToVariants: any;
   stats: Stats;
   unlocked: boolean;
+  hovering: boolean;
 }
 
 interface SplashProps {
@@ -69,7 +73,8 @@ export class Splash extends React.Component {
       char: new Chance().pickone(this.chars.slice(0,3)),
       charToVariants: null,
       stats: props.stats,
-      unlocked: ((Cookies.getJSON('v1') || {}) as StoredState).unlocked
+      unlocked: ((Cookies.getJSON('v1') || {}) as StoredState).unlocked,
+      hovering: false
     };
   }
   private handleChange = (e) => {
@@ -98,6 +103,19 @@ export class Splash extends React.Component {
     this.setState({shown: false});
     document.getElementById('mount-point').style.display = 'none';
   }
+  initGalleryItem = (char: string, el: HTMLElement) => {
+    if (el) {
+      this.galleryItemEls.set(char, el);
+      // new Tooltip(el, {
+      //   delay: 0, // {show: 0, hide: 500},
+      //   boundariesElement: document.body,
+      //   html: true,
+      //   title: () =>
+      //     'Share on Facebook or Twitter to unlock - get your friends to play with you!'
+      //     // + document.querySelector('.share-btns').outerHTML
+      // });
+    }
+  };
   chooseChar = (char: string) => {
     if (this.state.unlocked || isBasicStyle(char)) {
       this.setState({char});
@@ -163,25 +181,18 @@ export class Splash extends React.Component {
             const imgSrc = variantSpriteSheet[0].src;
             return <a
               key={char}
-              ref={el => this.galleryItemEls.set(char, el)}
+              ref={el => this.initGalleryItem(char, el)}
               className={classnames({
                 'gallery-item': true,
                 'gallery-item--disabled': !this.state.unlocked && !isBasicStyle(char),
                 'gallery-item--selected': this.state.char == char
               })}
-              title={'Share on Facebook or Twitter to unlock - get your friends to play with you!'}
+              title={'Share to unlock!'}
+              onMouseOver={() => this.setState({hovering: !this.state.unlocked && !isBasicStyle(char)})}
+              onMouseOut={() => this.setState({hovering: false})}
               onMouseDown={() => this.chooseChar(char)}
             >
-              {/*<a*/}
-                {/*href={"javascript: void 0"}*/}
-                {/*className={classnames({*/}
-                  {/*'gallery-link--disabled': !this.state.unlocked && !isBasicStyle(char)*/}
-                {/*})}*/}
-                {/*title={'Share on Facebook or Twitter to unlock - get your friends to play with you!'}*/}
-                {/*onMouseDown={() => this.chooseChar(char)}*/}
-              {/*>*/}
-                <img className='gallery-img' src={imgSrc}/>
-              {/*</a>*/}
+              <img className='gallery-img' src={imgSrc}/>
             </a>;
           })
         }</div>
@@ -197,6 +208,11 @@ export class Splash extends React.Component {
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
       <div className={'share-btns'}>
+        {/*<div className={'share-indicator'}>*/}
+        <div className={'share-indicator'} style={{display: this.state.hovering ? '' : 'none'}}>
+          Share to unlock characters!<br/>
+          Bring your friends to play!
+        </div>
         <button onClick={() => this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`)}>
           <i className={'fa fa-twitter icon'} aria-hidden={'true'}></i>
           Share on Twitter
