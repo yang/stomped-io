@@ -1,3 +1,6 @@
+* {
+    box-sizing: border-box;
+}
 :root {
     --bg: #2A0F3F;
     --alt-color: #b26ee9;
@@ -13,13 +16,14 @@ body {
     /* IE insists on displaying scrollbars for some reason */
     overflow: hidden;
     font-family: Arial;
+    font-size: 14px;
 }
 a {
     text-decoration: none;
 }
 
 .subhead {
-    line-height: 20px;
+    line-height: 1.5em;
     text-align: center;
     font-size: 14px;
     /*text-transform: uppercase;*/
@@ -46,8 +50,9 @@ a {
 }
 h1 {
     font-family: 'Luckiest Guy', cursive;
-    font-size: 96px;
+    font-size: 76px;
     margin: 0;
+
 }
 h2 {
     /*color: #cc6600;*/
@@ -120,17 +125,18 @@ h2 {
     text-align: center;
 }
 .gallery-item {
-    width: 50px;
+    width: 90px;
     overflow: hidden;
     display: inline-block;
-    margin: 0 16px;
+    cursor: pointer;
+    /*margin: 0 16px;*/
 }
 .gallery-item--disabled {
     opacity: .5;
-}
-.gallery-link--disabled {
     cursor: not-allowed;
 }
+/*.gallery-link--disabled {*/
+/*}*/
 .gallery-item--selected {
     border: 4px solid orange;
 }
@@ -191,6 +197,7 @@ h2 {
     font-family: 'Luckiest Guy', cursive;
     margin-top: 8px;
     color: #f27ef9;
+    color: #d0b7ff;
     letter-spacing: 1px;
 }
 
@@ -205,24 +212,51 @@ h2 {
 
 .minor-links {
     position: absolute;
-    bottom: 0;
+    top: 0;
     right: 0;
+    /*width: 100%;*/
     font-size: 14px;
     padding: 20px;
     color: var(--darker-alt-color);
+    /*text-align: center;*/
+    text-align: right;
+    line-height: 1.5em;
 }
 
 .minor-links a {
     color: var(--alt-color);
 }
 
-.minor-links button {
+.share-btns {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 20px;
+    line-height: 1.2em;
+}
+
+.share-btns button {
     color: var(--alt-color);
+    color: #d0b7ff;
     border: none;
     background: none;
-    font-size: 14px;
+    font-size: 20px;
     display: inline;
     padding: 0;
     margin: 0;
     cursor: pointer;
+    font-family: 'Luckiest Guy', cursive;
+    letter-spacing: 1px;
+}
+
+a:hover {
+    color: white;
+}
+
+.share-btns button:hover {
+    color: white;
+}
+.icon {
+    width: 1.1em;
+    margin: 0 .4em;
 }

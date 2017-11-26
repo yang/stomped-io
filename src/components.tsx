@@ -52,7 +52,7 @@ export class Splash extends React.Component {
   props: SplashProps;
   inputEl: HTMLInputElement;
   galleryEl: HTMLDivElement;
-  galleryItemEls = new Map<string, HTMLDivElement>();
+  galleryItemEls = new Map<string, HTMLElement>();
   chars = playerStyles;
   afterUpdates = [];
   constructor(props) {
@@ -161,7 +161,7 @@ export class Splash extends React.Component {
             const variantSpriteSheet = this.state.charToVariants[charBase][+variant];
             if (!variantSpriteSheet) return null;
             const imgSrc = variantSpriteSheet[0].src;
-            return <div
+            return <a
               key={char}
               ref={el => this.galleryItemEls.set(char, el)}
               className={classnames({
@@ -169,18 +169,20 @@ export class Splash extends React.Component {
                 'gallery-item--disabled': !this.state.unlocked && !isBasicStyle(char),
                 'gallery-item--selected': this.state.char == char
               })}
+              title={'Share on Facebook or Twitter to unlock - get your friends to play with you!'}
+              onMouseDown={() => this.chooseChar(char)}
             >
-              <a
-                href={"javascript: void 0"}
-                className={classnames({
-                  'gallery-link--disabled': !this.state.unlocked && !isBasicStyle(char)
-                })}
-                title={'Share on Facebook or Twitter to unlock - get your friends to play with you!'}
-                onMouseDown={() => this.chooseChar(char)}
-              >
+              {/*<a*/}
+                {/*href={"javascript: void 0"}*/}
+                {/*className={classnames({*/}
+                  {/*'gallery-link--disabled': !this.state.unlocked && !isBasicStyle(char)*/}
+                {/*})}*/}
+                {/*title={'Share on Facebook or Twitter to unlock - get your friends to play with you!'}*/}
+                {/*onMouseDown={() => this.chooseChar(char)}*/}
+              {/*>*/}
                 <img className='gallery-img' src={imgSrc}/>
-              </a>
-            </div>;
+              {/*</a>*/}
+            </a>;
           })
         }</div>
         <br/>
@@ -194,12 +196,24 @@ export class Splash extends React.Component {
         <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a>&nbsp;
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
+      <div className={'share-btns'}>
+        <button onClick={() => this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`)}>
+          <i className={'fa fa-twitter icon'} aria-hidden={'true'}></i>
+          Share on Twitter
+        </button>
+        <br/>
+        <button onClick={() => this.share("https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fstomped.io")}>
+          <i className={'fa fa-facebook-official icon'} aria-hidden={'true'}></i>
+          Share on Facebook
+        </button>
+      </div>
       <div className={"minor-links"}>
-        <button onClick={() => this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`)}>Share on Twitter</button> |&nbsp;
-        <button onClick={() => this.share("https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fstomped.io")}>Share on Facebook</button> |&nbsp;
+        {inIframe() && <a href={"/"} target={"_blank"}>
+          Pop out in new tab
+          <i className={'fa fa-external-link icon'} aria-hidden={'true'}></i>
+        </a>}
+        {inIframe() && <br/>}
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
-        {inIframe() && ' | '}
-        {inIframe() && <a href={"/"} target={"_blank"}>Pop out in new tab</a>}
       </div>
       <div className={'featured-youtubers'}>
         <a className={'youtube-link'} href={'https://www.youtube.com/watch?v=7qVnNp14SAE'} target={'_blank'}>

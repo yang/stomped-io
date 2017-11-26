@@ -121,8 +121,8 @@ export class GuiMgr {
     if (!isDebug) return;
     this.cliOpts = this.gui.addFolder('Client');
     this.svrOpts = this.gui.addFolder('Server');
-    this.cliOpts.open();
-    this.svrOpts.open();
+    // this.cliOpts.open();
+    // this.svrOpts.open();
     const svrOpts = this.svrOpts;
     const svrControllers = [
       svrOpts.add(svrSettings, 'dt'),
