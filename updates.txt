@@ -3,6 +3,8 @@
 
 - Encourage the sharin'  :)
 - Shrink sprites to help players getting out-of-memory errors
+- Fixed a major physics issue!  (This time for reals.)  Where if you try to smash down on another player, you could
+  potentially tunnel right past them, when it should have been a direct hit.
 
 2017-11-25
 ==========

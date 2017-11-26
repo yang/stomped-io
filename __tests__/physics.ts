@@ -86,6 +86,41 @@ function go({cloneAtStart = false, cloneOnContact = false, dim = 1, expectMiss =
   }
 }
 
+function bulletStomp() {
+  let world = Pl.World(Pl.Vec2(0, 0));
+
+  const ratio = 8; // Can also try 64
+
+  // Small box
+  function mk(pos, vel, bullet = false) {
+    var body = world.createBody({
+      position : pos,
+      type : 'dynamic',
+      fixedRotation : true,
+      restitution : 1,
+      allowSleep : false,
+      linearVelocity: vel,
+      bullet : bullet
+    });
+    body.createFixture({
+      shape: Pl.Box(24/ratio/2, 24/ratio/2),
+      density: 1,
+      restitution: 1,
+      friction: 0
+    });
+    return body;
+  }
+  const a = mk(Pl.Vec2((-24+1)/ratio, 0), Pl.Vec2(0, 0));
+  // Just one body needs bullet true.
+  const b = mk(Pl.Vec2(0, 30 / ratio), Pl.Vec2(0, -20 * 64 / ratio), true);
+
+  for (let i = 0; i < 10; i++) {
+    console.log(a.getPosition().y, b.getPosition().y);
+    world.step(.05);
+  }
+  expect(a.getPosition().y).toBeLessThan(b.getPosition().y);
+}
+
 describe('collisions', () => {
   it('should work even when broken up by cloneWorld', () => {
     go({cloneOnContact: true});
@@ -106,5 +141,9 @@ describe('collisions', () => {
   });
   it('should allow pass-through', () => {
     go({doPassthrough: true, expectMiss: true});
+  });
+
+  it('should work with bullet bodies (smash attack)', () => {
+    bulletStomp();
   });
 });

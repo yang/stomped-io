@@ -289,7 +289,7 @@ export class GameState {
       player.state = 'startingSmash';
       this.timerMgr.wait(settings.smashDelay, () => {
         player.state = 'smashing';
-        player.bod.bullet = true;
+        player.bod.setBullet(true);
       });
       this.onStartSmash.dispatch(player);
     }
@@ -461,7 +461,7 @@ export function create(gameState: GameState) {
           gameState.onJumpoff.dispatch(playerA, bB.getUserData());
           if (playerA.state == 'startingSmash' || playerA.state == 'smashing') {
             playerA.state = 'normal';
-            bA.bullet = false;
+            bA.setBullet(false);
           }
           postStep(() => {
             updateVel(bA, ({x,y}) => Pl.Vec2(x, 8 * (playerA.state == 'speeding' ? settings.speedup : 1)));
