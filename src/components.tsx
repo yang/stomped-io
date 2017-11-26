@@ -70,7 +70,7 @@ export class Splash extends React.Component {
       char: new Chance().pickone(this.chars.filter(char => char.indexOf('plain-') == 0)),
       charToVariants: null,
       stats: props.stats,
-      unlocked: ((Cookies.getJSON('v1') || {}) as StoredState).unlocked,
+      unlocked: true, //  ((Cookies.getJSON('v1') || {}) as StoredState).unlocked,
       hovering: false
     };
   }
