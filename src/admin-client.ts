@@ -147,6 +147,7 @@ export class GuiMgr {
     for (let c of svrControllers) {
       c.onFinishChange(uploadSettings);
     }
+    this.refresh();
   }
 
   private clear() {
@@ -165,6 +166,7 @@ export class GuiMgr {
 
     const cliOpts = this.cliOpts;
     this.cliControllers = [
+      cliOpts.add(cp, 'resetCookies'),
       cliOpts.add(cp, 'hammerCount'),
       cliOpts.add(cp, 'startHammer'),
       cliOpts.add(cp, 'stopHammer'),

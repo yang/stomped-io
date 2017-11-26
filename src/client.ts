@@ -48,6 +48,7 @@ import {
 import * as _ from 'lodash';
 import {loadSprites} from "./spriter";
 import * as URLSearchParams from 'url-search-params';
+import * as Cookies from 'js-cookie';
 
 export let browserSupported = function () {
   const hasSvgOuterHtml = (() => {
@@ -117,6 +118,7 @@ export class ControlPanel {
   doPings = true;
   doUpdatePl = false;
   smashFrames = 8;
+  resetCookies() { Cookies.remove('v1'); }
   backToSplash() { backToSplash(); }
   testNotif() { notify('Testing!'); }
 }

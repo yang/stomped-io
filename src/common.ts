@@ -1119,7 +1119,7 @@ export function clamp(x, bound) {
 export function* genStyles() {
   const chance = new Chance(0);
   while (true) {
-    const weights = [1,1,1].concat(playerStyles.map(() => 0.1).slice(0, -3));
+    const weights = [1,1,1].concat(playerStyles.map(() => 0.5 / playerStyles.length).slice(0, -3));
     yield chance.weighted(playerStyles, weights);
   }
 }

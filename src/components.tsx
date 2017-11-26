@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {Component} from "react";
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
 import {clearArray, maxNameLen, playerStyles, Stats} from "./common";
+import * as Cookies from 'js-cookie';
 
 interface SplashState {
   name: string;
@@ -12,6 +12,7 @@ interface SplashState {
   char: string;
   charToVariants: any;
   stats: Stats;
+  unlocked: boolean;
 }
 
 interface SplashProps {
@@ -27,6 +28,23 @@ export function inIframe () {
   } catch (e) {
     return true;
   }
+}
+
+const basicStyleBases = [
+  'plain'
+];
+
+function isBasicStyle(char: string) {
+  for (let sty of basicStyleBases) {
+    if (char.indexOf(sty) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+interface StoredState {
+  unlocked: boolean;
 }
 
 export class Splash extends React.Component {
@@ -50,7 +68,8 @@ export class Splash extends React.Component {
       disabled: false,
       char: new Chance().pickone(this.chars.slice(0,3)),
       charToVariants: null,
-      stats: props.stats
+      stats: props.stats,
+      unlocked: ((Cookies.getJSON('v1') || {}) as StoredState).unlocked
     };
   }
   private handleChange = (e) => {
@@ -80,7 +99,11 @@ export class Splash extends React.Component {
     document.getElementById('mount-point').style.display = 'none';
   }
   chooseChar = (char: string) => {
-    this.setState({char});
+    if (this.state.unlocked || isBasicStyle(char)) {
+      this.setState({char});
+    } else {
+      this.inputEl.focus();
+    }
   };
   scrollToChar = () => {
     const item = this.galleryItemEls.get(this.state.char);
@@ -94,6 +117,10 @@ export class Splash extends React.Component {
   setStats(stats: Stats) {
     this.setState({stats: stats});
   }
+  share = (url: string) => {
+    Cookies.set('v1', {unlocked: true} as StoredState);
+    window.location.href = url;
+  };
   render() {
     const isSupported = this.props.browserSupported;
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
@@ -139,10 +166,18 @@ export class Splash extends React.Component {
               ref={el => this.galleryItemEls.set(char, el)}
               className={classnames({
                 'gallery-item': true,
+                'gallery-item--disabled': !this.state.unlocked && !isBasicStyle(char),
                 'gallery-item--selected': this.state.char == char
               })}
             >
-              <a href={"javascript: void 0"} onMouseDown={() => this.chooseChar(char)}>
+              <a
+                href={"javascript: void 0"}
+                className={classnames({
+                  'gallery-link--disabled': !this.state.unlocked && !isBasicStyle(char)
+                })}
+                title={'Share on Facebook or Twitter to unlock - get your friends to play with you!'}
+                onMouseDown={() => this.chooseChar(char)}
+              >
                 <img className='gallery-img' src={imgSrc}/>
               </a>
             </div>;
@@ -160,8 +195,8 @@ export class Splash extends React.Component {
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
       <div className={"minor-links"}>
-        <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`} target={"_blank"}>Share on Twitter</a> |&nbsp;
-        <a href={"https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fstomped.io"} target={"_blank"}>Share on Facebook</a> |&nbsp;
+        <button onClick={() => this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`)}>Share on Twitter</button> |&nbsp;
+        <button onClick={() => this.share("https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fstomped.io")}>Share on Facebook</button> |&nbsp;
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
         {inIframe() && ' | '}
         {inIframe() && <a href={"/"} target={"_blank"}>Pop out in new tab</a>}
