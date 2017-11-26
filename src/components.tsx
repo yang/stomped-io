@@ -4,9 +4,6 @@ import * as classnames from 'classnames';
 import {Chance} from 'chance';
 import {clearArray, maxNameLen, playerStyles, Stats} from "./common";
 import * as Cookies from 'js-cookie';
-// import * as TT from 'tooltip.js';
-
-// const Tooltip = TT.default;
 
 interface SplashState {
   name: string;
@@ -106,14 +103,6 @@ export class Splash extends React.Component {
   initGalleryItem = (char: string, el: HTMLElement) => {
     if (el) {
       this.galleryItemEls.set(char, el);
-      // new Tooltip(el, {
-      //   delay: 0, // {show: 0, hide: 500},
-      //   boundariesElement: document.body,
-      //   html: true,
-      //   title: () =>
-      //     'Share on Facebook or Twitter to unlock - get your friends to play with you!'
-      //     // + document.querySelector('.share-btns').outerHTML
-      // });
     }
   };
   chooseChar = (char: string) => {
@@ -211,7 +200,7 @@ export class Splash extends React.Component {
         {/*<div className={'share-indicator'}>*/}
         <div className={'share-indicator'} style={{display: this.state.hovering ? '' : 'none'}}>
           Share to unlock characters!<br/>
-          Bring your friends to play!
+          Get your friends to play!
         </div>
         <button onClick={() => this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`)}>
           <i className={'fa fa-twitter icon'} aria-hidden={'true'}></i>
