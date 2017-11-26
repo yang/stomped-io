@@ -232,6 +232,10 @@ export class TimerMgr {
   }
 }
 
+export interface LoadedCode {
+  stomp(playerA: Player, playerB: Player, gameState: GameState);
+}
+
 export class GameState {
   timerMgr = new TimerMgr();
   public time = 0;
@@ -246,7 +250,7 @@ export class GameState {
   onEntCreated = new Signals.Signal();
   onStomp = new Signals.Signal();
   onStartSmash = new Signals.Signal();
-  constructor(public world: Pl.World = gWorld, public destroy: (killed: Ent, killer?: Ent) => void = () => {}) {}
+  constructor(public world: Pl.World = gWorld, public loadedCode: LoadedCode = null, public destroy: (killed: Ent, killer?: Ent) => void = () => {}) {}
   getEnts() {
     return (<Ent[]>this.players).concat(this.ledges).concat(this.stars).concat(this.blocks);
   }
@@ -437,6 +441,8 @@ export function makeBurst(x: number, y: number, count: number, gameState: GameSt
 }
 
 const entToHitter = new Map<Ent, Player>();
+
+
 export function create(gameState: GameState) {
   const players = gameState.players, world = gameState.world;
   const log = getLogger('jumpoff');
@@ -468,17 +474,7 @@ export function create(gameState: GameState) {
             if (bB.getUserData() instanceof Player) {
               const playerB: Player = bB.getUserData();
               uniqueHit(playerA, playerB, () => {
-                const damage = Math.max(playerA.size, playerB.size / 2);
-                const impact = Math.min(damage, playerB.size);
-                playerB.grow(-impact);
-                playerA.grow(impact / 2);
-                gameState.onStomp.dispatch(playerA, Math.round(impact / 2 * 10));
-                makeBurst(playerB.x, playerB.y,impact / 2 * 10, gameState);
-                playerB.state = 'normal';
-                if (playerB.size < 1) {
-                  destroy(playerB, playerA);
-                  playerB.dead = true;
-                }
+                gameState.loadedCode.stomp(playerA, playerB, gameState);
               });
             }
           });

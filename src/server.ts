@@ -16,7 +16,7 @@ import {
   updateEntPhysFromPl,
   updatePeriod, updateVel,
   settings,
-  world, setNotConsumable, setConsumable, StartSmash, AdminStats
+  world, setNotConsumable, setConsumable, StartSmash, AdminStats, LoadedCode
 } from './common';
 import * as Pl from 'planck-js';
 import * as fs from 'fs';
@@ -28,6 +28,18 @@ import * as net from "net";
 import * as repl from "repl";
 import * as Faker from 'faker';
 import * as FastGlob from 'fast-glob';
+
+let loadedCode = {} as LoadedCode;
+let currentPath = '';
+function reloadCode() {
+  const [path] = FastGlob.sync('./dyn-*.ts', {cwd: __dirname});
+  if (path && currentPath != path) {
+    Object.assign(loadedCode, require(path));
+    getLogger('dyn').log('loaded', path, 'with', Object.keys(require(path)), 'loadedCode', Object.keys(loadedCode));
+    currentPath = path;
+  }
+}
+reloadCode();
 
 const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
@@ -144,7 +156,7 @@ const styleGen = genStyles();
 
 const io = Sio();
 
-const gameState = new GameState(undefined, destroy);
+const gameState = new GameState(undefined, loadedCode, destroy);
 gameState.onEntCreated.add(ent => ent instanceof Star && events.push(new AddEnt(ent).ser()));
 gameState.onStomp.add((player, count) => events.push(new StompEv(player.id, count).ser()));
 gameState.onStartSmash.add((player) => events.push(new StartSmash(player.id).ser()));
@@ -514,27 +526,11 @@ function create() {
     setInterval(update, updatePeriod * 1000);
     setInterval(() => updateStars(gameState, false), updateStarsPeriod * 1000);
     setInterval(reloadPlayerStyles, 1000);
-    reloadCode();
-    setInterval(reloadCode, 1000);
-    setInterval(runCode, 1000);
+    setInterval(reloadCode, 10000);
   }
 
   Common.create(gameState);
 
-}
-
-let loadedCode = {} as any, currentPath = '';
-function reloadCode() {
-  const [path] = FastGlob.sync('./dyn-*.ts', {cwd: __dirname});
-  if (path && currentPath != path) {
-    Object.assign(loadedCode, require(path));
-    getLogger('dyn').log('loaded', path, 'with', Object.keys(require(path)), 'loadedCode', Object.keys(loadedCode));
-    currentPath = path;
-  }
-}
-
-function runCode() {
-  loadedCode.doit();
 }
 
 const toRemove: RemEnt[] = [];

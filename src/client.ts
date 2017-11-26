@@ -30,7 +30,7 @@ import {
   getLogger,
   InputEvent,
   Lava,
-  Ledge,
+  Ledge, LoadedCode,
   now,
   pb,
   Player, playerStyles,
@@ -49,6 +49,8 @@ import * as _ from 'lodash';
 import {loadSprites} from "./spriter";
 import * as URLSearchParams from 'url-search-params';
 import * as Cookies from 'js-cookie';
+
+const loadedCode = require('./dyn');
 
 export let browserSupported = function () {
   const hasSvgOuterHtml = (() => {
@@ -132,7 +134,7 @@ export const styleGen = genStyles();
 
 export var game, gPool;
 
-export const gameState = new GameState(undefined, destroy2);
+export const gameState = new GameState(undefined, loadedCode as LoadedCode, destroy2);
 gameState.onJumpoff.add((player, other) => {
   const minSize = 10, maxSize = 15, slope = 0.1 / (maxSize - minSize);
   if (cp.doShake) {
