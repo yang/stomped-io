@@ -158,7 +158,7 @@ export const playerStyleIndividuals = [
 
 export const playerStyles = [];
 for (let base of playerStyleBases) {
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < (base == 'plain' ? 7 : 3); i++) {
     playerStyles.push(`${base}-${i}`);
   }
 }
@@ -1119,7 +1119,9 @@ export function clamp(x, bound) {
 export function* genStyles() {
   const chance = new Chance(0);
   while (true) {
-    const weights = [1,1,1].concat(playerStyles.map(() => 0.5 / playerStyles.length).slice(0, -3));
+    const weights = playerStyles.map((style) =>
+      style.indexOf('plain-') == 0 ? 1 : 2 / playerStyles.length
+    );
     yield chance.weighted(playerStyles, weights);
   }
 }

@@ -1,6 +1,10 @@
 plain-0
 plain-1
 plain-2
+plain-3
+plain-4
+plain-5
+plain-6
 spacesuit-0
 robot-0
 alien-0

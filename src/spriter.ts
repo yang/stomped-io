@@ -119,13 +119,37 @@ const chars = [
       {},
       // blue
       {
-        main_hue: hue = '#5fdff1',
+        main_hue: hue = '#7ccff4',
         light_shade: Color(hue).darken(5),
         dark_shade: Color(hue).darken(10)
       },
       // orange
       {
         main_hue: hue = '#ff9110',
+        light_shade: Color(hue).darken(5),
+        dark_shade: Color(hue).darken(10),
+      },
+      // pink
+      {
+        main_hue: hue = '#f3a0e9',
+        light_shade: Color(hue).darken(5),
+        dark_shade: Color(hue).darken(10),
+      },
+      // teal
+      {
+        main_hue: hue = '#60e0bb',
+        light_shade: Color(hue).darken(5),
+        dark_shade: Color(hue).darken(10),
+      },
+      // brown
+      {
+        main_hue: hue = '#774e33',
+        light_shade: Color(hue).darken(5),
+        dark_shade: Color(hue).darken(10),
+      },
+      // red
+      {
+        main_hue: hue = '#ec5858',
         light_shade: Color(hue).darken(5),
         dark_shade: Color(hue).darken(10),
       },

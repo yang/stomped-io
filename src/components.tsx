@@ -67,7 +67,7 @@ export class Splash extends React.Component {
       name: '',
       shown: props.shown,
       disabled: false,
-      char: new Chance().pickone(this.chars.slice(0,3)),
+      char: new Chance().pickone(this.chars.filter(char => char.indexOf('plain-') == 0)),
       charToVariants: null,
       stats: props.stats,
       unlocked: ((Cookies.getJSON('v1') || {}) as StoredState).unlocked,
