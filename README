@@ -97,6 +97,7 @@ From your client:
 
     # Start once
     yarn watch
+    yarn watch-css
 
     # Deployment - specify the IP
     # You must commit your work before deploying!

@@ -1,0 +1,391 @@
+* {
+    box-sizing: border-box;
+}
+:root {
+    --bg: #2A0F3F;
+    --alt-color: #b26ee9;
+    --darker-alt-color: #824eb9;
+}
+html, body, #mount-point {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    color: #ff8800;
+}
+body {
+    /* IE insists on displaying scrollbars for some reason */
+    overflow: hidden;
+    font-family: Arial;
+    font-size: 14px;
+}
+a {
+    text-decoration: none;
+}
+
+.subhead {
+    line-height: 1.5em;
+    text-align: center;
+    font-size: 14px;
+    /*text-transform: uppercase;*/
+    font-weight: bold;
+    color: #dcd;
+    margin: 0;
+}
+#mount-point {
+    position: fixed;
+}
+.splash {
+    width: 100%;
+    height: 100%;
+    background: #331133;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+}
+.logo {
+    margin: 20px;
+}
+h1 {
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 76px;
+    margin: 0;
+
+}
+h2 {
+    /*color: #cc6600;*/
+    font-family: 'Luckiest Guy', cursive;
+    color: var(--alt-color);
+    margin: 0;
+}
+.splash-form {
+    text-align: center;
+}
+.num {
+    color: var(--alt-color);
+    color: #ff8800;
+    color: white;
+    color: var(--alt-color);
+    font-size: 1.2em;
+}
+.io {
+    color: var(--alt-color);
+    font-size: 0.8em;
+}
+.name-input {
+    border-radius: 32px;
+    background: rebeccapurple;
+    padding: 8px 16px;
+    font-size: 16px;
+    border: 0;
+    color: white;
+    margin: 20px;
+}
+.name-input:hover {
+    background: mediumpurple;
+}
+.name-input:focus {
+    outline: none;
+    /*background: rebeccapurple;*/
+}
+.name-input::placeholder {
+    opacity: 0.5;
+    color: white;
+}
+.submit-btn {
+    border-radius: 32px;
+    background: #ff8800;
+    padding: 8px 24px;
+    color: white;
+    font-size: 16px;
+    border: 0px;
+    font-weight: bold;
+    border: 4px solid #ffcc00;
+    margin: 10px;
+}
+.submit-btn:hover {
+    background: #ffaa00;
+}
+.submit-btn:focus {
+    outline: none;
+    background: #ff6600;
+}
+.submit-btn:disabled {
+    color: #ffcc88;
+}
+.gallery {
+    width: 800px;
+    height: 110px;
+    overflow-x: auto;
+    /*margin: 20px;*/
+    vertical-align: middle;
+    white-space: nowrap;
+    text-align: center;
+}
+.gallery-item {
+    width: 90px;
+    overflow: hidden;
+    display: inline-block;
+    cursor: pointer;
+    /*margin: 0 16px;*/
+}
+.gallery-item--disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+/*.gallery-link--disabled {*/
+/*}*/
+.gallery-item--selected {
+    border: 4px solid orange;
+}
+.gallery-img {
+    height: 67px;
+}
+
+.gallery::-webkit-scrollbar-track
+{
+    /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+    border-radius: 10px;
+    background-color: #4a1f6f;
+}
+
+.gallery::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+    background-color: var(--bg);
+}
+
+.gallery::-webkit-scrollbar-thumb
+{
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: darkorange;
+}
+
+.more-io-games {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    font-size: 20px;
+    font-family: 'Luckiest Guy', cursive;
+    padding: 20px;
+    color: var(--darker-alt-color);
+}
+
+.more-io-games a {
+    color: #ff8800;
+    color: var(--alt-color);
+}
+
+.featured-youtubers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 14px;
+    padding: 20px;
+}
+
+.youtube-link {
+    color: #dcd;
+}
+
+.featured-youtuber-name {
+    font-size: 24px;
+    font-family: 'Luckiest Guy', cursive;
+    margin-top: 8px;
+    color: #f27ef9;
+    color: #d0b7ff;
+    letter-spacing: 1px;
+}
+
+.featured-youtuber-name img {
+    vertical-align: middle;
+}
+
+.youtube-icon {
+    width: 32px;
+    margin-right: 10px;
+}
+
+.minor-links {
+    position: absolute;
+    top: 0;
+    right: 0;
+    /*width: 100%;*/
+    font-size: 14px;
+    padding: 20px;
+    color: var(--darker-alt-color);
+    /*text-align: center;*/
+    text-align: right;
+    line-height: 1.5em;
+}
+
+.minor-links a {
+    color: var(--alt-color);
+}
+
+.share-btns {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 20px;
+    line-height: 1.2em;
+}
+
+.share-btns button {
+    color: var(--alt-color);
+    color: #d0b7ff;
+    border: none;
+    background: none;
+    font-size: 20px;
+    display: inline;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    font-family: 'Luckiest Guy', cursive;
+    letter-spacing: 1px;
+}
+
+.tooltip .share-btns {
+    position: static;
+}
+
+.tooltip .share-btns button {
+    font-family: Arial;
+    font-size: 14px;
+    letter-spacing: initial;
+    white-space: nowrap;
+}
+
+a:hover {
+    color: white;
+}
+
+.share-btns button:hover {
+    color: white;
+}
+.icon {
+    width: 1.3em;
+    margin: 0 .4em;
+}
+
+.share-indicator {
+    font-family: 'Indie Flower', cursive;
+    position: absolute;
+    /*top: -20px;*/
+    bottom: 0;
+    /*left: -20px;*/
+    right: 0;
+    color: #ff8800;
+    background: url(arrow.png) no-repeat;
+    background-position: 0 20px;
+    height: 120px;
+    width: 290px;
+    padding-left: 40px;
+    font-size: 20px;
+    color: #ff8800;
+    line-height: 1.2em;
+}
+
+
+
+
+.popper,
+.tooltip {
+    white-space: normal;
+    position: absolute;
+    background: #FFC107;
+    color: black;
+    width: 150px;
+    border-radius: 3px;
+    box-shadow: 0 0 2px rgba(0,0,0,0.5);
+    padding: 10px;
+    text-align: center;
+}
+body .tooltip {
+    background: #1E252B;
+    color: #FFFFFF;
+    max-width: 200px;
+    width: auto;
+    /*font-size: .8rem;*/
+    padding: .5em 1em;
+}
+.popper .popper__arrow,
+.tooltip .tooltip-arrow {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    position: absolute;
+    margin: 5px;
+}
+
+.tooltip .tooltip-arrow,
+.popper .popper__arrow {
+    border-color: #FFC107;
+}
+body .tooltip .tooltip-arrow {
+    border-color: #1E252B;
+}
+.popper[x-placement^="top"],
+.tooltip[x-placement^="top"] {
+    margin-bottom: 5px;
+}
+.popper[x-placement^="top"] .popper__arrow,
+.tooltip[x-placement^="top"] .tooltip-arrow {
+    border-width: 5px 5px 0 5px;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    bottom: -5px;
+    left: calc(50% - 5px);
+    margin-top: 0;
+    margin-bottom: 0;
+}
+.popper[x-placement^="bottom"],
+.tooltip[x-placement^="bottom"] {
+    margin-top: 5px;
+}
+.tooltip[x-placement^="bottom"] .tooltip-arrow,
+.popper[x-placement^="bottom"] .popper__arrow {
+    border-width: 0 5px 5px 5px;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    border-top-color: transparent;
+    top: -5px;
+    left: calc(50% - 5px);
+    margin-top: 0;
+    margin-bottom: 0;
+}
+.tooltip[x-placement^="right"],
+.popper[x-placement^="right"] {
+    margin-left: 5px;
+}
+.popper[x-placement^="right"] .popper__arrow,
+.tooltip[x-placement^="right"] .tooltip-arrow {
+    border-width: 5px 5px 5px 0;
+    border-left-color: transparent;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+    left: -5px;
+    top: calc(50% - 5px);
+    margin-left: 0;
+    margin-right: 0;
+}
+.popper[x-placement^="left"],
+.tooltip[x-placement^="left"] {
+    margin-right: 5px;
+}
+.popper[x-placement^="left"] .popper__arrow,
+.tooltip[x-placement^="left"] .tooltip-arrow {
+    border-width: 5px 0 5px 5px;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    right: -5px;
+    top: calc(50% - 5px);
+    margin-left: 0;
+    margin-right: 0;
+}
