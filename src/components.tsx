@@ -14,6 +14,7 @@ interface SplashState {
   stats: Stats;
   unlocked: boolean;
   hovering: boolean;
+  clickedShare: boolean;
 }
 
 interface SplashProps {
@@ -70,8 +71,9 @@ export class Splash extends React.Component {
       char: new Chance().pickone(this.chars.filter(char => char.indexOf('plain-') == 0)),
       charToVariants: null,
       stats: props.stats,
-      unlocked: true, //  ((Cookies.getJSON('v1') || {}) as StoredState).unlocked,
-      hovering: false
+      unlocked: ((Cookies.getJSON('v1') || {}) as StoredState).unlocked,
+      hovering: false,
+      clickedShare: false
     };
   }
   private handleChange = (e) => {
@@ -125,8 +127,13 @@ export class Splash extends React.Component {
     this.setState({stats: stats});
   }
   share = (url: string) => {
+    this.setState({clickedShare: true});
     Cookies.set('v1', {unlocked: true} as StoredState);
-    window.location.href = url;
+    if (inIframe()) {
+      window.open(url);
+    } else {
+      window.location.href = url;
+    }
   };
   render() {
     const isSupported = this.props.browserSupported;
@@ -196,12 +203,22 @@ export class Splash extends React.Component {
         <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a>&nbsp;
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
+      <div className={classnames({
+        'share-indicator': true,
+        'share-indicator--highlighted': this.state.hovering,
+      })} style={{display: this.state.unlocked ? 'none' : ''}}>
+        { inIframe() && this.state.clickedShare ?
+          <span>
+            Refresh this page<br/>
+            after sharing!
+          </span> :
+          <span>
+            Share to unlock characters!<br/>
+            Get your friends to play!
+          </span>
+        }
+      </div>
       <div className={'share-btns'}>
-        {/*<div className={'share-indicator'}>*/}
-        <div className={'share-indicator'} style={{display: this.state.hovering ? '' : 'none'}}>
-          Share to unlock characters!<br/>
-          Get your friends to play!
-        </div>
         <button onClick={() => this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`)}>
           <i className={'fa fa-twitter icon'} aria-hidden={'true'}></i>
           Share on Twitter
