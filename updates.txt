@@ -2,6 +2,7 @@
 ==========
 
 - Encourage the sharin'  :)
+- Shrink sprites to help players getting out-of-memory errors
 
 2017-11-25
 ==========

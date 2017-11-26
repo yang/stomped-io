@@ -736,7 +736,7 @@ export class Star extends Ent {
   }
   dispDims(): Vec2 {
     const t = this.dispDimScaler * this.now() + this.dispDimOffset;
-    return super.dispDims().mul(2 + 1 + Math.sin(Math.PI * t / 1000));
+    return super.dispDims().mul(2 + .5 * Math.sin(Math.PI * t / 1000));
   }
   dispAngle() {
     const t =  this.dispAngleScaler * this.now() + this.dispAngleOffset;
