@@ -221,8 +221,8 @@ function genSprites(charName, ev) {
     // Anchor is always the bottom-left corner.
     const [w, h] = char.bbox || defaultBbox;
     svg.setAttribute('viewBox', `0 ${297 - h} ${w} ${h}`);
-    svg.setAttribute('width', `${w}mm`);
-    svg.setAttribute('height', `${h}mm`);
+    svg.setAttribute('width', `${w}`);
+    svg.setAttribute('height', `${h}`);
     document.body.appendChild(svg);
 
     // This is document, but if it were in object then document would be different.
