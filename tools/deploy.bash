@@ -10,4 +10,7 @@ ssh $dest '
     mkdir -p bounce;
     cd bounce;
     echo A | unzip ../bounce.zip
+    rm src/dyn-*.ts
+    cp src/dyn.ts src/.dyn-tmp.ts
+    mv src/.dyn-tmp.ts src/dyn-$(date +%Y-%m-%d-%H-%M-%S).ts
 '

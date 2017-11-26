@@ -5,6 +5,7 @@
 - Shrink sprites to help players getting out-of-memory errors
 - Fixed a major physics issue!  (This time for reals.)  Where if you try to smash down on another player, you could
   potentially tunnel right past them, when it should have been a direct hit.
+- Add basic server hot code reloading, so I can roll out certain new features without kicking everyone off
 
 2017-11-25
 ==========
