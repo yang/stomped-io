@@ -1116,11 +1116,40 @@ export function clamp(x, bound) {
   return Math.min(Math.abs(x), bound) * Math.sign(x);
 }
 
+export const basicStyleBases = [
+  'plain'
+];
+
+export function isBasicStyle(char: string) {
+  for (let sty of basicStyleBases) {
+    if (char.indexOf(sty) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export const hiddenStyleBases = [
+  'fady',
+  'santa'
+];
+
+export function isHiddenStyle(char: string) {
+  for (let sty of hiddenStyleBases) {
+    if (char.indexOf(sty) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function* genStyles() {
   const chance = new Chance(0);
   while (true) {
     const weights = playerStyles.map((style) =>
-      style.indexOf('plain-') == 0 ? 1 : 2 / playerStyles.length
+      isBasicStyle(style) ? 1 :
+        isHiddenStyle(style) ? 0 :
+          2 / playerStyles.length
     );
     yield chance.weighted(playerStyles, weights);
   }

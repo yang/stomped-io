@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
-import {clearArray, maxNameLen, playerStyles, Stats} from "./common";
+import {clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
 import * as Cookies from 'js-cookie';
 
 interface SplashState {
@@ -30,33 +30,6 @@ export function inIframe () {
   } catch (e) {
     return true;
   }
-}
-
-const basicStyleBases = [
-  'plain'
-];
-
-const hiddenStyleBases = [
-  'fady',
-  'santa'
-];
-
-function isBasicStyle(char: string) {
-  for (let sty of basicStyleBases) {
-    if (char.indexOf(sty) == 0) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function isHiddenStyle(char: string) {
-  for (let sty of hiddenStyleBases) {
-    if (char.indexOf(sty) == 0) {
-      return true;
-    }
-  }
-  return false;
 }
 
 interface StoredState {
