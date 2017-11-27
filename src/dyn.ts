@@ -20,4 +20,8 @@ export function selectChar(playerData) {
   return playerStyles.includes(playerData.char) ? playerData.char : 'plain-0';
 };
 
-const loadedCodeVerification: LoadedCode = {stomp, selectChar};
+
+// Only uncomment this briefly to verify no compilation errors, but *do not leave it in* or else it will fail to
+// compile in the live runnin gserver (since the running LoadedCode may not recognize a newly added function
+// signature).
+// const loadedCodeVerification: LoadedCode = {stomp, selectChar};
