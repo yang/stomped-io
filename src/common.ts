@@ -155,7 +155,8 @@ export const playerStyleIndividuals = [
   'reddit',
   'slender',
   'fady',
-  '4chan'
+  '4chan',
+  'santa'
 ];
 
 export const playerStyles = [];

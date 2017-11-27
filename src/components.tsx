@@ -37,7 +37,8 @@ const basicStyleBases = [
 ];
 
 const hiddenStyleBases = [
-  'fady'
+  'fady',
+  'santa'
 ];
 
 function isBasicStyle(char: string) {
@@ -91,7 +92,9 @@ export class Splash extends React.Component {
     e.preventDefault();
     this.setState({disabled: true});
     const name = this.state.name;
-    const char = name.toLowerCase().trim() == 'fady' ? 'fady-0' : this.state.char;
+    const char = name.toLowerCase().trim() == 'fady' ? 'fady-0' :
+      name.toLowerCase().trim() == 'santa' ? 'santa-0' :
+        this.state.char;
     this.props.onSubmit(name, char);
   };
   componentDidUpdate() {

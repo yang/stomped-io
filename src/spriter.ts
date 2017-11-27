@@ -191,6 +191,17 @@ const chars = [
       }
     ]
   },
+  {
+    name: 'santa',
+    bbox: [150,225],
+    variants: [
+      {
+        main_hue: hue = '#ff0000',
+        light_shade: Color(hue).darken(5),
+        dark_shade: Color(hue).darken(10),
+      }
+    ]
+  },
 ];
 
 export function loadSprites() {
