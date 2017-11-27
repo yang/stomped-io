@@ -235,6 +235,7 @@ export class TimerMgr {
 
 export interface LoadedCode {
   stomp(playerA: Player, playerB: Player, gameState: GameState);
+  selectChar(playerData);
 }
 
 export class GameState {

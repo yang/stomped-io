@@ -3,20 +3,43 @@ import * as Sio from 'socket.io';
 import * as Common from './common';
 import {
   addBody,
-  AddEnt, assert, baseHandler,
-  Bcast, Block, Burster,
-  clearArray, Dir, Ent, EntMgr,
-  Event, GameState, genStyles, getLogger, getRandomIntRange, ids, KillEv,
+  AddEnt,
+  AdminStats,
+  assert,
+  baseHandler,
+  Bcast,
+  Block,
+  clearArray,
+  Dir,
+  Ent,
+  EntMgr,
+  Event,
+  GameState,
+  genStyles,
+  getLogger,
+  getRandomIntRange,
+  ids,
   Lava,
   Ledge,
   ledgeHeight,
-  ledgeWidth, makeStar, maxNameLen, now, pb,
-  Player, playerStyles,
-  RemEnt, runLocally, serSimResults, Star, StompEv, StopSpeedup,
-  updateEntPhysFromPl,
-  updatePeriod, updateVel,
+  ledgeWidth,
+  LoadedCode,
+  makeStar,
+  maxNameLen,
+  now,
+  pb,
+  Player,
+  RemEnt,
+  runLocally,
+  serSimResults,
   settings,
-  world, setNotConsumable, setConsumable, StartSmash, AdminStats, LoadedCode
+  Star,
+  StartSmash,
+  StompEv,
+  StopSpeedup,
+  updateEntPhysFromPl,
+  updatePeriod,
+  world
 } from './common';
 import * as Pl from 'planck-js';
 import * as fs from 'fs';
@@ -566,6 +589,7 @@ io.use(function(socket, next) {
   return next();
 });
 
+
 io.on('connection', (socket: SocketIO.Socket) => {
   const log = getLogger('net');
   const client = new Client(socket);
@@ -617,7 +641,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
   });
 
   socket.on('join', (playerData) => {
-    const char = playerStyles.includes(playerData.char) ? playerData.char : 'player-plain-0';
+    const char = loadedCode.selectChar(playerData);
     player = makePlayer(playerData.name.trim().slice(0, maxNameLen) || 'Anonymous Stomper', char);
 
     log.log('player', player.describe(), 'with style', player.style, `joined (client ${client.id})`);

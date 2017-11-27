@@ -1,4 +1,4 @@
-import {GameState, LoadedCode, makeBurst, Player} from './common';
+import {GameState, LoadedCode, makeBurst, Player, playerStyles} from './common';
 
 export function stomp(playerA: Player, playerB: Player, gameState: GameState) {
   const requestedDamage = Math.max(playerA.size, playerB.size / 10);
@@ -16,4 +16,8 @@ export function stomp(playerA: Player, playerB: Player, gameState: GameState) {
   }
 }
 
-const loadedCodeVerification: LoadedCode = {stomp};
+export function selectChar(playerData) {
+  return playerStyles.includes(playerData.char) ? playerData.char : 'player-plain-0';
+};
+
+const loadedCodeVerification: LoadedCode = {stomp, selectChar};
