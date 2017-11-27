@@ -154,6 +154,7 @@ export const playerStyleBases = [
 export const playerStyleIndividuals = [
   'reddit',
   'slender',
+  'fady',
 ];
 
 export const playerStyles = [];

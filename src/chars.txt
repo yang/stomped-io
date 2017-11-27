@@ -22,3 +22,4 @@ skeleton-2
 plumber-2
 reddit-0
 slender-0
+fady-0

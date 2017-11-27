@@ -169,6 +169,17 @@ const chars = [
       {}
     ]
   },
+  {
+    name: 'fady',
+    bbox: [150,200],
+    variants: [
+      {
+        main_hue: hue = '#fff204',
+        light_shade: Color(hue).darken(5),
+        dark_shade: Color(hue).darken(10),
+      }
+    ]
+  },
 ];
 
 export function loadSprites() {
