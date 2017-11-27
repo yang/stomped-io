@@ -90,7 +90,9 @@ export class Splash extends React.Component {
   private handleSubmit = (e) => {
     e.preventDefault();
     this.setState({disabled: true});
-    this.props.onSubmit(this.state.name, this.state.char);
+    const name = this.state.name;
+    const char = name.toLowerCase().trim() == 'fady' ? 'fady-0' : this.state.char;
+    this.props.onSubmit(name, char);
   };
   componentDidUpdate() {
     // Must do after element is rendered - see
