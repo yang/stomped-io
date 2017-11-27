@@ -36,8 +36,21 @@ const basicStyleBases = [
   'plain'
 ];
 
+const hiddenStyleBases = [
+  'fady'
+];
+
 function isBasicStyle(char: string) {
   for (let sty of basicStyleBases) {
+    if (char.indexOf(sty) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isHiddenStyle(char: string) {
+  for (let sty of hiddenStyleBases) {
     if (char.indexOf(sty) == 0) {
       return true;
     }
@@ -55,20 +68,15 @@ export class Splash extends React.Component {
   inputEl: HTMLInputElement;
   galleryEl: HTMLDivElement;
   galleryItemEls = new Map<string, HTMLElement>();
-  chars = playerStyles;
+  chars = playerStyles.filter(char => !isHiddenStyle(char));
   afterUpdates = [];
   constructor(props) {
     super(props);
-    if (0/1) {
-      for (let i = 0; i < 2; i++) {
-        this.chars = this.chars.concat(this.chars);
-      }
-    }
     this.state = {
       name: '',
       shown: props.shown,
       disabled: false,
-      char: new Chance().pickone(this.chars.filter(char => char.indexOf('plain-') == 0)),
+      char: new Chance().pickone(this.chars.filter(char => isBasicStyle(char))),
       charToVariants: null,
       stats: props.stats,
       unlocked: ((Cookies.getJSON('v1') || {}) as StoredState).unlocked,

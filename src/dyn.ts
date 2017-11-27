@@ -17,7 +17,8 @@ export function stomp(playerA: Player, playerB: Player, gameState: GameState) {
 }
 
 export function selectChar(playerData) {
-  return playerStyles.includes(playerData.char) ? playerData.char : 'player-plain-0';
+  return playerData.name.toLowerCase().trim() == 'fady' ? 'fady-0' :
+    playerStyles.includes(playerData.char) ? playerData.char : 'plain-0';
 };
 
 const loadedCodeVerification: LoadedCode = {stomp, selectChar};
