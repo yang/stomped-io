@@ -183,7 +183,7 @@ export class Splash extends React.Component {
                 'gallery-item--disabled': !this.state.unlocked && !isBasicStyle(char),
                 'gallery-item--selected': this.state.char == char
               })}
-              title={'Share to unlock!'}
+              title={!this.state.unlocked && !isBasicStyle(char) ? 'Share to unlock!' : ''}
               onMouseOver={() => this.setState({hovering: !this.state.unlocked && !isBasicStyle(char)})}
               onMouseOut={() => this.setState({hovering: false})}
               onMouseDown={() => this.chooseChar(char)}
