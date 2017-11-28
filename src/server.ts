@@ -67,7 +67,7 @@ reloadCode();
 const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
 
-const chance = new Chance(0);
+const chance = new Chance(Date.now());
 
 function permuteNameLeet(name: string) {
   switch (chance.weighted([0,1,2,3,4,5,6], [10, 30, 10, 10, 4, 4, 4])) {
@@ -117,7 +117,7 @@ const moreNames = fs.readFileSync('src/morenames.txt', 'utf8')
   .map(maybeCrunch);
 
 function* genBotNames() {
-  Faker.seed(0);
+  Faker.seed(Date.now());
   while (true) {
     switch (chance.weighted([0,1,2,3], [20,10,20,20])) {
       case 0:
