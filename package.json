@@ -77,7 +77,7 @@
     "watch": "webpack --progress --colors --watch --config webpack.dev.config.js",
     "watch-css": "postcss src/main.css -w -o assets/main.css -u postcss-cssnext",
     "dev": "webpack-dev-server --config webpack.dev.config.js --open",
-    "server": "ts-node src/server.ts",
+    "server": "ts-node --inspect src/server.ts",
     "server-local": "ts-node --inspect=localhost:9222 src/server.ts",
     "server-watch": "node-dev -r ts-node/register src/server.ts",
     "test": "jest",
