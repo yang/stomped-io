@@ -133,6 +133,7 @@ export class ServerSettings {
   speedup = 1.5;
   burstLimit = 100;
   moveSpeedLimit = 5;
+  clientInputTimeout = 3 * 60000;
   ser() {
     return _({}).assign(this);
   }

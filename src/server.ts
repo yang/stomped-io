@@ -625,6 +625,8 @@ io.on('connection', (socket: SocketIO.Socket) => {
     }, 1000);
   }
 
+  let clientInputTimeout = setTimeout(() => socket.disconnect(), settings.clientInputTimeout);
+
   let player;
 
   socket.emit('stats', {
@@ -655,6 +657,9 @@ io.on('connection', (socket: SocketIO.Socket) => {
   });
 
   socket.on('input', (data) => {
+    clearTimeout(clientInputTimeout);
+    clientInputTimeout = setTimeout(() => socket.disconnect(), settings.clientInputTimeout);
+
     if (!player) return;
     getLogger('input').log('player', player.describe(), 'sent input for time', data.time);
     for (let ev of data.events) {
