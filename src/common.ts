@@ -94,7 +94,11 @@ export function getLogger(name: string) {
 export const ratio = 64;
 
 export const gravity = -10;
-export const world = Pl.World(Pl.Vec2(0, gravity));
+export const world = Pl.World({
+  gravity: Pl.Vec2(0, gravity),
+  velocityIterations: 1,
+  positionIterations: 1
+});
 const gWorld = world;
 
 export const gameWorld = {
@@ -749,20 +753,22 @@ export class Burster {
   private elapsed = 0;
   constructor(public ents: Ent[]) {}
   step(dt: number) {
-    // start velocity = 2
-    // last elapsed = .3
-    // last velocity = 1.4
-    // curr elapsed = .5
-    // curr velocity = ? = last velocity / (1 - last progress) * curr progress
-    const lastProgress = this.elapsed / burstDur,
-      currProgress = (this.elapsed + dt) / burstDur,
-      factor = this.elapsed + dt >= burstDur ? 0 : (1 - currProgress) / (1 - lastProgress);
     for (let ent of this.ents) {
       if (ent.bod.getFixtureList()) {
         if (this.elapsed > .2)
           setConsumable(ent);
-        updateVel(ent.bod, ({x, y}) => Pl.Vec2(x * factor, y * factor));
-        ent.dirty = true;
+        if (ent.bod.isAwake()) {
+          updateVel(ent.bod, ({x, y}) => {
+            return Pl.Vec2(
+              Math.sign(x) * Math.max(0, Math.abs(x) - .5),
+              Math.sign(y) * Math.max(0, Math.abs(y) - .5)
+            );
+          });
+          if (ent.bod.getLinearVelocity().x == 0 && ent.bod.getLinearVelocity().y == 0) {
+            ent.bod.setAwake(false);
+          }
+          ent.dirty = true;
+        }
       }
     }
     this.elapsed += dt;
@@ -833,7 +839,8 @@ export function createBody(world: Pl.World, ent, type, fixtureOpts = {}) {
     type: type,
     fixedRotation: true,
     position: plPosFromEnt(ent),
-    userData: ent
+    userData: ent,
+    awake: false
   });
   bod.createFixture(Object.assign({
     shape: Pl.Box(ent.width / 2 / ratio, ent.height / 2 / ratio),
