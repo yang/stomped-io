@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
 import {clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
+import {charVariants} from './spriter';
 import * as Cookies from 'js-cookie';
 
 interface SplashState {
@@ -161,6 +162,7 @@ export class Splash extends React.Component {
             const variantSpriteSheet = this.state.charToVariants[charBase][+variant];
             if (!variantSpriteSheet) return null;
             const imgSrc = variantSpriteSheet[0].src;
+            const [w,h,x0] = charVariants.find(cv => cv.name == char.slice(0, -2)).bbox;
             return <a
               key={char}
               ref={el => this.initGalleryItem(char, el)}
@@ -174,7 +176,12 @@ export class Splash extends React.Component {
               onMouseOut={() => this.setState({hovering: false})}
               onMouseDown={() => this.chooseChar(char)}
             >
-              <img className='gallery-img' src={imgSrc}/>
+              <span className={'gallery-img-box'}>
+                {/*No satisfying pure-CSS solution*/}
+                <img className='gallery-img' src={imgSrc} style={{
+                  height: .35 * h
+                }}/>
+              </span>
             </a>;
           })
         }</div>
