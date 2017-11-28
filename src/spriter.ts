@@ -183,7 +183,7 @@ export const charVariants = [
   },
   {
     name: '4chan',
-    bbox: [150,200,-15],
+    bbox: [150,225,-35],
     variants: [
       {
         main_hue: hue = '#fff0d5',
