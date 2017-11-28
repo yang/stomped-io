@@ -593,6 +593,7 @@ export class Vec2 {
   add(v: Vec2) { return new Vec2(this.x + v.x, this.y + v.y); }
   sub(v: Vec2) { return new Vec2(this.x - v.x, this.y - v.y); }
   mul(x: number) { return new Vec2(this.x * x, this.y * x); }
+  xmul(v: Vec2) { return new Vec2(this.x * v.x, this.y * v.y); }
   div(x: number) { return new Vec2(this.x / x, this.y / x); }
   len() { return Math.sqrt(this.x**2 + this.y**2); }
   toTuple(): [number, number] { return [this.x, this.y]; }
@@ -643,6 +644,8 @@ export class Lava extends Ent {
   constructor(public x: number, public y: number) {super();}
 }
 
+export const defaultBbox = [150,200];
+
 export const totalSquishTime = 0.25;
 export class Player extends Ent {
   timers: Timer[] = [];
@@ -656,14 +659,35 @@ export class Player extends Ent {
   dead = false;
   smashStart: number = null;
   dropInterval: IntervalTimer;
+  spriteBbox;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
 
   ser() {
     return Object.assign(super.ser(), {state: this.state, dir: this.dir, size: this.size, name: this.name, style: this.style});
   }
 
+  anchor() {
+    const [w,h,x0 = 0] = this.spriteBbox;
+    const [dw, dh] = defaultBbox;
+    const x = (dw / 2 - x0) / (w - x0);
+    return new Vec2(
+      this.dir == Dir.Left ? 1 - x : x,
+      (h - dh / 2) / h
+    );
+  }
+
+  dispTopLeft() {
+    return this.dispPos().sub(this.anchor().xmul(this.dispDims()));
+  }
+
+  dispPos() {
+    return this.pos().add(this.dims().div(2));
+  }
+
   dispDims() {
-    const dims = super.dispDims().mul(1.4);
+    const [w,h,x0 = 0] = this.spriteBbox;
+    const [dw, dh] = defaultBbox;
+    const dims = new Vec2(w - x0, h).mul(1.4 * super.dispDims().y / dh);
     if (this.currentSquishTime != null) {
       const currentSquish = 1 - 0.5 * Math.sin(this.currentSquishTime * Math.PI / totalSquishTime);
       dims.y *= currentSquish;

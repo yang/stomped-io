@@ -46,7 +46,7 @@ import {
   world
 } from './common';
 import * as _ from 'lodash';
-import {loadSprites} from "./spriter";
+import {charVariants, loadSprites} from "./spriter";
 import * as URLSearchParams from 'url-search-params';
 import * as Cookies from 'js-cookie';
 
@@ -345,13 +345,8 @@ function initEnts() {
   }
 
   const {ents} = initSnap;
-  try {
-    for (let ent of ents) {
-      entMgr.addEnt(ent);
-    }
-  } catch (e) {
-    errorReload();
-    throw new Error(`initSnap is not a diff but STILL got this error; timeline length is ${timeline.length}; first non-diff is at ${timeline.indexOf(timeline.find(bcast => !bcast.isDiff))}; initSnap has ${initSnap.ents.length} ents, ${initSnap.ents.filter(e => !e.type).length} of which has no type; orig error: ${e}\n${e.stack}`);
+  for (let ent of ents) {
+    entMgr.addEnt(ent);
   }
 
   Common.idState.nextId = _.max(getEnts().map(e => e.id)) + 1;
@@ -406,7 +401,7 @@ export const defaultNameStyle = { font: "14px Arial", fill: "#cccccc", stroke: "
 
 function mkSpriteForEnt(ent: Ent) {
   function mkSprite(group, spriteArt: string) {
-    const [x, y] = ent.dispPos().toTuple();
+    const [x, y] = ent instanceof Player ? ent.dispTopLeft().toTuple() : ent.dispPos().toTuple();
     const sprite = group.create(x, y, spriteArt);
     // Setting autoCull didn't really help performance that much.
     // sprite.autoCull = true;
@@ -416,8 +411,11 @@ function mkSpriteForEnt(ent: Ent) {
   }
   if (ent instanceof Player) {
     const char = playerStyles.includes(ent.style) ? ent.style : 'plain-0';
+    if (!ent.spriteBbox) {
+      ent.spriteBbox = charVariants.find(char => char.name == ent.style.slice(0, -2)).bbox;
+    }
     const sprite = mkSprite(playerGroup, `dude-${char}`);
-    sprite.anchor.setTo(.5, .5);
+    sprite.anchor.setTo(...ent.anchor().toTuple());
     sprite.animations.add('left', [3,4,3,5], 10, true);
     sprite.animations.add('right', [0,1,0,2], 10, true);
     const style = ent.id == meId ?
@@ -544,8 +542,8 @@ function backToSplash() {
 let moveName = function (player) {
   const text = playerToName.get(player);
   if (text) {
-    text.x = player.midDispPos().x;
-    text.y = player.dispPos().y - 16;
+    text.x = player.dispPos().x;
+    text.y = player.dispTopLeft().y - 16;
   }
   return text;
 };
@@ -861,7 +859,10 @@ function updateSpriteAndPlFromEnt(ent) {
 
 export function updateSpriteFromEnt(ent) {
   const sprite = entToSprite.get(ent);
-  if (sprite.anchor.x == 0) {
+  if (ent instanceof Player) {
+    sprite.anchor.setTo(...ent.anchor().toTuple());
+  }
+  if (sprite.anchor.x == 0 || ent instanceof Player) {
     ({x: sprite.x, y: sprite.y} = ent.dispPos());
   } else {
     ({x: sprite.x, y: sprite.y} = ent.dispPos().add(ent.dispDims().div(2)));

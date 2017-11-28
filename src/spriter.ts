@@ -1,9 +1,10 @@
 import * as Color from 'tinycolor2';
+import {defaultBbox} from "./common";
 
 let hidden = true, heavyShim = false;
 
 let hue = '';
-const chars = [
+export const charVariants = [
   {
     name: 'plumber',
     bbox: [180,200],
@@ -182,7 +183,7 @@ const chars = [
   },
   {
     name: '4chan',
-    bbox: [150,200],
+    bbox: [150,200,-15],
     variants: [
       {
         main_hue: hue = '#fff0d5',
@@ -193,7 +194,7 @@ const chars = [
   },
   {
     name: 'santa',
-    bbox: [150,225],
+    bbox: [150,225,-80],
     variants: [
       {
         main_hue: hue = '#ff0000',
@@ -208,7 +209,7 @@ export function loadSprites() {
   const staging = document.createElement('div');
   // Need to compartmentalize our innerHTML mangling, or else it interferes with dat.GUI.
   document.body.appendChild(staging);
-  staging.innerHTML += chars.map(char =>
+  staging.innerHTML += charVariants.map(char =>
     `
     <object ${hidden ? "style='width:0;height:0;margin:0;'" : "style='margin:0"}
       type="image/svg+xml"
@@ -217,7 +218,7 @@ export function loadSprites() {
     </object>
   `).join('');
 
-  const pSprites = chars.map(char =>
+  const pSprites = charVariants.map(char =>
     new Promise<any>(resolve =>
       document.getElementById(char.name).addEventListener('load', (ev) => resolve({[char.name]: genSprites(char.name, ev)}))
     )
@@ -233,9 +234,8 @@ function children(x: any) {
 
 let alertedOnce = false;
 function genSprites(charName, ev) {
-  const char = chars.find(char => char.name == charName);
+  const char = charVariants.find(char => char.name == charName);
   const obj = ev.target as HTMLObjectElement;
-  const defaultBbox = [150,200];
   const variantImgs = [];
 
   const baseSvg = obj.contentDocument.querySelector('svg') as SVGElement;
@@ -252,9 +252,9 @@ function genSprites(charName, ev) {
     const svg = baseSvg.cloneNode(true) as SVGElement;
 
     // Anchor is always the bottom-left corner.
-    const [w, h] = char.bbox || defaultBbox;
-    svg.setAttribute('viewBox', `0 ${297 - h} ${w} ${h}`);
-    svg.setAttribute('width', `${w}`);
+    const [w, h, x0 = 0] = char.bbox || defaultBbox;
+    svg.setAttribute('viewBox', `${x0} ${297 - h} ${w - x0} ${h}`);
+    svg.setAttribute('width', `${w - x0}`);
     svg.setAttribute('height', `${h}`);
     document.body.appendChild(svg);
 
