@@ -1139,7 +1139,8 @@ export function isBasicStyle(char: string) {
 
 export const hiddenStyleBases = [
   'fady',
-  'santa'
+  'santa',
+  '4chan'
 ];
 
 export function isHiddenStyle(char: string) {
