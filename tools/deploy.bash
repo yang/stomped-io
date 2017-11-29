@@ -13,4 +13,6 @@ ssh $dest '
     rm src/dyn-*.ts
     cp src/dyn.ts src/.dyn-tmp.ts
     mv src/.dyn-tmp.ts src/dyn-$(date +%Y-%m-%d-%H-%M-%S).ts
+    . ~/.node/bounce/bin/activate
+    yarn install
 '
