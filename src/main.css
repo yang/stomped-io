@@ -350,6 +350,33 @@ li {
     z-index: 1;
 }
 
+.please-vote {
+    font-family: 'Indie Flower', cursive;
+    font-size: 18px;
+    position: absolute;
+    bottom: 0;
+    margin: 0 auto;
+    text-align: left;
+    padding: 10px 60px 0 60px;
+}
+.splash--iframed .please-vote {
+    background: url(straight-arrow.png) no-repeat;
+    background-position: -0px 30px;
+}
+.please-vote a {
+    color: #d0b7ff;
+}
+.please-vote-container {
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px;
+}
+.dismiss-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
 
 
 .popper,

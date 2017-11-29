@@ -17,6 +17,8 @@ interface SplashState {
   hovering: boolean;
   clickedShare: boolean;
   dur: string;
+  deaths: number;
+  voteDismissed: boolean;
 }
 
 interface SplashProps {
@@ -60,6 +62,8 @@ export class Splash extends React.Component {
       hovering: false,
       clickedShare: false,
       dur: 'day',
+      deaths: 0,
+      voteDismissed: false
     };
   }
   private handleChange = (e) => {
@@ -84,14 +88,18 @@ export class Splash extends React.Component {
     }
   }
   show() {
-    (document.querySelector('.right-ad') as HTMLElement).style.display = '';
-    (window as any).aipDisplayTag.refresh('stomped-io_300x250');
+    const ad = document.querySelector('.right-ad') as HTMLElement;
+    if (ad) {
+      ad.style.display = '';
+      (window as any).aipDisplayTag.refresh('stomped-io_300x250');
+    }
     this.afterUpdates.push(this.scrollToChar);
-    this.setState({shown: true, disabled: false});
+    this.setState({shown: true, disabled: false, deaths: this.state.deaths + 1});
     document.getElementById('mount-point').style.display = '';
   }
   hide() {
-    (document.querySelector('.right-ad') as HTMLElement).style.display = 'none';
+    const ad = document.querySelector('.right-ad') as HTMLElement;
+    if (ad) ad.style.display = 'none';
     this.setState({shown: false});
     document.getElementById('mount-point').style.display = 'none';
   }
@@ -146,7 +154,8 @@ export class Splash extends React.Component {
     return <div
       className={classnames({
         'splash': true,
-        'splash--ads': this.showAds
+        'splash--ads': this.showAds,
+        'splash--iframed': inIframe()
       })}
       style={{display: this.state.shown ? undefined : 'none'}}
     >
@@ -188,7 +197,7 @@ export class Splash extends React.Component {
             const variantSpriteSheet = this.state.charToVariants[charBase][+variant];
             if (!variantSpriteSheet) return null;
             const imgSrc = variantSpriteSheet[0].src;
-            const [w,h,x0] = charVariants.find(cv => cv.name == char.slice(0, -2)).bbox;
+            const [w,h,x0] = charVariants.find(cv => cv.name == char.slice(0, 2)).bbox;
             return <a
               key={char}
               ref={el => this.initGalleryItem(char, el)}
@@ -219,8 +228,28 @@ export class Splash extends React.Component {
       </form>
       }
       </div>
+      <div className={'please-vote'} style={{display: this.state.deaths < -2 || this.state.voteDismissed ? 'none' : ''}}>
+        <div className={'please-vote-container'}>
+          If you enjoy this game,<br/>
+          please give us a
+          {' '}
+          {
+            inIframe() ?
+              'thumbs up' :
+              <a
+                target={'_blank'}
+                href="http://iogames.space/stomped-io"
+                onClick={() => this.setState({voteDismissed: true})}
+              >thumbs up</a>
+          }
+          !
+          <a className='dismiss-btn' href={'javascript: void 0'} onClick={() => this.setState({voteDismissed: true})}>
+            <i className={'fa fa-times'}/>
+          </a>
+        </div>
+      </div>
       <div className={"more-io-games"}>
-        <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a>&nbsp;
+        <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a><br/>
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
       <div className={classnames({
