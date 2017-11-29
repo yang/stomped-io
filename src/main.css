@@ -116,7 +116,7 @@ h2 {
     color: #ffcc88;
 }
 .gallery {
-    width: 800px;
+    width: 400px;
     height: 110px;
     overflow-x: auto;
     vertical-align: middle;
@@ -306,6 +306,20 @@ a:hover {
 .best-of {
     margin-top: 20px;
     color: #dcd;
+    width: 150px;
+    overflow: hidden;
+}
+@media (max-width: 890px) {
+    .splash--ads .featured-youtubers {
+        display: none;
+    }
+}
+@media (max-width: 1080px) {
+    .splash--ads .main-section {
+        margin-left: 150px;
+        margin-right: 340px;
+    }
+
 }
 .best-of-dur {
     color: var(--darker-alt-color);
@@ -324,6 +338,16 @@ ul {
 }
 li {
     list-style: none;
+}
+
+.right-ad {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0px;
+    padding: 20px;
+    /*background: white;*/
+    z-index: 1;
 }
 
 

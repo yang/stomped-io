@@ -46,6 +46,7 @@ export class Splash extends React.Component {
   galleryItemEls = new Map<string, HTMLElement>();
   chars = playerStyles.filter(char => !isHiddenStyle(char));
   afterUpdates = [];
+  showAds = location.pathname.substring(location.pathname.lastIndexOf("/") + 1) == 'client.html';
   constructor(props) {
     super(props);
     this.state = {
@@ -83,11 +84,14 @@ export class Splash extends React.Component {
     }
   }
   show() {
+    (document.querySelector('.right-ad') as HTMLElement).style.display = '';
+    (window as any).aipDisplayTag.refresh('stomped-io_300x250');
     this.afterUpdates.push(this.scrollToChar);
     this.setState({shown: true, disabled: false});
     document.getElementById('mount-point').style.display = '';
   }
   hide() {
+    (document.querySelector('.right-ad') as HTMLElement).style.display = 'none';
     this.setState({shown: false});
     document.getElementById('mount-point').style.display = 'none';
   }
@@ -124,9 +128,28 @@ export class Splash extends React.Component {
       window.location.href = url;
     }
   };
+  ad(side: string) {
+    if (!this.showAds) return [];
+    side = '';
+    return [
+      <div id='stomped-io_300x250'>
+        <script type='text/javascript'>
+          aipDisplayTag.display('stomped-io_300x250');
+          (window as any).aipDisplayTag.refresh('stomped-io_300x250';
+        </script>
+      </div>
+    ];
+  }
   render() {
     const isSupported = this.props.browserSupported;
-    return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
+    return <div
+      className={classnames({
+        'splash': true,
+        'splash--ads': this.showAds
+      })}
+      style={{display: this.state.shown ? undefined : 'none'}}
+    >
+      <div className={'main-section'}>
       <h1>Stomped<span className="io">.io</span></h1>
       {/*{this.state.stats && <h2><span className="num">{this.state.stats.players}</span> Players Online</h2>}*/}
       {!isSupported && <p key={'p'} className={'subhead'}>
@@ -194,6 +217,7 @@ export class Splash extends React.Component {
           disabled={!this.state.charToVariants || this.state.disabled || this.state.name.trim() == ''}>Play!</button>
       </form>
       }
+      </div>
       <div className={"more-io-games"}>
         <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a>&nbsp;
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
@@ -213,6 +237,8 @@ export class Splash extends React.Component {
           </span>
         }
       </div>
+      {/*<div className={'left-ad'}>{...this.ad('left')}</div>*/}
+      {/*<div className={'right-ad'}>{...this.ad('right')}</div>*/}
       <div className={'share-btns'}>
         <button onClick={() => this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`)}>
           <i className={'fa fa-twitter icon'} aria-hidden={'true'}></i>

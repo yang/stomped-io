@@ -117,7 +117,7 @@ Back on the host:
     # One-time host app setup
     cd bounce/
     mkdir -p web/
-    for i in index.html admin.html assets/ build/ designs/ dist/ updates.txt myicon.ico ; do
+    for i in index.html admin.html client.html assets/ build/ designs/ dist/ updates.txt myicon.ico ; do
         ln -s ../$i web/
     done
 
