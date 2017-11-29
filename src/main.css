@@ -303,6 +303,29 @@ a:hover {
     color: white;
 }
 
+.best-of {
+    margin-top: 20px;
+    color: #dcd;
+}
+.best-of-dur {
+    color: var(--darker-alt-color);
+}
+.best-of-dur--selected {
+    font-weight: bold;
+    color: #d0b7ff;
+    color: var(--alt-color);
+}
+.best-of ul {
+    font-size: 12px;
+}
+
+ul {
+    padding: 0;
+}
+li {
+    list-style: none;
+}
+
 
 
 .popper,

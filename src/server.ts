@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import * as Sio from 'socket.io';
 import * as Common from './common';
+import * as Schedule from 'node-schedule';
 import {
   addBody,
   AddEnt,
@@ -28,13 +29,13 @@ import {
   maxNameLen,
   now,
   pb,
-  Player,
+  Player, Record,
   RemEnt,
   runLocally,
   serSimResults,
   settings,
   Star,
-  StartSmash,
+  StartSmash, Stats,
   StompEv,
   StopSpeedup,
   updateEntPhysFromPl,
@@ -51,6 +52,9 @@ import * as net from "net";
 import * as repl from "repl";
 import * as Faker from 'faker';
 import * as FastGlob from 'fast-glob';
+import * as Pg from 'pg';
+import * as Http from 'http';
+import * as Express from 'express';
 
 let loadedCode = {} as LoadedCode;
 let currentPath = '';
@@ -66,6 +70,8 @@ reloadCode();
 
 const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
+
+const cli = new Pg.Client({host: 'localhost', user: 'bounce', database: 'bounce'});
 
 const chance = new Chance(Date.now());
 
@@ -177,7 +183,9 @@ baseHandler.file = fs.createWriteStream('log');
 
 const styleGen = genStyles();
 
-const io = Sio();
+const app = Express();
+const server = Http.createServer(app);
+const io = Sio(server, {path: '/socket.io'});
 
 const gameState = new GameState(undefined, loadedCode, destroy);
 gameState.onEntCreated.add(ent => ent instanceof Star && events.push(new AddEnt(ent).ser()));
@@ -527,7 +535,10 @@ function reloadPlayerStyles() {
   Common.setPlayerStyles(lines);
 }
 
-function create() {
+async function create() {
+  await cli.connect();
+  await rollupStats();
+
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
   gameState.lava = lava;
@@ -550,10 +561,90 @@ function create() {
     setInterval(() => updateStars(gameState, false), updateStarsPeriod * 1000);
     setInterval(reloadPlayerStyles, 1000);
     setInterval(reloadCode, 10000);
+    setInterval(mergeStats, 1 * 60 * 1000);
+    setInterval(saveStats, 10 * 60 * 1000);
+    const schedule = new Schedule.RecurrenceRule();
+    schedule.hour = 0;
+    schedule.minute = 0;
+    Schedule.scheduleJob(schedule, rollupStats);
   }
 
   Common.create(gameState);
 
+}
+
+interface NameToBestDict {
+  [key: string]: number;
+}
+
+function recordsToDict(records: Record[]) {
+  return _(records)
+    .map(({name, size}) => [name, size])
+    .fromPairs()
+    .value() as NameToBestDict;
+};
+
+function dictToRecords(object: NameToBestDict) {
+  return _(object).toPairs()
+    .sortBy(([name, size]) => -size)
+    .take(10)
+    .map(([name, size]) => ({name, size}))
+    .value() as Record[];
+}
+
+function mergeDicts(a: NameToBestDict, b: NameToBestDict): NameToBestDict {
+  return _.assignWith(a, b, (a = 0, b = 0) => Math.max(a,b));
+}
+
+function mergeStats() {
+  const currNameToBest: NameToBestDict = _(gameState.players)
+    .map(player => [player.name, Math.round(10 * player.peakSize)])
+    .fromPairs()
+    .value();
+  bestOf.day = dictToRecords(mergeDicts(recordsToDict(bestOf.day), currNameToBest));
+  bestOf.week = dictToRecords(mergeDicts(recordsToDict(bestOf.week), recordsToDict(bestOf.day)));
+  bestOf.month = dictToRecords(mergeDicts(recordsToDict(bestOf.month), recordsToDict(bestOf.week)));
+  for (let key in currNameToBest) {
+    delete currNameToBest[key];
+  }
+}
+
+function trace<T>(x: T): T {
+  console.log(x);
+  return x;
+}
+
+async function saveStats() {
+  // Merge and save current day's cumulative stats.
+  mergeStats();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const data = JSON.stringify(recordsToDict(bestOf.day));
+  await cli.query(`
+    insert into daily_stats (date, data)
+    values ($1, $2)
+    on conflict (date)
+    do update set data = $2 where daily_stats.date = $1
+  `, [today, data]);
+  await cli.query('commit');
+}
+
+async function rollupStatsFor(dur: string) {
+  const res = await cli.query(
+    `select * from daily_stats where date > now() - '1 ${dur}'::interval`
+  );
+  const cum: {[key: string]: number} = {};
+  for (let row of res.rows) {
+    const data = JSON.parse(row.data);
+    mergeDicts(cum, data);
+  }
+  return dictToRecords(cum);
+}
+
+async function rollupStats() {
+  bestOf.day = await rollupStatsFor('day');
+  bestOf.week = await rollupStatsFor('week');
+  bestOf.month = await rollupStatsFor('month');
 }
 
 const toRemove: RemEnt[] = [];
@@ -589,6 +680,11 @@ io.use(function(socket, next) {
   return next();
 });
 
+let bestOf = {
+  day: [],
+  week: [],
+  month: []
+};
 
 io.on('connection', (socket: SocketIO.Socket) => {
   const log = getLogger('net');
@@ -630,7 +726,8 @@ io.on('connection', (socket: SocketIO.Socket) => {
   let player;
 
   socket.emit('stats', {
-    players: gameState.players.length
+    players: gameState.players.length,
+    bestOf: bestOf
   });
 
   socket.on('disconnect', () => {
@@ -695,7 +792,14 @@ create();
 
 console.log('listening');
 
-io.listen(3000);
+app.get('/stats', (req, res) => {
+  res.json({
+    players: gameState.players.length,
+    bestOf: bestOf
+  } as Stats);
+});
+
+server.listen(3000);
 
 net.createServer(function (socket) {
   repl.start({
@@ -704,3 +808,5 @@ net.createServer(function (socket) {
     output: socket
   }).on('exit', () => socket.end());
 }).listen(5001, "localhost");
+
+

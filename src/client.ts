@@ -945,12 +945,6 @@ let meId: number;
 function startGame(name: string, char: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
   socket = connect();
 
-  socket.on('stats', (_stats: Stats) => {
-    if (rootComponent) {
-      rootComponent.setStats(_stats);
-    }
-  });
-
   socket.emit('join', {name, char});
 
   if (cp.doPings) {
@@ -1040,8 +1034,8 @@ function startGame(name: string, char: string, onJoin: (socket) => void, updateE
 }
 
 let rootComponent;
+const addr = location.origin.replace(/:\d+$/, ':3000');
 export let connect = function () {
-  const addr = location.origin.replace(/:\d+$/, ':3000');
   const socket = Sio(addr, {query: {authKey}});
   socket.on('svrSettings', (svrData) => {
     svrSettings.deser(svrData);
@@ -1099,5 +1093,10 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
       const [name, char] = firstSubmit;
       return startGame(name, char, onJoin, updateExtras, mkDebugText, _sprites);
     });
+  fetch(`/stats`).then((resp) => resp.json().then((_stats: Stats) => {
+    if (rootComponent) {
+      rootComponent.setStats(_stats);
+    }
+  }));
   injectAds();
 }

@@ -1,3 +1,8 @@
+2017-11-28
+==========
+
+- Add cumulative leaderboard for day/week/month - for fame and glory
+
 2017-11-27
 ==========
 

@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
-import {clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
+import {BestOf, clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
 import {charVariants} from './spriter';
 import * as Cookies from 'js-cookie';
 
@@ -16,6 +16,7 @@ interface SplashState {
   unlocked: boolean;
   hovering: boolean;
   clickedShare: boolean;
+  dur: string;
 }
 
 interface SplashProps {
@@ -56,7 +57,8 @@ export class Splash extends React.Component {
       stats: props.stats,
       unlocked: ((Cookies.getJSON('v1') || {}) as StoredState).unlocked,
       hovering: false,
-      clickedShare: false
+      clickedShare: false,
+      dur: 'day',
     };
   }
   private handleChange = (e) => {
@@ -238,6 +240,25 @@ export class Splash extends React.Component {
             Fady!
           </div>
         </a>
+        {this.state.stats &&
+        <div className={'best-of'}>
+          Top of the:{' '}
+          {['day','week','month'].map((dur, i) => <span>
+            {i > 0 ? ' | ' : ''}
+            <a
+              className={classnames({
+                'best-of-dur': true,
+                'best-of-dur--selected': dur == this.state.dur
+              })}
+              href={'javascript: void 0'}
+              onClick={() => this.setState({dur})}
+            >{dur}</a>
+          </span>)}
+          <ul className={'best-of-list'}>
+            {this.state.stats.bestOf[this.state.dur].map(rec => <li>{rec.size} - {rec.name}</li>)}
+          </ul>
+        </div>
+        }
       </div>
     </div>;
   }

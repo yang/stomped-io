@@ -660,6 +660,7 @@ export class Player extends Ent {
   smashStart: number = null;
   dropInterval: IntervalTimer;
   spriteBbox;
+  peakSize = 1;
   constructor(public name: string, public x: number, public y: number, public style: string) {super();}
 
   ser() {
@@ -702,6 +703,7 @@ export class Player extends Ent {
     const bA = player.bod;
     const fA = bA.getFixtureList();
     player.size += incSize;
+    player.peakSize = Math.max(player.peakSize, player.size);
     [player.width, player.height] = player.baseDims.mul(player.size ** (1 / 3)).toTuple();
     for (let i = 0; i < 4; i++) {
       const v = fA.getShape().getVertex(i);
@@ -1365,8 +1367,20 @@ export function deserSimResults({worldStatesData, bestWorldStateIndex, bestPath}
   return results;
 };
 
+export interface Record {
+  name: string;
+  size: number;
+}
+
+export interface BestOf {
+  day: Record[];
+  week: Record[];
+  month: Record[];
+}
+
 export interface Stats {
   players: number;
+  bestOf: BestOf;
 }
 
 export interface AdminStats {

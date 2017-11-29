@@ -26,6 +26,9 @@ module.exports = merge(baseConfig, {
     host: '0.0.0.0',
     openPage: 'admin.html?debug=1&authKey=SECRET',
     publicPath: '/build/',
-    disableHostCheck: true
+    disableHostCheck: true,
+    proxy: {
+      '/stats': 'http://localhost:3000'
+    }
   }
 });

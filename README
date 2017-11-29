@@ -80,7 +80,16 @@ Instructions tested on Ubuntu 16.04.
 On the host:
 
     # One-time setup
-    sudo apt install nginx virtualenvwrapper unzip apache2-utils
+    sudo apt install nginx virtualenvwrapper unzip apache2-utils postgresql
+
+    # Database setup
+    sudo -u postgres psql
+        create user bounce with login;
+        \password bounce
+        create database bounce owner bounce;
+    # Update .pgpass
+    psql -h localhost -U bounce bounce
+          create table daily_stats (date date unique, data text);
 
     # Log out and back in
     mkvirtualenv bounce
