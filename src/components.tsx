@@ -284,7 +284,7 @@ export class Splash extends React.Component {
               {/*>{dur}</a>*/}
             {/*</span>)}*/}
             <ul className={'best-of-list'}>
-              {this.state.stats.bestOf[this.state.dur].map(rec => <li>{rec.size} - {rec.name}</li>)}
+              {this.state.stats.bestOf[this.state.dur].map(rec => <li key={rec.name}>{rec.size} - {rec.name}</li>)}
             </ul>
           </div>
         }
