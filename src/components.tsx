@@ -103,6 +103,7 @@ export class Splash extends React.Component {
   chooseChar = (char: string) => {
     if (this.state.unlocked || isBasicStyle(char)) {
       this.setState({char});
+      this.afterUpdates.push(() => this.scrollToChar());
     } else {
       this.inputEl.focus();
     }
