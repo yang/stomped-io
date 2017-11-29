@@ -2,6 +2,7 @@ let heavyShim = false;
 require('es6-shim');
 require('es7-shim');
 require('location-origin');
+import * as Fetch from 'whatwg-fetch';
 // This is from ES5-DOM-SHIM
 if (heavyShim) { require('./a'); }
 import * as Bowser from 'bowser';
