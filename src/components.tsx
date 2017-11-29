@@ -125,9 +125,6 @@ export class Splash extends React.Component {
     }
   };
   render() {
-    if (this.state.stats && !this.state.stats.bestOf) {
-      (window as any).Raven.captureMessage(`Got Stats: ${JSON.stringify(this.state.stats)}`);
-    }
     const isSupported = this.props.browserSupported;
     return <div className='splash' style={{display: this.state.shown ? undefined : 'none'}}>
       <h1>Stomped<span className="io">.io</span></h1>
