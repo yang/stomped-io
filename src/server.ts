@@ -614,11 +614,18 @@ function trace<T>(x: T): T {
   return x;
 }
 
+let lastRunDay = new Date();
+lastRunDay .setHours(0,0,0,0);
+
 async function saveStats() {
-  // Merge and save current day's cumulative stats.
-  mergeStats();
   const today = new Date();
   today.setHours(0,0,0,0);
+  // Merge and save current day's cumulative stats, or don't merge if new day.
+  if (lastRunDay.getTime() == today.getTime()) {
+    mergeStats();
+  } else {
+    lastRunDay = today;
+  }
   const data = JSON.stringify(recordsToDict(bestOf.day));
   await cli.query(`
     insert into daily_stats (date, data)
