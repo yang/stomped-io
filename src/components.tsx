@@ -243,18 +243,19 @@ export class Splash extends React.Component {
         {
           this.state.stats && this.state.stats.bestOf &&
           <div className={'best-of'}>
-            Top of the:{' '}
-            {['day','week','month'].map((dur, i) => <span>
-              {i > 0 ? ' | ' : ''}
-              <a
-                className={classnames({
-                  'best-of-dur': true,
-                  'best-of-dur--selected': dur == this.state.dur
-                })}
-                href={'javascript: void 0'}
-                onClick={() => this.setState({dur})}
-              >{dur}</a>
-            </span>)}
+            Top of the day:
+            {/*Top of the:{' '}*/}
+            {/*{['day','week','month'].map((dur, i) => <span>*/}
+              {/*{i > 0 ? ' | ' : ''}*/}
+              {/*<a*/}
+                {/*className={classnames({*/}
+                  {/*'best-of-dur': true,*/}
+                  {/*'best-of-dur--selected': dur == this.state.dur*/}
+                {/*})}*/}
+                {/*href={'javascript: void 0'}*/}
+                {/*onClick={() => this.setState({dur})}*/}
+              {/*>{dur}</a>*/}
+            {/*</span>)}*/}
             <ul className={'best-of-list'}>
               {this.state.stats.bestOf[this.state.dur].map(rec => <li>{rec.size} - {rec.name}</li>)}
             </ul>
