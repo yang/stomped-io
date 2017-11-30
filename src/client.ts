@@ -23,7 +23,7 @@ import {
   EntMgr,
   enumerate,
   Event,
-  GameState,
+  GameState, gameWorld,
   genStyles,
   getDir,
   getLogger,
@@ -201,7 +201,7 @@ function preload(sprites) {
   }
 }
 
-var platforms, starGroup, playerGroup, nameGroup, lavaGroup, activeStarGroup;
+var platforms, starGroup, playerGroup, nameGroup, lavaGroup, activeStarGroup, mapGroup;
 var cursors;
 
 var stars;
@@ -241,6 +241,8 @@ export let onNextBcastPersistentCallbacks = [];
 
 export let gfx;
 
+let minimap, mapBlip;
+
 (<any>window).dbg = {platforms, cursors, baseHandler, gameWorld: world, players, ledges, entToSprite, Common};
 
 function notify(content: string) {
@@ -250,6 +252,8 @@ function notify(content: string) {
 }
 
 let ptr;
+
+const mapDims = new Vec2(200, 200 / gameWorld.width * gameWorld.height);
 
 function create() {
 
@@ -277,6 +281,7 @@ function create() {
   nameGroup = game.add.group();
   lavaGroup = game.add.group();
   activeStarGroup = game.add.group();
+  mapGroup = game.add.group();
 
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
@@ -377,6 +382,27 @@ function initEnts() {
   me = players[players.length - 1];
   const meSprite = entToSprite.get(me);
   follow(meSprite);
+
+  // The minimap
+  const graphics = game.add.graphics(0,0);
+  graphics.clear();
+  graphics.beginFill(0xffff00);
+  graphics.drawCircle(0, 0, 5);
+  mapBlip = game.add.sprite(0, 0, graphics.generateTexture());
+  mapBlip.anchor.setTo(.5, .5);
+  const graphics2 = game.add.graphics(0,0);
+  graphics2.clear();
+  graphics2.lineStyle(1, 0x888888, 1);
+  graphics2.beginFill(0x000000);
+  graphics2.drawRect(0, 0, mapDims.x, mapDims.y);
+  // graphics.beginFill(0xffffff);
+  // graphics.drawRect(0, 0, 5000, 5000);
+  minimap = game.add.sprite(0, 0, graphics2.generateTexture());
+  mapGroup.fixedToCamera = true;
+  mapGroup.cameraOffset.setTo(0,0);
+  mapGroup.add(minimap);
+  mapGroup.add(mapBlip);
+
   guiMgr.refresh();
 }
 
@@ -853,6 +879,10 @@ ${mkDebugText(ptr, currentPlayer)}
   for (let player of players) {
     const text = moveName(player);
   }
+
+  // minimap
+  mapGroup.cameraOffset.setTo(game.width - minimap.width - 10, game.height - minimap.height - 10);
+  [mapBlip.x, mapBlip.y] = [me.x / gameWorld.width * mapDims.x, me.y / gameWorld.height * mapDims.y];
 
   if (cp.showScores) {
     scoreText.text = mkScoreText();
