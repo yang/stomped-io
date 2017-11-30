@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import * as Sio from 'socket.io';
 import * as Common from './common';
-import * as Schedule from 'node-schedule';
 import {
   addBody,
   AddEnt,
@@ -563,10 +562,6 @@ async function create() {
     setInterval(reloadCode, 10000);
     setInterval(mergeStats, 1 * 60 * 1000);
     setInterval(saveStats, 10 * 60 * 1000);
-    const schedule = new Schedule.RecurrenceRule();
-    schedule.hour = 0;
-    schedule.minute = 0;
-    Schedule.scheduleJob(schedule, rollupStats);
   }
 
   Common.create(gameState);
@@ -620,11 +615,12 @@ lastRunDay .setHours(0,0,0,0);
 async function saveStats() {
   const today = new Date();
   today.setHours(0,0,0,0);
-  // Merge and save current day's cumulative stats, or don't merge if new day.
+  // Merge and save current day's cumulative stats, or wipe bestOf.day if new day.
   if (lastRunDay.getTime() == today.getTime()) {
     mergeStats();
   } else {
     lastRunDay = today;
+    rollupStats();
   }
   const data = JSON.stringify(recordsToDict(bestOf.day));
   await cli.query(`
