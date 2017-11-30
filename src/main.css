@@ -359,6 +359,13 @@ li {
     margin: 0 auto;
     text-align: left;
     padding: 10px 60px 0 60px;
+    /*display: none;*/
+    transition: transform 1s;
+    transform: translateY(100px);
+}
+.please-vote--shown {
+    /*display: block;*/
+    transform: translateY(0px);
 }
 .splash--iframed .please-vote {
     background: url(straight-arrow.png) no-repeat;

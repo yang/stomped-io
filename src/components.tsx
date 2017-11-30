@@ -60,6 +60,7 @@ export class Splash extends React.Component {
   showAds = location.pathname.substring(location.pathname.lastIndexOf("/") + 1) == 'client.html';
   constructor(props) {
     super(props);
+    (window as any).dbg.doShow = () => this.setState({deaths: this.state.deaths + 1});
     this.state = {
       name: '',
       shown: props.shown,
@@ -287,8 +288,14 @@ export class Splash extends React.Component {
             </div>
           </div>
     }
-      <div className={'please-vote'} style={{display: this.state.deaths < 2 || this.state.voteDismissed ? 'none' : ''}}>
-        <div className={'please-vote-container'}>
+      <div
+        className={classnames({
+          'please-vote': true,
+          'please-vote--shown': this.state.deaths >= 2 && !this.state.voteDismissed,
+        })}>
+        <div className={classnames({
+          'please-vote-container': true,
+        })}>
           If you enjoy this game,<br/>
           please give us a
           {' '}
