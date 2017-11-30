@@ -270,7 +270,7 @@ export class Splash extends React.Component {
               <ul className={'stats-col'}>
                 {psTags.slice(3)}
               </ul>
-              <button className={'share-stats-btn'} onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I survived for ${ps.aliveTime} and got a score of ${ps.topSize}! Can you beat me? Come and play! https://stomped.io #stompedio`)}`)}>
+              <button className={'share-stats-btn'} onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I survived for ${humanTime(ps.aliveTime)} and got a score of ${10 * Math.round(ps.topSize)}! Can you beat me? Come and play! https://stomped.io #stompedio`)}`)}>
                 <i className={'fa fa-twitter'} aria-hidden={'true'}></i>
                 {' '}
                 Share
