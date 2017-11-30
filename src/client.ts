@@ -2,11 +2,8 @@ let heavyShim = false;
 require('es6-shim');
 require('es7-shim');
 require('location-origin');
-import * as Fetch from 'whatwg-fetch';
-// This is from ES5-DOM-SHIM
-if (heavyShim) { require('./a'); }
 import * as Bowser from 'bowser';
-import {inIframe, renderSplash, Splash} from "./components";
+import {inIframe, PlayerStats, renderSplash, Splash} from "./components";
 import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
@@ -31,18 +28,23 @@ import {
   getLogger,
   InputEvent,
   Lava,
-  Ledge, LoadedCode,
+  Ledge,
+  LoadedCode,
   now,
   pb,
-  Player, playerStyles,
+  Player,
+  playerStyles,
   plPosFromEnt,
   ratio,
   RemEnt,
   runLocally,
   ServerSettings,
   setInputsByDir,
-  Star, StartAction,
-  StartSmash, StartSpeedup, Stats, StopAction, StopSpeedup,
+  Star,
+  StartAction,
+  StartSmash,
+  Stats,
+  StopAction,
   Vec2,
   world
 } from './common';
@@ -50,6 +52,8 @@ import * as _ from 'lodash';
 import {charVariants, loadSprites} from "./spriter";
 import * as URLSearchParams from 'url-search-params';
 import * as Cookies from 'js-cookie';
+// This is from ES5-DOM-SHIM
+if (heavyShim) { require('./a'); }
 
 const loadedCode = require('./dyn');
 
@@ -335,8 +339,11 @@ function errorReload() {
   }, 1000);
 }
 
+const playerStats = new PlayerStats();
+
 function initEnts() {
   const initSnap = timeline.get(0);
+  playerStats.spawnTime = initSnap.time;
 
   gameState.time = initSnap.tick * svrSettings.dt;
 
@@ -689,6 +696,7 @@ ${mkDebugText(ptr, currentPlayer)}
               // TODO working around bug where killer might not be found - not sure how this is possible yet, but Sentry has surfaced it a few times.
               getLogger('kills').log(killer ? killer.describe() : remEnt.killerId, 'killed', killed.describe());
               if (killed == me) {
+                playerStats.aliveTime = bcast.time - playerStats.spawnTime;
                 if (killer) {
                   notify(`You got stomped by\n${killer.name}!`);
                   setTimeout(() => {
@@ -717,6 +725,11 @@ ${mkDebugText(ptr, currentPlayer)}
             const p = gameState.players.find(p => p.id == ev.playerId);
 
             if (p) {
+              if (p == me) {
+                playerStats.stomped += 1;
+              } else if (ev.victimId == me.id) {
+                playerStats.gotStomped += 1;
+              }
               // Can't use particle emitter since it doesn't support delayed fading out.
               for (let i = 0; i < Math.min(ev.count, 30); i++) {
                 const dims = p.dispDims();
@@ -780,6 +793,9 @@ ${mkDebugText(ptr, currentPlayer)}
             if (state != 'startingSmash')
               ent.state = state;
           }
+          if (ent == me) {
+            playerStats.topSize = Math.max(playerStats.topSize, me.size);
+          }
         }
       }
     }
@@ -836,14 +852,30 @@ function showScore(player: Player) {
 }
 
 export function mkScoreText() {
-  return `Leaderboard
-${_(gameState.players)
+  const sorted = _(gameState.players)
     .sortBy([
       p => -p.size,
       p => p.id
     ])
     .map((p, i) => [i,p] as [number, Player])
-    .filter(([i, p]) => i < 10 || me == p)
+    .filter(([i, p]) => i < 10 || me == p);
+  const myEntry = sorted.find(([i, p]) => p == me);
+  const myRank = myEntry ? myEntry[0] + 1 : 999;
+  playerStats.topRank = Math.min(playerStats.topRank, myRank);
+  if (myRank == 1 && playerStats.currLeaderStartTime == 0) {
+    playerStats.currLeaderStartTime = now();
+  } else if (myRank != 1 && playerStats.currLeaderStartTime != 0) {
+    playerStats.leaderStreakTime = Math.max(playerStats.leaderStreakTime, now() - playerStats.currLeaderStartTime);
+    playerStats.currLeaderStartTime = 0;
+  }
+  if (myRank <= 10 && playerStats.currLeaderboardStartTime == 0) {
+    playerStats.currLeaderboardStartTime = now();
+  } else if (myRank > 10 && playerStats.currLeaderboardStartTime != 0) {
+    playerStats.leaderboardTime += now() - playerStats.currLeaderboardStartTime;
+    playerStats.currLeaderboardStartTime = 0;
+  }
+  return `Leaderboard
+${sorted
     .map(([i, p]) => `${i + 1}. ${showScore(p)} -- ${p.name} ${p == me ? '<---' : ''}`)
     .join('\n')}`;
 };
@@ -1074,6 +1106,7 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
     pRootComponent = renderSplash({
       browserSupported: browserSupported(),
       stats: stats,
+      playerStats: playerStats,
       onSubmit: (name, char) => {
         // OK to resolve multiple times
         resolveSubmit([name, char]);

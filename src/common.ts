@@ -806,7 +806,7 @@ export class Burster {
 export class Event extends Serializable {}
 
 export class StompEv extends Event {
-  constructor(public playerId: number, public count: number) { super("StompEv"); }
+  constructor(public playerId: number, public victimId: number, public count: number) { super("StompEv"); }
 }
 
 export class StartAction extends Event {

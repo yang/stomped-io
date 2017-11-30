@@ -189,7 +189,7 @@ const io = Sio(server, {path: '/socket.io'});
 
 const gameState = new GameState(undefined, loadedCode, destroy);
 gameState.onEntCreated.add(ent => ent instanceof Star && events.push(new AddEnt(ent).ser()));
-gameState.onStomp.add((player, count) => events.push(new StompEv(player.id, count).ser()));
+gameState.onStomp.add((player, stomped, count) => events.push(new StompEv(player.id, stomped.id, count).ser()));
 gameState.onStartSmash.add((player) => events.push(new StartSmash(player.id).ser()));
 
 // already-serialized

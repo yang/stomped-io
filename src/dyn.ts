@@ -7,7 +7,7 @@ export function stomp(playerA: Player, playerB: Player, gameState: GameState) {
   const burstSize = cappedDamage / 2 * 10;
   playerB.grow(-cappedDamage);
   playerA.grow(cappedDamage / 2);
-  gameState.onStomp.dispatch(playerA, Math.round(effectSize));
+  gameState.onStomp.dispatch(playerA, playerB, Math.round(effectSize));
   makeBurst(playerB.x, playerB.y, burstSize, gameState);
   playerB.state = 'normal';
   if (playerB.size < 1) {
