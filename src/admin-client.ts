@@ -61,7 +61,7 @@ export function main(pool) {
 
   Client.setCp(new ControlPanelWithBots());
 
-  botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool, null);
+  botMgr = new BotMgr(styleGen, entMgr, gameState, socket, gPool, null, Client.loadedCode);
 
   Client.main(
     pool,

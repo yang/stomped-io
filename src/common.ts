@@ -245,6 +245,12 @@ export interface LoadedCode {
   selectChar(playerData);
 }
 
+export function charForName(name: string, defaultChar: string) {
+  return name.toLowerCase().trim() == 'fady' ? 'fady-0' :
+    name.toLowerCase().trim() == 'santa' ? 'santa-0' :
+      defaultChar;
+}
+
 export class GameState {
   timerMgr = new TimerMgr();
   public time = 0;

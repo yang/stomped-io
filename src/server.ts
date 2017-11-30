@@ -124,7 +124,7 @@ const moreNames = fs.readFileSync('src/morenames.txt', 'utf8')
 function* genBotNames() {
   Faker.seed(Date.now());
   while (true) {
-    switch (chance.weighted([0,1,2,3], [20,10,20,20])) {
+    switch (chance.weighted([0,1,2,3,4], [20,10,20,20,1])) {
       case 0:
         // chars
         const length = chance.weighted([1,2,3,4,5,6], [10,5,5,2,2,2])
@@ -148,6 +148,9 @@ function* genBotNames() {
       case 3:
         // morenames.txt
         yield chance.pickone(moreNames);
+        break;
+      case 4:
+        yield 'santa';
         break;
     }
   }
@@ -201,7 +204,7 @@ function onEntAdded(ent: Ent) {
 }
 
 const entMgr = new EntMgr(world, gameState, onEntAdded);
-const botMgr = new BotMgr(styleGen, entMgr, gameState, null, null, botNameGen);
+const botMgr = new BotMgr(styleGen, entMgr, gameState, null, null, botNameGen, loadedCode);
 
 const doRun = !runLocally, doAddPlayers = !runLocally; // doRun = save-batteries mode
 

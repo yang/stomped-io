@@ -55,7 +55,7 @@ import * as Cookies from 'js-cookie';
 // This is from ES5-DOM-SHIM
 if (heavyShim) { require('./a'); }
 
-const loadedCode = require('./dyn');
+export const loadedCode = require('./dyn');
 
 export let browserSupported = function () {
   const hasSvgOuterHtml = (() => {

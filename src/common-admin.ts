@@ -6,7 +6,7 @@ import {
   bestColors,
   bfs,
   bodiesByType,
-  BodyState,
+  BodyState, charForName,
   chunk,
   clearArray,
   cloneWorld,
@@ -34,7 +34,7 @@ import {
   horizon,
   InputEvent, isClose,
   iterBodies,
-  Ledge,
+  Ledge, LoadedCode,
   now, opp,
   pathDivergenceEps,
   Player,
@@ -582,7 +582,8 @@ export class BotMgr {
               public gameState: GameState,
               public socket,
               public pool,
-              private nameGen) {
+              private nameGen,
+              private loadedCode: LoadedCode) {
   }
 
   maybeAddProxy(botData) {
@@ -605,22 +606,27 @@ export class BotMgr {
   makeBot(isDumb: boolean) {
     const period = this.chance.integer({min: 3, max: 30}) * 60 * 1000;
     const self = this;
-    function* genNames() {
-      let name: string, lastSwitch: number;
+    function* genPairs() {
+      let name: string, style: string, lastSwitch: number;
       while (true) {
         if (!name || now() - lastSwitch > period) {
           name = self.nameGen ? self.nameGen.next().value : 'bot';
+          const char = charForName(name, self.styleGen.next().value)
+          style = self.loadedCode.selectChar({char, name});
           lastSwitch = now();
         }
-        yield name;
+        yield [name, style];
       }
     }
-    const names = genNames();
-    const style = this.styleGen.next().value;
-    const player = this.joinGame(names.next().value, style);
+    const pairs = genPairs();
+    const [name, style] = pairs.next().value;
+    const player = this.joinGame(name, style);
     const bot = new Bot(
       player, this.gameState, this.socket, this.pool, isDumb, null,
-      () => this.joinGame(names.next().value, style)
+      () => {
+        const [name, style] = pairs.next().value;
+        return this.joinGame(name, style);
+      }
     );
     bot.target = new Vec2(0, 0);
     this.bots.push(bot);

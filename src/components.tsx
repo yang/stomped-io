@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
-import {clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
+import {charForName, clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
 import {charVariants} from './spriter';
 import * as Cookies from 'js-cookie';
 import * as _ from 'lodash';
@@ -84,9 +84,7 @@ export class Splash extends React.Component {
     e.preventDefault();
     this.setState({disabled: true});
     const name = this.state.name;
-    const char = name.toLowerCase().trim() == 'fady' ? 'fady-0' :
-      name.toLowerCase().trim() == 'santa' ? 'santa-0' :
-        this.state.char;
+    const char = charForName(name, this.state.char);
     this.props.onSubmit(name, char);
   };
   componentDidUpdate() {
