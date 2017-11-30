@@ -2,6 +2,7 @@
 ==========
 
 - Show player stats after death
+- Fixes: more browser compat, spin direction
 
 2017-11-28
 ==========
