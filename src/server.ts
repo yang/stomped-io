@@ -802,7 +802,7 @@ app.get('/stats', (req, res) => {
   } as Stats);
 });
 
-server.listen(3000);
+setTimeout(() => server.listen(3000), 2000);
 
 net.createServer(function (socket) {
   repl.start({
