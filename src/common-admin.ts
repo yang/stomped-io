@@ -565,10 +565,17 @@ export class Bot {
   }
 
   private playStart = now();
+  private rejoinTimer;
 
   checkDeath() {
-    if (this.isDead() && (!this.keepPlayingFor || now() - this.playStart < this.keepPlayingFor + 5000)) {
-      this.player = this.onRejoin();
+    if (!this.rejoinTimer && this.isDead() && (!this.keepPlayingFor || now() - this.playStart < this.keepPlayingFor + 5000)) {
+      this.rejoinTimer = setTimeout(
+        () => {
+          this.player = this.onRejoin();
+          this.rejoinTimer = null;
+        },
+        5000
+      );
     }
   }
 }
