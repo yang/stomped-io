@@ -17,7 +17,10 @@
    version="1.1"
    id="svg1376"
    inkscape:version="0.92.2 5c3e80d, 2017-08-06"
-   sodipodi:docname="favicon.svg">
+   sodipodi:docname="favicon.svg"
+   inkscape:export-filename="/Users/yang/proj/game/bouncer-game/designs/favicon.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
   <defs
      id="defs1370">
     <linearGradient
@@ -124,29 +127,6 @@
          offset="0"
          id="stop60721" />
     </linearGradient>
-    <pattern
-       inkscape:stockid="Checkerboard"
-       id="Checkerboard"
-       patternTransform="translate(0,0) scale(10,10)"
-       height="2"
-       width="2"
-       patternUnits="userSpaceOnUse"
-       inkscape:collect="always">
-      <rect
-         id="rect6492"
-         height="1"
-         width="1"
-         y="0"
-         x="0"
-         style="fill:black;stroke:none" />
-      <rect
-         id="rect6494"
-         height="1"
-         width="1"
-         y="1"
-         x="1"
-         style="fill:black;stroke:none" />
-    </pattern>
     <filter
        style="color-interpolation-filters:sRGB;"
        inkscape:label="Drop Shadow"
@@ -299,12 +279,12 @@
      inkscape:cx="487.03055"
      inkscape:cy="339.64458"
      inkscape:document-units="mm"
-     inkscape:current-layer="g7293"
+     inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="2048"
      inkscape:window-height="1027"
-     inkscape:window-x="636"
-     inkscape:window-y="338"
+     inkscape:window-x="397"
+     inkscape:window-y="0"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata1373">
@@ -323,19 +303,14 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       y="97.224648"
-       x="0.22499999"
-       height="199.55035"
-       width="149.55034"
-       id="rect7180"
-       style="opacity:0.07999998;fill:url(#Checkerboard);fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.44999999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
-    <rect
-       style="opacity:0.594;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.44999999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect1921"
-       width="149.55034"
-       height="199.55035"
-       x="0.22499999"
-       y="97.224648" />
+       style="opacity:1;fill:#000000;fill-opacity:0;fill-rule:nonzero;stroke:none;stroke-width:6.50215244;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect5597"
+       width="150"
+       height="150"
+       x="-2.7755576e-17"
+       y="97"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
   </g>
   <g
      inkscape:groupmode="layer"
