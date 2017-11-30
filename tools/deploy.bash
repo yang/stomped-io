@@ -13,9 +13,11 @@ ssh $dest "
     rm dist/bundle*
     mv dist/.$new_bundle dist/$new_bundle
     echo A | unzip ../bounce.zip
-    rm src/dyn-*.ts
-    cp src/dyn.ts src/.dyn-tmp.ts
-    mv src/.dyn-tmp.ts src/dyn-\$(date +%Y-%m-%d-%H-%M-%S).ts
+    if false ; then
+        rm src/dyn-*.ts
+        cp src/dyn.ts src/.dyn-tmp.ts
+        mv src/.dyn-tmp.ts src/dyn-\$(date +%Y-%m-%d-%H-%M-%S).ts
+    fi
     . ~/.node/bounce/bin/activate
     yarn install
 "
