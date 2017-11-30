@@ -920,7 +920,7 @@ export function feedInputs(player: Player) {
     }
     // This is our hacky approach to spinning the player.
     if (player.state == 'startingSmash') {
-      sprite.angle += 360 / cp.smashFrames;
+      sprite.angle += (player.dir == Dir.Left ? -1 : 1) * 360 / cp.smashFrames;
       if (sprite.angle == 0) {
         player.state = 'normal';
       }
