@@ -66,6 +66,18 @@ export let browserSupported = function () {
   return !Bowser.msie && hasSvgOuterHtml;
 };
 
+document.writeln(`
+<script src="//api.adinplay.com/display/pub/STM/stomped.io/display.min.js"></script>
+<div class="right-ad">
+    <div id='stomped-io_300x250'>
+        <script type='text/javascript'>
+          aipDisplayTag.display('stomped-io_300x250');
+          aipDisplayTag.refresh('stomped-io_300x250');
+        </script>
+    </div>
+</div>
+`);
+
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
 const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-split');

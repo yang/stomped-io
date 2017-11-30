@@ -57,7 +57,7 @@ export class Splash extends React.Component {
   galleryItemEls = new Map<string, HTMLElement>();
   chars = playerStyles.filter(char => !isHiddenStyle(char));
   afterUpdates = [];
-  showAds = location.pathname.substring(location.pathname.lastIndexOf("/") + 1) == 'client.html';
+  showAds = true;
   constructor(props) {
     super(props);
     (window as any).dbg.doShow = () => this.setState({deaths: this.state.deaths + 1});
