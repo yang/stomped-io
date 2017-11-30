@@ -2,6 +2,7 @@ let heavyShim = false;
 require('es6-shim');
 require('es7-shim');
 require('location-origin');
+import 'whatwg-fetch';
 import * as Bowser from 'bowser';
 import {inIframe, PlayerStats, renderSplash, Splash} from "./components";
 import * as CBuffer from 'CBuffer';
