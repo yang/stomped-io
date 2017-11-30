@@ -71,8 +71,10 @@ document.writeln(`
 <div class="right-ad">
     <div id='stomped-io_300x250'>
         <script type='text/javascript'>
-          aipDisplayTag.display('stomped-io_300x250');
-          aipDisplayTag.refresh('stomped-io_300x250');
+          if (window.aipDisplayTag) {
+            aipDisplayTag.display('stomped-io_300x250');
+            aipDisplayTag.refresh('stomped-io_300x250');
+          }
         </script>
     </div>
 </div>
