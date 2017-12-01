@@ -608,7 +608,7 @@ function removeEnt(id: number, instantly = false) {
 }
 
 function backToSplash() {
-  rootComponent.setState({stats: {players: gameState.players.length}});
+  rootComponent.setState({stats: Object.assign({players: gameState.players.length}, rootComponent.state.stats)});
   rootComponent.show();
 
   for (let ent of getEnts()) {
