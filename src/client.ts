@@ -66,21 +66,11 @@ export let browserSupported = function () {
   return !Bowser.msie && hasSvgOuterHtml;
 };
 
-document.writeln(`
-<script src="//api.adinplay.com/display/pub/STM/stomped.io/display.min.js"></script>
-<div class="right-ad">
-    <div id='stomped-io_300x250'>
-        <script type='text/javascript'>
-          if (window.aipDisplayTag) {
-            aipDisplayTag.display('stomped-io_300x250');
-            aipDisplayTag.refresh('stomped-io_300x250');
-          }
-        </script>
-    </div>
-</div>
-<script>
-if (!window.aipDisplayTag)
-  document.writeln(\`
+function addslashes( str ) {
+  return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+}
+
+const adPlaceholder = addslashes(`
 <div class="right-ad-default">
 <p>Servers are expensive!  :(</p>
 
@@ -95,7 +85,23 @@ if (!window.aipDisplayTag)
 
 <p>— The Developer</p>
 </div>
-\`);
+`).replace(/\n/g, '\\n');
+
+document.writeln(`
+<script src="//api.adinplay.com/display/pub/STM/stomped.io/display.min.js"></script>
+<div class="right-ad">
+    <div id='stomped-io_300x250'>
+        <script type='text/javascript'>
+          if (window.aipDisplayTag) {
+            aipDisplayTag.display('stomped-io_300x250');
+            aipDisplayTag.refresh('stomped-io_300x250');
+          }
+        </script>
+    </div>
+</div>
+<script>
+if (!window.aipDisplayTag)
+  document.writeln('${adPlaceholder}');
 </script>
 `);
 
