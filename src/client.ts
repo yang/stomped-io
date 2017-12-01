@@ -338,8 +338,14 @@ function create() {
     key.onUp.add(actionRelease);
   }
 
-  game.input.onDown.add(actionButton);
-  game.input.onUp.add(actionRelease);
+  game.input.onDown.add((ptr) => {
+    if (ptr == game.input.mousePointer || game.input.pointer1.isDown && game.input.pointer2.isDown)
+      actionButton();
+  });
+  game.input.onUp.add((ptr) => {
+    if (ptr == game.input.mousePointer)
+      actionRelease();
+  });
 
   // Mouse controls.
   game.input.addMoveCallback((_ptr, x: number, y: number, isClick) => {
