@@ -401,7 +401,7 @@ function initEnts() {
   mapBlip.anchor.setTo(.5, .5);
   const graphics2 = game.add.graphics(0,0);
   graphics2.clear();
-  graphics2.lineStyle(1, 0x888888, 1);
+  graphics2.lineStyle(1, 0xcccccc, 1);
   graphics2.beginFill(0x000000);
   graphics2.drawRect(0, 0, mapDims.x, mapDims.y);
   // graphics.beginFill(0xffffff);
