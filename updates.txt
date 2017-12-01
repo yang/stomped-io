@@ -2,6 +2,7 @@
 ==========
 
 - Add minimap to lower right corner
+- Fixes: stats bugs
 
 2017-11-29
 ==========

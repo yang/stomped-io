@@ -364,6 +364,15 @@ const playerStats = new PlayerStats();
 function initEnts() {
   const initSnap = timeline.get(0);
   playerStats.spawnTime = initSnap.time;
+  playerStats.leaderboardTime = 0;
+  playerStats.currLeaderboardStartTime = 0;
+  playerStats.topRank = 99999;
+  playerStats.stomped = 0;
+  playerStats.gotStomped = 0;
+  playerStats.topSize = 0;
+  playerStats.leaderStreakTime = 0;
+  playerStats.currLeaderStartTime = 0;
+  playerStats.aliveTime = 0;
 
   gameState.time = initSnap.tick * svrSettings.dt;
 
