@@ -1062,8 +1062,18 @@ function render() {
 
 export type UpdateExtrasFn = (currentPlayer: Player, updating: boolean, currTime: number) => void;
 
+function zoomOutMobile() {
+  var viewport = document.querySelector('meta[name="viewport"]') as any;
+
+  if ( viewport ) {
+    viewport.content = "initial-scale=0.1";
+    viewport.content = "width=1200";
+  }
+}
+
 let meId: number;
 function startGame(name: string, char: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
+  zoomOutMobile();
   socket = connect();
 
   socket.emit('join', {name, char});
