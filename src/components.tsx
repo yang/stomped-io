@@ -27,6 +27,7 @@ interface SplashState {
   deaths: number;
   voteDismissed: boolean;
   showStats: boolean;
+  pleaseVote: boolean;
 }
 
 interface SplashProps {
@@ -74,7 +75,8 @@ export class Splash extends React.Component {
       dur: 'day',
       deaths: 0,
       voteDismissed: false,
-      showStats: false
+      showStats: false,
+      pleaseVote: false
     };
   }
   private handleChange = (e) => {
@@ -102,6 +104,12 @@ export class Splash extends React.Component {
       ad.style.display = '';
       if ((window as any).aipDisplayTag)
         (window as any).aipDisplayTag.refresh('stomped-io_300x250');
+    }
+    if (this.state.deaths >= 1 && !this.state.voteDismissed) {
+      setTimeout(
+        () => this.setState({pleaseVote: true}),
+        100
+      );
     }
     this.setState({
       shown: true,
@@ -290,7 +298,7 @@ export class Splash extends React.Component {
       <div
         className={classnames({
           'please-vote': true,
-          'please-vote--shown': this.state.deaths >= 2 && !this.state.voteDismissed,
+          'please-vote--shown': this.state.pleaseVote,
         })}>
         <div className={classnames({
           'please-vote-container': true,
@@ -304,11 +312,15 @@ export class Splash extends React.Component {
               <a
                 target={'_blank'}
                 href="http://iogames.space/stomped-io"
-                onClick={() => this.setState({voteDismissed: true})}
+                onClick={() => this.setState({pleaseVote: false, voteDismissed: true})}
               >thumbs up</a>
           }
           !
-          <a className='dismiss-btn' href={'javascript: void 0'} onClick={() => this.setState({voteDismissed: true})}>
+          <a
+            className='dismiss-btn'
+            href={'javascript: void 0'}
+            onClick={() => this.setState({pleaseVote: false, voteDismissed: true})}
+          >
             <i className={'fa fa-times'}/>
           </a>
         </div>
