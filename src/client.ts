@@ -78,10 +78,9 @@ document.writeln(`
         </script>
     </div>
 </div>
-`);
-
-if (!(window as any).aipDisplayTag) {
-  document.writeln(`
+<script>
+if (!window.aipDisplayTag)
+  document.writeln(\`
 <div class="right-ad-default">
 <p>Servers are expensive!  :(</p>
 
@@ -96,8 +95,9 @@ if (!(window as any).aipDisplayTag) {
 
 <p>— The Developer</p>
 </div>
+\`);
+</script>
 `);
-}
 
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
