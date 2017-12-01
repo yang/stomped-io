@@ -369,11 +369,10 @@ function create() {
   }, {});
 
   // The notification banner
-  notifText = game.add.text(16, 16, '', { fontSize: '48px', fill: '#fff', align: 'center', boundsAlignH: "center", boundsAlignV: "middle" });
+  notifText = game.add.text(0, 0, '', { fontSize: '48px', fill: '#fff', align: 'center', boundsAlignH: "center", boundsAlignV: "middle" });
   notifText.fixedToCamera = true;
-  notifText.cameraOffset.setTo(16,16);
+  notifText.cameraOffset.setTo(0,0);
   notifText.lineSpacing = -2;
-  notifText.setTextBounds(0,0,cp.camWidth,600);
   notifText.setShadow(4,4,'#000',4);
 }
 
@@ -930,6 +929,8 @@ ${mkDebugText(ptr, currentPlayer)}
   if (cp.showScores) {
     scoreText.text = mkScoreText();
   }
+
+  notifText.setTextBounds(0, 0, game.width / game.world.scale.x, 600);
 
   const endTime = now();
   getLogger('client-jank').log('start', currTime, 'end', endTime, 'elapsed', endTime - currTime);

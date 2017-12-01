@@ -1,8 +1,8 @@
 2017-11-31
 ==========
 
-- Add touch controls!  Game is now playable on mobile.  (Press both left/right to stomp.)
-- Fixes: leaderboard, broken ads placeholder
+- Add touch controls and generally make game playable on mobile!  (Tap both left/right to stomp.)
+- Fixes: leaderboard, broken ads placeholder, message banner positioningd
 
 2017-11-30
 ==========
