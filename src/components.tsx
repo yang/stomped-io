@@ -105,6 +105,8 @@ export class Splash extends React.Component {
       if ((window as any).aipDisplayTag)
         (window as any).aipDisplayTag.refresh('stomped-io_300x250');
     }
+    const ad2 = document.querySelector('.right-ad-default') as HTMLElement;
+    if (ad2) ad2.style.display = '';
     if (this.state.deaths >= 1 && !this.state.voteDismissed) {
       setTimeout(
         () => this.setState({pleaseVote: true}),
@@ -122,7 +124,8 @@ export class Splash extends React.Component {
   hide() {
     const ad = document.querySelector('.right-ad') as HTMLElement;
     if (ad) ad.style.display = 'none';
-    this.setState({shown: false});
+    const ad2 = document.querySelector('.right-ad-default') as HTMLElement;
+    if (ad2) ad2.style.display = 'none';
     document.getElementById('mount-point').style.display = 'none';
   }
   initGalleryItem = (char: string, el: HTMLElement) => {
