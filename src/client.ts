@@ -80,6 +80,25 @@ document.writeln(`
 </div>
 `);
 
+if ((window as any).aipDisplayTag) {
+  document.writeln(`
+<div class="right-ad-default">
+<p>Servers are expensive!  :(</p>
+
+<p>Please support this game by either:</p>
+
+<ul>
+<li>disabling your ad blocker on this site, or</li>
+<li>playing in an incognito window</li>
+</ul>
+
+<p>Thank you, I really appreciate it!</p>
+
+<p>— The Developer</p>
+</div>
+`);
+}
+
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
 const Phaser = (<any>window).Phaser = require('phaser-ce/build/custom/phaser-split');

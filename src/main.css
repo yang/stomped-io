@@ -334,10 +334,10 @@ a:hover {
     font-size: 12px;
 }
 
-ul {
+.splash ul {
     padding: 0;
 }
-li {
+.splash li {
     list-style: none;
 }
 
@@ -348,7 +348,22 @@ li {
     right: 0px;
     padding: 20px;
     /*background: white;*/
+    z-index: 2;
+}
+
+.right-ad-default {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0;
+    width: 300px;
+    height: 250px;
+    font-weight: bold;
+    font-size: 16px;
     z-index: 1;
+    background: #491F6F;
+    color: white;
+    padding: 0 20px;
 }
 
 .please-vote {
