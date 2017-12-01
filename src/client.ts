@@ -890,7 +890,10 @@ ${mkDebugText(ptr, currentPlayer)}
   }
 
   // minimap
-  mapGroup.cameraOffset.setTo(game.width - minimap.width - 10, game.height - minimap.height - 10);
+  mapGroup.cameraOffset.setTo(
+    game.width  / 1 - minimap.width  * game.world.scale.x  - 10,
+    game.height / 1 - minimap.height * game.world.scale.y - 10
+  );
   [mapBlip.x, mapBlip.y] = [me.x / gameWorld.width * mapDims.x, me.y / gameWorld.height * mapDims.y];
 
   if (cp.showScores) {
