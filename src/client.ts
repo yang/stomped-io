@@ -80,7 +80,7 @@ document.writeln(`
 </div>
 `);
 
-if ((window as any).aipDisplayTag) {
+if (!(window as any).aipDisplayTag) {
   document.writeln(`
 <div class="right-ad-default">
 <p>Servers are expensive!  :(</p>
