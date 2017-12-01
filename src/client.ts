@@ -86,7 +86,6 @@ const adPlaceholder = addslashes(`
 <p>— The Developer</p>
 </div>
 `).replace(/\n/g, '\\n');
-
 document.writeln(`
 <script src="//api.adinplay.com/display/pub/STM/stomped.io/display.min.js"></script>
 <div class="right-ad">
@@ -99,8 +98,9 @@ document.writeln(`
         </script>
     </div>
 </div>
+<script type="text/javascript" src='advertisement.js'></script>
 <script>
-if (!window.aipDisplayTag)
+if (!document.getElementById('ads'))
   document.writeln('${adPlaceholder}');
 </script>
 `);
