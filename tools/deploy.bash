@@ -5,8 +5,9 @@ fi
 new_bundle="$(basename dist/bundle*)"
 git archive --format zip -o bounce.zip master
 rsync -ril bounce.zip $dest:
-rsync -ril index.html build dist $dest:bounce/
 rsync -ril assets/main.css $dest:bounce/assets/
+# Sync index.html last
+rsync -ril build dist index.html $dest:bounce/
 ssh $dest "
     mkdir -p bounce;
     cd bounce;
