@@ -126,6 +126,7 @@ export class Splash extends React.Component {
     if (ad) ad.style.display = 'none';
     const ad2 = document.querySelector('.right-ad-default') as HTMLElement;
     if (ad2) ad2.style.display = 'none';
+    this.setState({shown: false, pleaseVote: false});
     document.getElementById('mount-point').style.display = 'none';
   }
   initGalleryItem = (char: string, el: HTMLElement) => {
