@@ -74,12 +74,9 @@ const adPlaceholder = addslashes(`
 <div class="right-ad-default">
 <p>Servers are expensive!  :(</p>
 
-<p>Please support this game by either:</p>
+<p>Please support this game by disabling your ad blocker for this site.</p>
 
-<ul>
-<li>disabling your ad blocker on this site, or</li>
-<li>playing in an incognito window</li>
-</ul>
+<p>(Playing in an incognito window might work.)</p>
 
 <p>Thank you, I really appreciate it!</p>
 
