@@ -223,7 +223,7 @@ function initSnap() {
 }
 
 let firstUpdate = true;
-let initBots = 1;
+let initBots = 40;
 
 function update() {
   if (firstUpdate) {
