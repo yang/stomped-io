@@ -418,6 +418,9 @@ function initEnts() {
   me = players[players.length - 1];
   const meSprite = entToSprite.get(me);
   follow(meSprite);
+  const [origMeData] = ents.filter(e => e.type == 'Player').slice(-1);
+  me.name = origMeData.name;
+  playerToName.get(me).text = me.name;
 
   // The minimap
   const graphics = game.add.graphics(0,0);

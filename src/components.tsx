@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
-import {charForName, clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
+import {charForName, clean, clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
 import {charVariants} from './spriter';
 import * as Cookies from 'js-cookie';
 import * as _ from 'lodash';
@@ -409,7 +409,8 @@ export class Splash extends React.Component {
             </span>)}
             <ul className={'best-of-list'}>
               {this.state.stats.bestOf[this.state.dur]
-                .filter(rec => rec.name.search(/(paku|luffy)(..?|.?dot.?)io|\.io$/i) == -1)
+                .filter(rec => rec.name.search(/nigger|(paku|luffy)(..?|.?dot.?)io|\.io$/i) == -1)
+                .filter(rec => clean(rec.name))
                 .map(rec => <li key={rec.name}>{rec.size} - {rec.name}</li>)}
             </ul>
           </div>

@@ -3,6 +3,48 @@ import * as _ from 'lodash';
 import * as Signals from 'signals';
 import * as CBuffer from 'CBuffer';
 import * as Chance from 'chance';
+import * as List from 'badwords-list';
+
+// From <https://stackoverflow.com/questions/24515/bad-words-filter>
+const spellMappings = {
+  a: '[a A @]',
+  b: '[b B I3 l3 i3]',
+  c: '(?:[c C (]|[k K])',
+  d: '[d D]',
+  e: '[e E 3]',
+  f: '(?:[f F]|[ph pH Ph PH])',
+  g: '[g G 6]',
+  h: '[h H]',
+  i: '[i I l ! 1]',
+  j: '[j J]',
+  k: '(?:[c C (]|[k K])',
+  l: '[l L 1 ! i]',
+  m: '[m M]',
+  n: '[n N]',
+  o: '[o O 0]',
+  p: '[p P]',
+  q: '[q Q 9]',
+  r: '[r R]',
+  s: '[s S $ 5]',
+  t: '[t T 7]',
+  u: '[u U v V]',
+  v: '[v V u U]',
+  w: '[w W vv VV]',
+  x: '[x X]',
+  y: '[y Y]',
+  z: '[z Z 2]'
+};
+
+const patString = Array.from(List.regex.toString().replace(/^\/\\b(.+)\\b\/gi$/, '$1'))
+  .map((ch: string) => {
+    const expanded = spellMappings[ch];
+    return expanded ? expanded.replace(/ /g, '') : ch;
+  })
+  .join('');
+const badWords = new RegExp(`\\b${patString}\\b`, 'gi');
+export function clean(x: string) {
+  return badWords[Symbol.replace](x, '~');
+}
 
 CBuffer.prototype.findIndex = function(pred) {
   for (let i = 0; i < this.length; i++) {
@@ -1427,6 +1469,8 @@ export class EntMgr {
   addPlayer(playerObj) {
     const players = this.gameState.players;
     const found = players.find((p) => p.id == playerObj.id);
+    playerObj = _.clone(playerObj);
+    playerObj.name = clean(playerObj.name);
     if (!found) {
       const player = new Player(playerObj.name, playerObj.x, playerObj.y, playerObj.style);
       _.extend(player, playerObj);
