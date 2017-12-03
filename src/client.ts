@@ -1173,20 +1173,6 @@ export let connect = function () {
   return socket;
 };
 
-function injectAds() {
-  if (!inIframe()) {
-    document.write(`
-  <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<script>
-  (adsbygoogle = window.adsbygoogle || []).push({
-    google_ad_client: "ca-pub-9481400679587531",
-    enable_page_level_ads: true
-  });
-</script>
-    `);
-  }
-}
-
 export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText) {
   getLogger('main').log('starting main');
   guiMgr = _guiMgr;
@@ -1228,5 +1214,4 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
       rootComponent.setStats(_stats);
     }
   }));
-  injectAds();
 }
