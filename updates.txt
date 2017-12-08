@@ -1,3 +1,8 @@
+2017-12-07
+==========
+
+- Fixes: browser compat, post-game stats
+
 2017-12-03
 ==========
 

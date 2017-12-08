@@ -18,7 +18,7 @@ const isMobileOrTablet = checkMobileOrTablet();
 function humanTime(ms: number) {
   const sec = Math.floor(ms / 1000);
   const min = Math.floor(sec / 60);
-  return `${min}m ${sec < 10 ? '0' : ''}${sec}s`;
+  return `${min}m ${sec < 10 ? '0' : ''}${sec % 60}s`;
 }
 
 interface SplashState {
