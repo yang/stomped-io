@@ -1,3 +1,9 @@
+2017-12-16
+==========
+
+- Add top-of-month leaderboard
+- Fixes: browser compat
+
 2017-12-07
 ==========
 

@@ -396,7 +396,7 @@ export class Splash extends React.Component {
           this.state.stats && this.state.stats.bestOf &&
           <div className={'best-of'}>
             Top of the:<br/>
-            {['day','week'].map((dur, i) => <span>
+            {['day','week','month'].map((dur, i) => <span>
               {i > 0 ? ' | ' : ''}
               <a
                 className={classnames({
