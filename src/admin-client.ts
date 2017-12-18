@@ -173,6 +173,7 @@ export class GuiMgr {
       cliOpts.add(cp, 'currentPlayer', players.map((p, i) => i)).onFinishChange(() => refollow()),
       cliOpts.add(cp, 'runLocally').onFinishChange(() => Common.setRunLocally(cp.runLocally)),
       cliOpts.add(cp, 'makeBot'),
+      cliOpts.add(cp, 'removeBot'),
       cliOpts.add(cp, 'viewAll').onFinishChange(rescale),
       cliOpts.add(cp, 'instantTurn'),
       cliOpts.add(cp, 'drawPlanckBoxes'),
@@ -203,6 +204,9 @@ class ControlPanelWithBots extends ControlPanel {
   pounder = new Pounder();
   makeBot() {
     runLocally ? botMgr.makeBot() : socket.emit('makeBot');
+  }
+  removeBot() {
+    socket.emit('removeBot');
   }
   hammerCount = 30;
   startHammer() {

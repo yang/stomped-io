@@ -706,6 +706,10 @@ io.on('connection', (socket: SocketIO.Socket) => {
       settings.deser(svrData);
     });
 
+    socket.on('removeBot', () => {
+      botMgr.removeBot();
+    });
+
     socket.on('makeBot', () => {
       const bot = botMgr.makeBot(true);
       socket.emit('botProxy', bot.ser());

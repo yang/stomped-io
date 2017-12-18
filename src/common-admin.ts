@@ -610,6 +610,16 @@ export class BotMgr {
     }
   }
 
+  removeBot() {
+    if (this.bots.length > 0) {
+      const bot = _(this.bots).minBy(b => b.player.size);
+      _.remove(this.bots, b => b == bot);
+      if (!bot.player.dead) {
+        this.gameState.destroy(bot.player);
+      }
+    }
+  }
+
   makeBot(isDumb: boolean) {
     const period = this.chance.integer({min: 3, max: 30}) * 60 * 1000;
     const self = this;
