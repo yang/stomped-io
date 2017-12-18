@@ -1073,9 +1073,9 @@ function zoomOutMobile() {
 }
 
 let meId: number;
-function startGame(name: string, char: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
+function startGame(name: string, char: string, server: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
   zoomOutMobile();
-  socket = connect();
+  socket = connect(server);
 
   socket.emit('join', {name, char});
 
@@ -1166,8 +1166,8 @@ function startGame(name: string, char: string, onJoin: (socket) => void, updateE
 }
 
 let rootComponent;
-const addr = location.origin.replace(/:\d+$/, ':3000');
-export let connect = function () {
+export let connect = function (server: string) {
+  const addr = server.indexOf('http') == 0 ? server : `https://${server}`;
   const socket = Sio(addr, {query: {authKey}});
   socket.on('svrSettings', (svrData) => {
     svrSettings.deser(svrData);
@@ -1187,30 +1187,30 @@ export function main(pool, _guiMgr, onJoin: (socket) => void, updateExtras: Upda
     new Promise(() => null);
   let stats: Stats;
   let firstSubmitted = false, pRootComponent: Promise<Splash>;
-  const pFirstSubmit = new Promise<[string, string]>((resolveSubmit) => {
+  const pFirstSubmit = new Promise<[string, string, string]>((resolveSubmit) => {
     pRootComponent = renderSplash({
       browserSupported: browserSupported(),
       stats: stats,
       playerStats: playerStats,
-      onSubmit: (name, char) => {
+      onSubmit: (name, char, server) => {
         // OK to resolve multiple times
-        resolveSubmit([name, char]);
+        resolveSubmit([name, char, server]);
         // Let Promise.all handle the first one
-        if (firstSubmitted) startGame(name, char, onJoin, updateExtras, mkDebugText, sprites);
+        if (firstSubmitted) startGame(name, char, server, onJoin, updateExtras, mkDebugText, sprites);
         firstSubmitted = true;
       },
       shown: !autoStartName
     });
     pRootComponent.then(root => rootComponent = root);
-    if (autoStartName) { resolveSubmit([autoStartName, 'white']); }
+    if (autoStartName) { resolveSubmit([autoStartName, 'white', 'stomped.io']); }
   });
   Promise.all([pSprites, pRootComponent]).then(([sprites, rootComponent]) =>
     rootComponent.setImgs(sprites)
   );
   Promise.all([pFirstSubmit, pPb, pSprites])
     .then(([firstSubmit, pb, _sprites]) => {
-      const [name, char] = firstSubmit;
-      return startGame(name, char, onJoin, updateExtras, mkDebugText, _sprites);
+      const [name, char, server] = firstSubmit;
+      return startGame(name, char, server, onJoin, updateExtras, mkDebugText, _sprites);
     });
   fetch(`/stats`).then((resp) => resp.json().then((_stats: Stats) => {
     if (rootComponent) {

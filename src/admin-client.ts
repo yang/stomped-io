@@ -311,7 +311,7 @@ class Pounder {
   sockets = [];
 
   hammer(i) {
-    const socket = Client.connect();
+    const socket = Client.connect('https://stomped.io');
     this.sockets.push(socket);
     socket.on('connect', () => {
       socket.emit('join', {name: `hammer-${i}`, char: playerStyles[i % playerStyles.length]});
