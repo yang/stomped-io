@@ -223,7 +223,7 @@ function initSnap() {
 }
 
 let firstUpdate = true;
-let initBots = 40;
+let initBots = process.env.INITBOTS ? +process.env.INITBOTS : 40;
 
 function update() {
   if (firstUpdate) {
