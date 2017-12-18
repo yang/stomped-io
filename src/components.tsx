@@ -410,8 +410,7 @@ export class Splash extends React.Component {
             <ul className={'best-of-list'}>
               {this.state.stats.bestOf[this.state.dur]
                 .filter(rec => rec.name.search(/nigger|(paku|luffy)(..?|.?dot.?)io|\.io$/i) == -1)
-                .filter(rec => clean(rec.name))
-                .map(rec => <li key={rec.name}>{rec.size} - {rec.name}</li>)}
+                .map(rec => <li key={rec.name}>{rec.size} - {clean(rec.name)}</li>)}
             </ul>
           </div>
         }
