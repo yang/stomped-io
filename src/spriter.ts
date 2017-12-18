@@ -220,7 +220,7 @@ export function loadSprites() {
 
   const pSprites = charVariants.map(char =>
     new Promise<any>(resolve =>
-      document.getElementById(char.name).addEventListener('load', (ev) => resolve({[char.name]: genSprites(char.name, ev)}))
+      document.getElementById(char.name).addEventListener('load', (ev) => resolve(genSprites(char.name, ev)))
     )
   );
 
@@ -232,10 +232,24 @@ function children(x: any) {
   return Array.from(x.childNodes).filter((el: any) => el.nodeType != 3);
 }
 
-let alertedOnce = false;
-function genSprites(charName, ev) {
-  const char = charVariants.find(char => char.name == charName);
+let alertedOnce = false, gaveUpOnSvg = false;
+function genSprites(charName, ev, trial = 0) {
   const obj = ev.target as HTMLObjectElement;
+
+  if (!obj || !obj.contentDocument) {
+    if (trial > 3 && !gaveUpOnSvg) {
+      gaveUpOnSvg = true;
+      throw new Error(`tried 3 times to access SVG contentDocument but still failed! !!obj=${!!obj}, &&!!obj.contentDocument=${!!obj && !!obj.contentDocument}`);
+    }
+    return new Promise(resolve =>
+      setTimeout(
+        () => resolve(genSprites(charName, {target: obj}, trial + 1)),
+        100 * 2 ** trial
+      )
+    );
+  }
+
+  const char = charVariants.find(char => char.name == charName);
   const variantImgs = [];
 
   const baseSvg = obj.contentDocument.querySelector('svg') as SVGElement;
@@ -347,6 +361,6 @@ function genSprites(charName, ev) {
 
   obj.remove();
 
-  return variantImgs;
+  return {[charName]: variantImgs};
 }
 

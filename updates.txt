@@ -1,3 +1,8 @@
+2017-12-18
+==========
+
+- Fixes: try making init on iOS more robust
+
 2017-12-16
 ==========
 
