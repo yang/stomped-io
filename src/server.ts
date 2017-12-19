@@ -631,11 +631,11 @@ async function saveStats() {
   }
   const data = JSON.stringify(recordsToDict(bestOf.day));
   await cli.query(`
-    insert into daily_stats (date, data)
-    values ($1, $2)
-    on conflict (date)
-    do update set data = $2 where daily_stats.date = $1
-  `, [today, data]);
+    insert into daily_stats (host, date, data)
+    values ($1, $2, $3)
+    on conflict (host, date)
+    do update set data = $3 where daily_stats.host = $1 and daily_stats.date = $2
+  `, [hostname, today, data]);
   await cli.query('commit');
 }
 
@@ -655,6 +655,7 @@ async function rollupStats() {
   bestOf.day = await rollupStatsFor('day');
   bestOf.week = await rollupStatsFor('week');
   bestOf.month = await rollupStatsFor('month');
+  await cli.query('rollback');
 }
 
 const toRemove: RemEnt[] = [];

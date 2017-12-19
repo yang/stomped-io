@@ -89,7 +89,7 @@ On the host:
         create database bounce owner bounce;
     # Update .pgpass
     psql -h localhost -U bounce bounce
-          create table daily_stats (date date unique, data text);
+        create table daily_stats (host text, date date, data text, unique (host, date));
 
     # Log out and back in
     mkvirtualenv bounce
