@@ -926,7 +926,7 @@ export function createBody(world: Pl.World, ent, type, fixtureOpts = {}) {
   return bod;
 }
 
-let lastTime = null;
+let lastTime = 0;
 export const updatePeriod = 1 / 20 / 1;
 // physics timestep per real timestep
 export const timeWarp = settings.dt / updatePeriod;
@@ -976,6 +976,10 @@ export function oscillate(ledge: Ledge, time: number) {
 }
 
 export function update(gameState: GameState, _dt: number = settings.dt, _world: Pl.World = world) {
+  const currTime = Date.now() / 1000;
+
+  _dt = Math.min(2 * settings.dt, (currTime - lastTime) * 0.74);
+
   gameState.timerMgr.advanceBy(_dt);
 
   // TODO we're feeding inputs every physics tick here, but we send inputs to
@@ -983,10 +987,6 @@ export function update(gameState: GameState, _dt: number = settings.dt, _world: 
   for (let player of gameState.players) feedInputs(player, _dt, gameState);
   for (let ledge of gameState.ledges) oscillate(ledge, gameState.time);
   gameState.bursters = gameState.bursters.filter(b => b.step(_dt));
-
-  const currTime = Date.now() / 1000;
-
-  if (lastTime == null) lastTime = Date.now() / 1000;
 
   _world.step(_dt);
   for (let f of postSteps) {
@@ -1011,6 +1011,8 @@ export function update(gameState: GameState, _dt: number = settings.dt, _world: 
   clearArray(postSteps);
 
   gameState.time += _dt;
+
+  lastTime = currTime;
 
   return _dt;
 }
