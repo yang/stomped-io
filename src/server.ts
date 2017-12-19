@@ -54,6 +54,7 @@ import * as FastGlob from 'fast-glob';
 import * as Pg from 'pg';
 import * as Http from 'http';
 import * as Express from 'express';
+import * as os from "os";
 
 let loadedCode = {} as LoadedCode;
 let currentPath = '';
@@ -175,6 +176,9 @@ if (process.argv[2] == 'preview-names') {
   }
   process.exit(0);
 }
+
+const hostname = process.argv[2] || os.hostname();
+const port = +process.argv[3] || 3000;
 
 class Client {
   id = ids.next().value;
@@ -809,7 +813,7 @@ app.get('/stats', (req, res) => {
   } as Stats);
 });
 
-setTimeout(() => server.listen(3000), 2000);
+setTimeout(() => server.listen(port), 2000);
 
 net.createServer(function (socket) {
   repl.start({
@@ -817,6 +821,6 @@ net.createServer(function (socket) {
     input: socket,
     output: socket
   }).on('exit', () => socket.end());
-}).listen(5003, "localhost");
+}).listen(5003 + port - 3000, "localhost");
 
 

@@ -1,6 +1,7 @@
 2017-12-18
 ==========
 
+- Start scaling to multiple rooms
 - Fixes: try making init on iOS more robust
 
 2017-12-16
