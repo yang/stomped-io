@@ -577,10 +577,27 @@ async function create() {
     setInterval(mergeStats, 1 * 60 * 1000);
     setInterval(saveStats, 10 * 60 * 1000);
     setInterval(syncServerStats, 10 * 1000);
+    setInterval(adjustBots, 3 * 1000);
   }
 
   Common.create(gameState);
 
+}
+
+function adjustBots() {
+  if (gameState.players.length > 50) {
+    const overhead = gameState.players.length - 50;
+    // Try to remove that many bots, if avail
+    const toRemove = Math.min(botMgr.bots.length, overhead);
+    for (let i = 0; i < Math.min(toRemove, 2); i++) {
+      botMgr.removeBot();
+    }
+  } else if (gameState.players.length < 40) {
+    const toAdd = 40 - botMgr.bots.length;
+    for (let i = 0; i < Math.min(toAdd, 2); i++) {
+      botMgr.makeBot(true);
+    }
+  }
 }
 
 let lastLoad: ServerLoad[] = [];
