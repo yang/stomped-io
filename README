@@ -81,6 +81,8 @@ On the host:
 
     # One-time setup
     sudo apt install nginx virtualenvwrapper unzip apache2-utils postgresql
+    sudo hostname blah.stomped.io
+    echo blah.stomped.io | sudo tee /etc/hostname
 
     # Database setup
     sudo -u postgres psql
@@ -90,6 +92,7 @@ On the host:
     # Update .pgpass
     psql -h localhost -U bounce bounce
         create table daily_stats (host text, date date, data text, unique (host, date));
+        create table load (host text unique, time timestamp, humans int, bots int);
 
     # Log out and back in
     mkvirtualenv bounce

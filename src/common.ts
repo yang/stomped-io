@@ -1426,9 +1426,15 @@ export interface BestOf {
   month: Record[];
 }
 
+export interface ServerLoad {
+  host: string;
+  players: number;
+}
+
 export interface Stats {
   players: number;
   bestOf: BestOf;
+  load: ServerLoad[];
 }
 
 export interface AdminStats {

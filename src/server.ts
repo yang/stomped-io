@@ -31,7 +31,7 @@ import {
   Player, Record,
   RemEnt,
   runLocally,
-  serSimResults,
+  serSimResults, ServerLoad,
   settings,
   Star,
   StartSmash, Stats,
@@ -71,7 +71,12 @@ reloadCode();
 const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
 
-const cli = new Pg.Client({host: 'localhost', user: 'bounce', database: 'bounce'});
+
+let pgConnect = function () {
+  return new Pg.Client({host: 'localhost', user: 'bounce', database: 'bounce'});
+};
+const cli = pgConnect();
+const serverStatsCli = pgConnect();
 
 const chance = new Chance(Date.now());
 
@@ -543,7 +548,9 @@ function reloadPlayerStyles() {
 
 async function create() {
   await cli.connect();
+  await serverStatsCli.connect();
   await rollupStats();
+  await syncServerStats();
 
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
@@ -569,10 +576,31 @@ async function create() {
     setInterval(reloadCode, 10000);
     setInterval(mergeStats, 1 * 60 * 1000);
     setInterval(saveStats, 10 * 60 * 1000);
+    setInterval(syncServerStats, 10 * 1000);
   }
 
   Common.create(gameState);
 
+}
+
+let lastLoad: ServerLoad[] = [];
+
+async function syncServerStats() {
+  const botPlayers = new Set(botMgr.bots.map(b => b.player));
+  const bots = gameState.players.filter(p => botPlayers.has(p)).length;
+  const humans = gameState.players.length - bots;
+  await serverStatsCli.query(`
+    insert into load (host, time, humans, bots)
+    values ($1, $2, $3, $3)
+    on conflict (host)
+    do update set time = $2, humans = $3, bots = $4 where load.host = $1
+  `, [hostname, new Date(), humans, bots]);
+  const load = await serverStatsCli.query(`
+    select * from load where time > now() - '1 minute'::interval
+  `);
+  lastLoad = load.rows.map(({host, time, humans, bots}) =>
+    ({host, players: humans + bots} as ServerLoad)
+  );
 }
 
 interface NameToBestDict {
@@ -810,7 +838,8 @@ console.log('listening');
 app.get('/stats', (req, res) => {
   res.json({
     players: gameState.players.length,
-    bestOf: bestOf
+    bestOf: bestOf,
+    load: lastLoad
   } as Stats);
 });
 

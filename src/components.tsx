@@ -79,6 +79,8 @@ export class Splash extends React.Component {
   chars = playerStyles.filter(char => !isHiddenStyle(char));
   afterUpdates = [];
   showAds = true;
+  statsResolver;
+  statsLoaded = new Promise<Stats>(resolve => this.statsResolver = resolve);
   constructor(props) {
     super(props);
     (window as any).dbg.doShow = () => this.setState({deaths: this.state.deaths + 1});
@@ -107,8 +109,22 @@ export class Splash extends React.Component {
     this.setState({disabled: true});
     const name = this.state.name;
     const char = charForName(name, this.state.char);
-    const server = servers()[0];
-    this.props.onSubmit(name, char, server);
+    this.statsLoaded.then(stats => {
+      const server = _(stats.load).minBy(({host, players}) => players).host;
+      let host;
+      if (searchParams.get('server')) {
+        host = searchParams.get('server');
+      } else if (_(server).startsWith('localhost')) {
+        // Ignore the server string which is just localhost:
+        // A LAN user might be accessing e.g.: http://yangs-big-mbp.local:8080
+        // That location.origin is what we should be using (yangs-big-mbp.local:3000)
+        const port = server.replace('localhost:', '');
+        host = location.origin.replace(/:\d+$/, `:${port}`);
+      } else {
+        host = server;
+      }
+      this.props.onSubmit(name, char, host);
+    });
   };
   componentDidUpdate() {
     // Must do after element is rendered - see
@@ -174,6 +190,7 @@ export class Splash extends React.Component {
   }
   setStats(stats: Stats) {
     this.setState({stats: stats});
+    this.statsResolver(stats);
   }
   share = (url: string) => {
     this.setState({clickedShare: true});
