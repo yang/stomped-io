@@ -978,7 +978,8 @@ export function oscillate(ledge: Ledge, time: number) {
 export function update(gameState: GameState, _dt: number = settings.dt, _world: Pl.World = world) {
   const currTime = Date.now() / 1000;
 
-  _dt = Math.min(2 * settings.dt, (currTime - lastTime) * 0.74);
+  // Lower-bounded to prevent negative currTime - lastTime (actually seen in local dev server!)
+  _dt = Math.max(Math.min(2 * settings.dt, (currTime - lastTime) * 0.74), .01);
 
   gameState.timerMgr.advanceBy(_dt);
 
