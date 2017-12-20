@@ -616,7 +616,7 @@ async function syncServerStats() {
     select * from load where time > now() - '1 minute'::interval
   `);
   lastLoad = load.rows.map(({host, time, humans, bots}) =>
-    ({host, players: humans + bots} as ServerLoad)
+    ({host, weight: humans} as ServerLoad)
   );
 }
 

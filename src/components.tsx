@@ -126,7 +126,9 @@ export class Splash extends React.Component {
     const name = this.state.name;
     const char = charForName(name, this.state.char);
     this.statsLoaded.then(stats => {
-      const server = _(stats.load).minBy(({host, players}) => players).host;
+      const [{host: server}] = _(stats.load)
+        .sortBy(({host, weight}) => [Math.max(weight - 60, 0), host.length, host])
+        .value();
       let host;
       if (searchParams.get('server')) {
         host = searchParams.get('server');

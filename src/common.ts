@@ -1430,7 +1430,7 @@ export interface BestOf {
 
 export interface ServerLoad {
   host: string;
-  players: number;
+  weight: number;
 }
 
 export interface Stats {
