@@ -159,7 +159,7 @@ export class ControlPanel {
   camWidth = 1200;
   camHeight = 800;
   spectate = false;
-  doPings = true;
+  doPings = false;
   doUpdatePl = false;
   smashFrames = 8;
   resetCookies() { Cookies.remove('v1'); }
@@ -1073,14 +1073,15 @@ function zoomOutMobile() {
 }
 
 let meId: number;
+let pinger;
 function startGame(name: string, char: string, server: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
   zoomOutMobile();
   socket = connect(server);
 
   socket.emit('join', {name, char});
 
-  if (cp.doPings) {
-    setInterval(() => {
+  if (cp.doPings && !pinger) {
+    pinger = setInterval(() => {
       socket.emit('ding', {pingTime: now()})
     }, 1000);
   }
