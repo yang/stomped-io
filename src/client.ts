@@ -675,8 +675,8 @@ function update(extraSteps, mkDebugText) {
   // create()/rescale()/onResize() doesn't work.
   //
   // Understanding zooming and the camera and scaling systems in Phaser is very confusing.
-  game.camera.bounds.width = (cp.boundCameraWithinWalls ? 1 : 3) * Common.gameWorld.width;
-  game.camera.bounds.x = cp.boundCameraWithinWalls ? 0 : -Common.gameWorld.width;
+  game.camera.bounds.width = (cp.boundCameraWithinWalls || cp.viewAll ? 1 : 3) * Common.gameWorld.width;
+  game.camera.bounds.x = cp.boundCameraWithinWalls || cp.viewAll ? 0 : -Common.gameWorld.width;
   game.camera.bounds.height = cp.boundCameraAboveGround ? Common.gameWorld.height : game.world.height;
 
   if (gameState.players.length == 0)
@@ -1056,8 +1056,8 @@ export function rescale() {
     // - width = 800, height = 400 means no scaling.
     const scale = cp.viewAll ?
       Math.min(
-        game.width / game.world.width,
-        game.height / game.world.height
+        game.width / gameWorld.width,
+        game.height / gameWorld.height
       ) :
       Math.max(
         game.width / cp.camWidth,
