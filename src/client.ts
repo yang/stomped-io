@@ -430,6 +430,7 @@ function initEnts() {
   graphics.drawCircle(0, 0, 5);
   mapBlip = game.add.sprite(0, 0, graphics.generateTexture());
   mapBlip.anchor.setTo(.5, .5);
+  graphics.clear();
   const graphics2 = game.add.graphics(0,0);
   graphics2.clear();
   graphics2.lineStyle(1, 0xcccccc, 1);
@@ -438,6 +439,7 @@ function initEnts() {
   // graphics.beginFill(0xffffff);
   // graphics.drawRect(0, 0, 5000, 5000);
   minimap = game.add.sprite(0, 0, graphics2.generateTexture());
+  graphics2.clear();
   mapGroup.fixedToCamera = true;
   mapGroup.cameraOffset.setTo(0,0);
   mapGroup.add(minimap);
