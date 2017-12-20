@@ -800,7 +800,10 @@ ${mkDebugText(ptr, currentPlayer)}
           case 'StartSmash':
             const startSmash = ev as StartSmash;
             const player = gameState.players.find(p => p.id == startSmash.playerId);
-            if (player) player.state = 'startingSmash';
+            if (player) {
+              player.state = 'startingSmash';
+              player.smashStart = currTime;
+            }
             break;
           case 'StompEv':
             const p = gameState.players.find(p => p.id == ev.playerId);
@@ -1010,9 +1013,14 @@ export function feedInputs(player: Player) {
     }
     // This is our hacky approach to spinning the player.
     if (player.state == 'startingSmash') {
-      sprite.angle += (player.dir == Dir.Left ? -1 : 1) * 360 / cp.smashFrames;
-      if (sprite.angle == 0) {
+      const smashAnimDur = svrSettings.smashDelay * .75 * 1000;
+      const smashAnimElapsed = now() - player.smashStart;
+      if (smashAnimElapsed < smashAnimDur) {
+        sprite.angle = (player.dir == Dir.Left ? -1 : 1) * 360 * smashAnimElapsed / smashAnimDur;
+      } else {
         player.state = 'normal';
+        sprite.angle = 0;
+        player.smashStart = null;
       }
     } else {
       sprite.angle = 0;

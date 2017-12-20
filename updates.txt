@@ -2,6 +2,7 @@
 ==========
 
 - Add Copy Room Link so you can keep playing with friends!
+- Fix spin animation straggling on slower devices
 
 2017-12-19
 ==========
