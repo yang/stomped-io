@@ -7,7 +7,7 @@
 2017-12-18
 ==========
 
-- Scale and load-balance to multiple rooms!
+- Scale and load-balance to multiple rooms/servers!
 - Fixes: try making init on iOS more robust
 
 2017-12-16

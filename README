@@ -81,8 +81,8 @@ On the host:
 
     # One-time setup
     sudo apt install nginx virtualenvwrapper unzip apache2-utils postgresql
-    sudo hostname blah.stomped.io
-    echo blah.stomped.io | sudo tee /etc/hostname
+    sudo hostname stomped.io
+    echo stomped.io | sudo tee /etc/hostname
 
     # Database setup
     sudo -u postgres psql
@@ -103,7 +103,11 @@ On the host:
 
     sudo htpasswd -c /etc/apache2/bounce.htpasswd yang
 
-Set up letsencrypt, and edit the nginx config to look like the one in tools/.
+Set up letsencrypt:
+
+    sudo certbot --nginx
+
+Edit the nginx config to look like the one in tools/.
 
 From your client:
 
@@ -147,3 +151,27 @@ nginx
         auth_basic_user_file /etc/apache2/bounce.htpasswd;
       }
     }
+
+Alt servers
+-----------
+
+Clone the primary server.
+
+Run once, replacing NODE with e.g. us-west-00:
+
+    sudo hostname NODE.stomped.io
+    echo NODE.stomped.io | sudo tee /etc/hostname
+    ssh-keygen # Make passwordless key
+    ssh-copy-id stomped.io
+
+Edit nginx config to use new hostname in server_name (and remove the redirect from www).
+
+Set up letsencrypt:
+
+    sudo certbot --nginx
+
+Run on each boot:
+
+    sudo service postgresql stop
+    ssh -fNL5432:localhost:5432 stomped.io
+    yarn server

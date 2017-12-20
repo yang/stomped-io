@@ -1,4 +1,4 @@
-dest="$1"
+dest="stomped.io"
 if [[ ! $no_build ]] ; then
     yarn build-prod
 fi
@@ -23,3 +23,15 @@ ssh $dest "
     . ~/.node/bounce/bin/activate
     yarn install
 "
+
+for host in us-west-00 ; do
+    host=$host.$dest
+    rsync -ril bounce.zip $host:
+    ssh $host "
+        mkdir -p bounce;
+        cd bounce;
+        echo A | unzip ../bounce.zip
+        . ~/.node/bounce/bin/activate
+        yarn install
+    "
+done
