@@ -1,3 +1,8 @@
+2017-12-20
+==========
+
+- Add Copy Room Link so you can keep playing with friends!
+
 2017-12-19
 ==========
 

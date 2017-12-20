@@ -245,7 +245,7 @@ h2 {
     line-height: 1.2em;
 }
 
-.share-btns button {
+.share-btns button, .room-link-btn {
     color: var(--alt-color);
     color: #d0b7ff;
     border: none;
@@ -438,6 +438,43 @@ a:hover {
 .cont-btn {
     background: #824eb9;
     width: 45%;
+    margin: 10px auto;
+}
+
+.Popover {
+    z-index: 9;
+}
+
+.Popover-body {
+    display: inline-flex;
+    flex-direction: column;
+    padding: 2rem 4rem;
+    background: #4a1f6f;
+    color: white;
+    border-radius: 0.3rem;
+}
+
+.Popover-tipShape {
+    fill: #4a1f6f;
+}
+
+.room-link-modal {
+    text-align: center;
+    background: #4a1f6f;
+    z-index: 9;
+}
+
+.room-link-text {
+    font-size: 16px;
+    border: 1px solid purple;
+    color: white;
+    background: #2A0F3F;
+    padding: 4px;
+    width: 100%;
+}
+
+.room-link-btn {
+    display: block;
     margin: 10px auto;
 }
 

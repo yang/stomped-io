@@ -48,6 +48,7 @@
     "protobufjs": "^6.8.0",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
+    "react-popover": "^0.5.4",
     "signals": "^1.0.0",
     "socket.io": "^2.0.3",
     "socket.io-client": "^2.0.3",

@@ -7,6 +7,7 @@ import {charVariants} from './spriter';
 import * as Cookies from 'js-cookie';
 import * as _ from 'lodash';
 import * as Clipboard from 'clipboard';
+import * as Popover from 'react-popover';
 
 const searchParams = new URLSearchParams(window.location.search);
 
@@ -41,6 +42,7 @@ interface SplashState {
   pleaseVote: boolean;
   youtuber: Youtuber;
   server: string;
+  showRoomModal: boolean;
 }
 
 interface SplashProps {
@@ -99,6 +101,7 @@ export class Splash extends React.Component {
   statsResolver;
   statsLoaded = new Promise<Stats>(resolve => this.statsResolver = resolve);
   server: string;
+  roomLinkText;
   constructor(props) {
     super(props);
     (window as any).dbg.doShow = () => this.setState({deaths: this.state.deaths + 1});
@@ -118,7 +121,8 @@ export class Splash extends React.Component {
       showStats: false,
       pleaseVote: false,
       youtuber: randYoutuber(),
-      server: null
+      server: null,
+      showRoomModal: false
     };
   }
   private handleChange = (e) => {
@@ -438,15 +442,43 @@ export class Splash extends React.Component {
         {inIframe() && <br/>}
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
         {this.state.server && <br/>}
-        {this.state.server && <a
-          ref={(btn) => btn && new Clipboard(btn, {
-            text: () => `${location.origin}/?server=${encodeURIComponent(this.state.server)}`
-          })}
-          onClick={(e) => e.preventDefault()}
-          href={`/?server=${encodeURIComponent(this.state.server)}`}
-          target={"_blank"}>
-          Copy room link
-        </a>}
+        {
+          this.state.server &&
+          <Popover
+            isOpen={this.state.showRoomModal}
+            target={null}
+            onOuterAction={() => this.setState({showRoomModal: false})}
+            body={
+              <div className='room-link-modal'>
+                <p>Share this link with friends so you can play on the same server!</p>
+                <input
+                  ref={(el) => this.roomLinkText = el}
+                  type="text"
+                  className='room-link-text'
+                  value={`${location.origin}/?server=${encodeURIComponent(this.state.server)}`}
+                  onClick={function(ev) { (ev.target as any).select(); }}
+                  {...{readonly: true}}
+                  />
+                <button
+                  onClick={() => this.roomLinkText.select()}
+                  className='room-link-btn'
+                  ref={(btn) => btn && new Clipboard(btn, {
+                    text: () => `${location.origin}/?server=${encodeURIComponent(this.state.server)}`
+                  })}
+                >Copy Link</button>
+              </div>
+            }
+          >
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                this.setState({showRoomModal: true});
+              }}
+              href={'javascript: void 0'}>
+              Copy room link
+            </a>
+          </Popover>
+        }
       </div>
       <div className={'featured-youtubers'}>
         <a className={'youtube-link'} href={this.state.youtuber.url} target={'_blank'}>
