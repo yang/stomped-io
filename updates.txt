@@ -1,6 +1,7 @@
 2017-12-19
 ==========
 
+- Feature more Youtubers!
 - Preserve constant game sim speed as load increases
 
 2017-12-18

@@ -38,6 +38,7 @@ interface SplashState {
   voteDismissed: boolean;
   showStats: boolean;
   pleaseVote: boolean;
+  youtuber: Youtuber;
 }
 
 interface SplashProps {
@@ -69,6 +70,20 @@ export function servers() {
     return [location.origin.replace(/:\d+$/, ':3000')];
 }
 
+interface Youtuber {
+  name: string;
+  url: string;
+}
+
+const youtubers: Youtuber[] = [
+  {name: 'Fady', url: 'https://www.youtube.com/watch?v=7qVnNp14SAE'},
+  {name: 'Truebizcuit', url: 'https://www.youtube.com/watch?v=oTOY6TgWWuo'},
+  {name: 'AG TaNGrA', url: 'https://www.youtube.com/watch?v=hSHyTeHPma8'},
+  {name: 'game mas', url: 'https://www.youtube.com/watch?v=BP3_k-po6Kc'},
+];
+function randYoutuber() {
+  return new Chance().pickone(youtubers);
+}
 
 export class Splash extends React.Component {
   state: SplashState;
@@ -98,7 +113,8 @@ export class Splash extends React.Component {
       deaths: 0,
       voteDismissed: false,
       showStats: false,
-      pleaseVote: false
+      pleaseVote: false,
+      youtuber: randYoutuber()
     };
   }
   private handleChange = (e) => {
@@ -415,11 +431,11 @@ export class Splash extends React.Component {
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
       </div>
       <div className={'featured-youtubers'}>
-        <a className={'youtube-link'} href={'https://www.youtube.com/watch?v=7qVnNp14SAE'} target={'_blank'}>
+        <a className={'youtube-link'} href={this.state.youtuber.url} target={'_blank'}>
           Featured YouTuber:
           <div className={'featured-youtuber-name'}>
             <img className={'youtube-icon'} src={'assets/youtube-icon.png'}/>
-            Fady!
+            {this.state.youtuber.name}!
           </div>
         </a>
         {
