@@ -6,6 +6,7 @@ import {charForName, clean, clearArray, isBasicStyle, isHiddenStyle, maxNameLen,
 import {charVariants} from './spriter';
 import * as Cookies from 'js-cookie';
 import * as _ from 'lodash';
+import * as Clipboard from 'clipboard';
 
 const searchParams = new URLSearchParams(window.location.search);
 
@@ -39,6 +40,7 @@ interface SplashState {
   showStats: boolean;
   pleaseVote: boolean;
   youtuber: Youtuber;
+  server: string;
 }
 
 interface SplashProps {
@@ -96,6 +98,7 @@ export class Splash extends React.Component {
   showAds = true;
   statsResolver;
   statsLoaded = new Promise<Stats>(resolve => this.statsResolver = resolve);
+  server: string;
   constructor(props) {
     super(props);
     (window as any).dbg.doShow = () => this.setState({deaths: this.state.deaths + 1});
@@ -114,7 +117,8 @@ export class Splash extends React.Component {
       voteDismissed: false,
       showStats: false,
       pleaseVote: false,
-      youtuber: randYoutuber()
+      youtuber: randYoutuber(),
+      server: null
     };
   }
   private handleChange = (e) => {
@@ -126,22 +130,7 @@ export class Splash extends React.Component {
     const name = this.state.name;
     const char = charForName(name, this.state.char);
     this.statsLoaded.then(stats => {
-      const [{host: server}] = _(stats.load)
-        .sortBy(({host, weight}) => [Math.max(weight - 60, 0), host.length, host])
-        .value();
-      let host;
-      if (searchParams.get('server')) {
-        host = searchParams.get('server');
-      } else if (_(server).startsWith('localhost')) {
-        // Ignore the server string which is just localhost:
-        // A LAN user might be accessing e.g.: http://yangs-big-mbp.local:8080
-        // That location.origin is what we should be using (yangs-big-mbp.local:3000)
-        const port = server.replace('localhost:', '');
-        host = location.origin.replace(/:\d+$/, `:${port}`);
-      } else {
-        host = server;
-      }
-      this.props.onSubmit(name, char, host);
+      this.props.onSubmit(name, char, this.server);
     });
   };
   componentDidUpdate() {
@@ -206,8 +195,25 @@ export class Splash extends React.Component {
     this.afterUpdates.push(this.scrollToChar);
     this.setState({charToVariants: mapping});
   }
+
   setStats(stats: Stats) {
-    this.setState({stats: stats});
+    const [{host: server}] = _(stats.load)
+      .sortBy(({host, weight}) => [Math.max(weight - 60, 0), host.length, host])
+      .value();
+    let host;
+    if (searchParams.get('server')) {
+      host = searchParams.get('server');
+    } else if (_(server).startsWith('localhost')) {
+      // Ignore the server string which is just localhost:
+      // A LAN user might be accessing e.g.: http://yangs-big-mbp.local:8080
+      // That location.origin is what we should be using (yangs-big-mbp.local:3000)
+      const port = server.replace('localhost:', '');
+      host = location.origin.replace(/:\d+$/, `:${port}`);
+    } else {
+      host = server;
+    }
+    this.server = host;
+    this.setState({stats: stats, server: host});
     this.statsResolver(stats);
   }
   share = (url: string) => {
@@ -431,6 +437,16 @@ export class Splash extends React.Component {
         </a>}
         {inIframe() && <br/>}
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
+        {this.state.server && <br/>}
+        {this.state.server && <a
+          ref={(btn) => btn && new Clipboard(btn, {
+            text: () => `${location.origin}/?server=${encodeURIComponent(this.state.server)}`
+          })}
+          onClick={(e) => e.preventDefault()}
+          href={`/?server=${encodeURIComponent(this.state.server)}`}
+          target={"_blank"}>
+          Copy room link
+        </a>}
       </div>
       <div className={'featured-youtubers'}>
         <a className={'youtube-link'} href={this.state.youtuber.url} target={'_blank'}>
