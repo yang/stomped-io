@@ -673,6 +673,7 @@ async function saveStats() {
   } else {
     lastRunDay = today;
     rollupStats();
+    bestOf.day = [];
   }
   const data = JSON.stringify(recordsToDict(bestOf.day));
   await cli.query(`
