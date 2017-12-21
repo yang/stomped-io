@@ -141,6 +141,33 @@ function selectEnum(value, enumObj, enums) {
   }
 }
 
+// https://madhatted.com/2013/6/16/you-do-not-understand-browser-history
+// https://stackoverflow.com/questions/33860241/safari-back-button-doesnt-reload-page-when-used
+// https://stackoverflow.com/questions/11979156/mobile-safari-back-button
+// https://stackoverflow.com/questions/24524248/how-to-prevent-reloading-of-web-page-from-cache-while-using-mobile-safari-browse
+function disableBfCache() {
+  // Apparently has not worked since iOS5
+  +window.addEventListener('unload', function () {});
+  // Apparently not working in recent iOS
+  window.addEventListener("pageshow", function(evt){
+    if(evt.persisted){
+      setTimeout(function(){
+        window.location.reload();
+      },10);
+      window.location.reload();
+    }
+  }, false);
+  window.addEventListener('pagehide', function(e) {
+    // wait for this callback to finish executing and then...
+    setTimeout(function() {
+      document.body.innerHTML = ("<script type='text/javascript'>window.location.reload();<\/script>");
+    });
+  });
+  // TODO also capture popstate.
+}
+
+disableBfCache();
+
 export class ControlPanel {
   currentPlayer = 0;
   viewAll = false;

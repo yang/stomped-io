@@ -1,3 +1,10 @@
+2017-12-21
+==========
+
+- *Hugely* satisfying fix to a long-standing iOS Safari bug affecting many users, where relying on the back-forward
+  cache causes the browser to *swap various embedded documents* (iframes/objects). Insane and terrible. Ultimately the
+  best solution was to disable the bfcache and force a reload.
+
 2017-12-20
 ==========
 

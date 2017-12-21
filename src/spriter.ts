@@ -205,22 +205,23 @@ export const charVariants = [
   },
 ];
 
-export function loadSprites() {
+export function loadSprites(charName = "", trial = 0) {
   const staging = document.createElement('div');
   // Need to compartmentalize our innerHTML mangling, or else it interferes with dat.GUI.
   document.body.appendChild(staging);
-  staging.innerHTML += charVariants.map(char =>
+  const selCharVariants = (charName == "" ? charVariants : [charVariants.find(ch => ch.name == charName)]);
+  staging.innerHTML += selCharVariants.map(char =>
     `
     <object ${hidden ? "style='width:0;height:0;margin:0;'" : "style='margin:0"}
       type="image/svg+xml"
       data="designs/player-${char.name}.svg"
-      id="${char.name}">
+      id="__${char.name}">
     </object>
   `).join('');
 
-  const pSprites = charVariants.map(char =>
+  const pSprites = selCharVariants.map(char =>
     new Promise<any>(resolve =>
-      document.getElementById(char.name).addEventListener('load', (ev) => resolve(genSprites(char.name, ev)))
+      document.getElementById("__" + char.name).addEventListener('load', (ev) => resolve(genSprites(char.name, ev, trial)))
     )
   );
 
@@ -235,18 +236,17 @@ function children(x: any) {
 let alertedOnce = false, gaveUpOnSvg = false;
 function genSprites(charName, ev, trial = 0) {
   const obj = ev.target as HTMLObjectElement;
+  console.log(charName, trial);
 
+  // This trial logic should not really be necessary now that we've disabled the bfcache.
   if (!obj || !obj.contentDocument) {
-    if (trial > 3 && !gaveUpOnSvg) {
+    obj.remove();
+    if (trial > 1 && !gaveUpOnSvg) {
       gaveUpOnSvg = true;
-      throw new Error(`tried 3 times to access SVG contentDocument but still failed! !!obj=${!!obj}, &&!!obj.contentDocument=${!!obj && !!obj.contentDocument}`);
+      throw new Error(`tried 2 times to reload SVG but still failed! !!obj=${!!obj}, &&!!obj.contentDocument=${!!obj && !!obj.contentDocument}`);
+    } else {
+      return loadSprites(charName, trial + 1);
     }
-    return new Promise(resolve =>
-      setTimeout(
-        () => resolve(genSprites(charName, {target: obj}, trial + 1)),
-        100 * 2 ** trial
-      )
-    );
   }
 
   const char = charVariants.find(char => char.name == charName);
