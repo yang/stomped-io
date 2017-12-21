@@ -8,6 +8,7 @@ import * as Cookies from 'js-cookie';
 import * as _ from 'lodash';
 import * as Clipboard from 'clipboard';
 import * as Popover from 'react-popover';
+import * as URLSearchParams from 'url-search-params';
 
 const searchParams = new URLSearchParams(window.location.search);
 
