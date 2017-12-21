@@ -593,7 +593,7 @@ function adjustBots() {
       botMgr.removeBot();
     }
   } else if (gameState.players.length < 40) {
-    const toAdd = 40 - botMgr.bots.length;
+    const toAdd = 40 - gameState.players.length;
     for (let i = 0; i < Math.min(toAdd, 2); i++) {
       botMgr.makeBot(true);
     }
