@@ -1101,6 +1101,7 @@ function render() {
 
 export type UpdateExtrasFn = (currentPlayer: Player, updating: boolean, currTime: number) => void;
 
+// https://stackoverflow.com/questions/22639296/force-mobile-browser-zoom-out-with-javascript
 function zoomOutMobile() {
   var viewport = document.querySelector('meta[name="viewport"]') as any;
 
