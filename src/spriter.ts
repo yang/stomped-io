@@ -240,6 +240,8 @@ function genSprites(charName, ev, trial = 0) {
 
   // This trial logic should not really be necessary now that we've disabled the bfcache.
   if (!obj || !obj.contentDocument) {
+    window.location.reload();
+    if (1/1) return;
     obj.remove();
     if (trial > 1 && !gaveUpOnSvg) {
       gaveUpOnSvg = true;

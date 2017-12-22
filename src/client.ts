@@ -141,6 +141,8 @@ function selectEnum(value, enumObj, enums) {
   }
 }
 
+// Ultimately this doesn't seem to be 100% reliably working, so relying on reload when hitting bug in spriter.
+//
 // https://madhatted.com/2013/6/16/you-do-not-understand-browser-history
 // https://stackoverflow.com/questions/33860241/safari-back-button-doesnt-reload-page-when-used
 // https://stackoverflow.com/questions/11979156/mobile-safari-back-button
@@ -1113,7 +1115,9 @@ function zoomOutMobile() {
 
 let meId: number;
 let pinger;
+const autoKill = +searchParams.get('autoKill');
 function startGame(name: string, char: string, server: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
+  if (autoKill) setTimeout(backToSplash, autoKill);
   zoomOutMobile();
   socket = connect(server);
 
