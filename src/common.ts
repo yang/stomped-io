@@ -823,11 +823,11 @@ export class Star extends Ent {
   }
 }
 
-const burstDur = 1;
+const burstDur = 3;
 export class Burster {
   private elapsed = 0;
   constructor(public ents: Ent[]) {}
-  step(dt: number) {
+  step(_dt: number) {
     for (let ent of this.ents) {
       if (ent.bod.getFixtureList()) {
         if (this.elapsed > .2)
@@ -835,8 +835,10 @@ export class Burster {
         if (ent.bod.isAwake()) {
           updateVel(ent.bod, ({x, y}) => {
             return Pl.Vec2(
-              Math.sign(x) * Math.max(0, Math.abs(x) - .5),
-              Math.sign(y) * Math.max(0, Math.abs(y) - .5)
+              this.elapsed + _dt > burstDur ? 0 :
+                Math.sign(x) * Math.max(0, Math.abs(x) - .5 * _dt / settings.dt),
+              this.elapsed + _dt > burstDur ? 0 :
+                Math.sign(y) * Math.max(0, Math.abs(y) - .5 * _dt / settings.dt)
             );
           });
           if (ent.bod.getLinearVelocity().x == 0 && ent.bod.getLinearVelocity().y == 0) {
@@ -846,7 +848,7 @@ export class Burster {
         }
       }
     }
-    this.elapsed += dt;
+    this.elapsed += _dt;
     return this.elapsed < burstDur;
   }
 }

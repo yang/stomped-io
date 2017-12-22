@@ -2,6 +2,7 @@
 ==========
 
 - Revamp UI for mobile!
+- Fix burst-out stars from infinitely drifting
 
 2017-12-21
 ==========
