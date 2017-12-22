@@ -643,8 +643,15 @@ export class Vec2 {
   mul(x: number) { return new Vec2(this.x * x, this.y * x); }
   xmul(v: Vec2) { return new Vec2(this.x * v.x, this.y * v.y); }
   div(x: number) { return new Vec2(this.x / x, this.y / x); }
+  xdiv(v: Vec2) { return new Vec2(this.x / v.x, this.y / v.y); }
   len() { return Math.sqrt(this.x**2 + this.y**2); }
   toTuple(): [number, number] { return [this.x, this.y]; }
+  clamp(base: Vec2, radius: number) {
+    const delta = this.sub(base);
+    const scaled = delta.mul(Math.min(radius, delta.len()) / delta.len());
+    return base.add(scaled);
+    // return new Vec2(bound(this.x, base.x - radius, base.x + radius), bound(this.y, base.y + radius));
+  }
   static fromObj({x, y}: {x: number, y: number}) { return new Vec2(x,y); }
 }
 
@@ -1201,6 +1208,10 @@ export function iterFixtures(body) {
 
 export function clamp(x, bound) {
   return Math.min(Math.abs(x), bound) * Math.sign(x);
+}
+
+export function bound(x, lo, hi) {
+  return x < lo ? lo : x > hi ? hi : x;
 }
 
 export const basicStyleBases = [

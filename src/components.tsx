@@ -314,11 +314,11 @@ export class Splash extends React.Component {
               <strong>Click or press down/space</strong> for a smash attack!
             </p>}
             {isSupported && isMobileOrTablet && <p key='ppp' className={'subhead'}>
-              <strong>Tap left/right side of screen</strong> to steer.
+              <strong>Drag left half of screen</strong> to steer.
               <br/>
               Collect stars to grow.  Stomp other players to take their stars.
               <br/>
-              <strong>Tap with both thumbs</strong> for a smash attack!
+              <strong>Tap right half of screen</strong> for a smash attack!
             </p>}
             {isSupported && <form key={'form'} className='splash-form' onSubmit={this.handleSubmit}>
               <input

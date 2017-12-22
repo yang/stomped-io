@@ -253,7 +253,7 @@ function preload(sprites) {
   }
 }
 
-var platforms, starGroup, playerGroup, nameGroup, lavaGroup, activeStarGroup, mapGroup;
+var platforms, starGroup, playerGroup, nameGroup, lavaGroup, activeStarGroup, mapGroup, controlsGroup;
 var cursors;
 
 var stars;
@@ -309,6 +309,12 @@ const mapDims = new Vec2(200, 200 / gameWorld.width * gameWorld.height);
 
 let doubleTapping = false;
 
+let dirStickBase, dirStick, actionBtn, actionPtr, dirPtr;
+
+let ptrToWorldPos = function () {
+  return Vec2.fromObj(game.input).add(new Vec2(game.camera.x, game.camera.y)).div(game.world.scale.x);
+};
+
 function create() {
 
   game.world.setBounds(-Common.gameWorld.width,0,3 * Common.gameWorld.width, Common.gameWorld.height);
@@ -336,6 +342,7 @@ function create() {
   lavaGroup = game.add.group();
   activeStarGroup = game.add.group();
   mapGroup = game.add.group();
+  controlsGroup = game.add.group();
 
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
@@ -353,6 +360,32 @@ function create() {
   scoreText.cameraOffset.setTo(16,16);
   scoreText.lineSpacing = -2;
 
+  // Virtual controls
+  const graphics = game.add.graphics(0,0);
+  graphics.clear();
+  graphics.beginFill(0xffffff);
+  graphics.drawCircle(0, 0, 130);
+  const circle = graphics.generateTexture();
+  dirStickBase = game.add.sprite(0, 0, circle);
+  dirStickBase.anchor.setTo(.5, .5);
+  dirStickBase.visible = false;
+  dirStickBase.alpha = 0.3;
+  dirStick = game.add.sprite(0, 0, circle);
+  dirStick.anchor.setTo(.5, .5);
+  dirStick.visible = false;
+  dirStick.scale.setTo(.7, .7);
+  dirStick.alpha = 0.3;
+  actionBtn = game.add.sprite(0, 0, circle);
+  actionBtn.anchor.setTo(.5, .5);
+  actionBtn.visible = false;
+  actionBtn.alpha = 0.3;
+  graphics.clear();
+  controlsGroup.fixedToCamera = true;
+  controlsGroup.cameraOffset.setTo(0,0);
+  controlsGroup.add(dirStickBase);
+  controlsGroup.add(dirStick);
+  controlsGroup.add(actionBtn);
+
   //  Key controls.
   cursors = game.input.keyboard.createCursorKeys();
   for (let keyName of ['left', 'right']) {
@@ -363,44 +396,66 @@ function create() {
 
   const space = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
   for (let key of [cursors.down, space]) {
-    key.onDown.add(actionButton);
-    key.onUp.add(actionRelease);
+    key.onDown.add(startAction);
+    key.onUp.add(stopAction);
   }
 
   game.input.onDown.add((ptr) => {
-    if (ptr == game.input.mousePointer || game.input.pointer1.isDown && game.input.pointer2.isDown) {
-      actionButton();
-      doubleTapping = true;
+    // Pointer position is offset by camera position, and neither is in world scale.
+    if (ptr.isMouse) {
+      startAction();
+    } else {
+      const worldPtr = ptrToWorldPos();
+      if (worldPtr.x > me.x) {
+        actionBtn.visible = true;
+        ({x: actionBtn.x, y: actionBtn.y} = worldToScreenOffsetWorldScale(worldPtr));
+        actionPtr = ptr;
+        startAction();
+      } else {
+        dirStick.visible = true;
+        dirStickBase.visible = true;
+        [dirStick.x, dirStick.y] = [dirStickBase.x, dirStickBase.y] = worldToScreenOffsetWorldScale(worldPtr).toTuple();
+        dirPtr = ptr;
+      }
     }
   });
   game.input.onUp.add((ptr) => {
-    if (ptr == game.input.mousePointer) {
-      actionRelease();
-      if (!game.input.pointer1.isDown && !game.input.pointer2.isDown) {
-        doubleTapping = false;
-      }
+    if (ptr == actionPtr) {
+      actionPtr = null;
+      actionBtn.visible = false;
+      stopAction();
+    } else if (ptr == dirPtr) {
+      dirPtr = null;
+      dirStickBase.visible = false;
+      dirStick.visible = false;
+    } else if (ptr.isMouse) {
+      stopAction();
     }
   });
 
   // Mouse controls.
-  game.input.addMoveCallback((_ptr, x: number, y: number, isClick) => {
+  game.input.addMoveCallback((ptr, x: number, y: number, isClick) => {
     // We're manually calculating the mouse pointer position in scaled world coordinates.
     // game.input.worldX doesn't factor in the world scaling.
     // Setting game.input.scale didn't seem to do anything.
-    ptr = new Vec2(game.input.x, game.input.y).add(new Vec2(game.camera.x, game.camera.y)).div(game.world.scale.x);
-
-    const dir = ptr.x <= me.x + me.width / 2 ? Dir.Left : Dir.Right;
-    if (dir != getDir(me)) {
-      setInputsByDir(me, dir);
-      socket.emit('input', {time: now(), events: [new InputEvent(me.dir)]});
+    const worldPtr = ptrToWorldPos();
+    if (ptr == dirPtr) {
+      ({x: dirStick.x, y: dirStick.y} = worldToScreenOffsetWorldScale(worldPtr).clamp(Vec2.fromObj(dirStickBase), 50));
+      const delta = dirStick.x - dirStickBase.x;
+      if (delta > 5) {
+        setInputsByDir(me, Dir.Right);
+        socket.emit('input', {time: now(), events: [new InputEvent(me.dir)]});
+      } else if (delta < -5) {
+        setInputsByDir(me, Dir.Left);
+        socket.emit('input', {time: now(), events: [new InputEvent(me.dir)]});
+      }
+    } else if (ptr.isMouse) {
+      const dir = worldPtr.x <= me.x ? Dir.Left : Dir.Right;
+      if (dir != getDir(me)) {
+        setInputsByDir(me, dir);
+        socket.emit('input', {time: now(), events: [new InputEvent(me.dir)]});
+      }
     }
-
-    // const dx = game.input.mouse.event.movementX;
-    // const dy = game.input.mouse.event.movementY;
-    // if (this.me) {
-    //   this.me.angle += this.dx / 400;
-    //   this.me.bod.setAngle(-this.me.angle);
-    // }
   }, {});
 
   // The notification banner
@@ -504,11 +559,11 @@ export function getEnts() {
   return gameState.getEnts();
 }
 
-function actionButton() {
+function startAction() {
   events.push(new StartAction());
 }
 
-function actionRelease() {
+function stopAction() {
   events.push(new StopAction());
 }
 
@@ -981,6 +1036,22 @@ ${mkDebugText(ptr, currentPlayer)}
 
 function showScore(player: Player) {
   return Math.round(10 * player.size);
+}
+
+function camPos() {
+  return new Vec2(game.camera.x, game.camera.y);
+}
+function worldScale() {
+  return new Vec2(game.world.scale.x, game.world.scale.y);
+}
+
+let camWorldPos = function () {
+  return camPos().xdiv(worldScale());
+};
+
+// Output: (0,0) is top left of screen, but scale is still world scale (not # pixels, i.e. not game.width)
+function worldToScreenOffsetWorldScale(ptr: {x: number, y: number}) {
+  return Vec2.fromObj(ptr).sub(camWorldPos());
 }
 
 export function mkScoreText() {
