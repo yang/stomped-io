@@ -237,14 +237,15 @@ h2 {
     color: var(--alt-color);
 }
 
-.share-btns {
+.share-btns-container {
     position: absolute;
     bottom: 0;
     right: 0;
     padding: 20px;
+}
+.share-btns {
     line-height: 1.2em;
 }
-
 .share-btns button, .room-link-btn {
     color: var(--alt-color);
     color: #d0b7ff;
@@ -279,7 +280,7 @@ a:hover {
 }
 .icon {
     width: 1.3em;
-    margin: 0 .4em;
+    margin: 0 .4em 0 -.2em;
 }
 
 .share-indicator {
@@ -311,7 +312,7 @@ a:hover {
     overflow: hidden;
 }
 @media (max-width: 768px) {
-    .more-io-games, .please-vote, .right-ad-default, .right-ad, .featured-youtubers, .share-btns, .share-indicator {
+    .more-io-games, .please-vote, .right-ad-default, .right-ad, .featured-youtubers, .share-btns-container, .share-indicator {
         display: none;
     }
     h1 {
@@ -476,20 +477,28 @@ a:hover {
 .Popover-body {
     display: inline-flex;
     flex-direction: column;
-    padding: 2rem 4rem;
-    background: #4a1f6f;
+    padding: 1rem 2rem;
+    background: #824eb9;
     color: white;
     border-radius: 0.3rem;
 }
 
-.Popover-tipShape {
-    fill: #4a1f6f;
+.Popover-body p {
+    margin-top: 0;
 }
 
-.room-link-modal {
+.Popover-tipShape {
+    fill: #824eb9;
+}
+
+.room-link-modal, .share-modal {
     text-align: center;
-    background: #4a1f6f;
+    /*background: #824eb9;*/
     z-index: 9;
+}
+
+.share-modal {
+    text-align:  left;
 }
 
 .room-link-text {

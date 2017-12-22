@@ -44,6 +44,7 @@ interface SplashState {
   youtuber: Youtuber;
   server: string;
   showRoomModal: boolean;
+  showShareModal: string;
 }
 
 interface SplashProps {
@@ -123,7 +124,8 @@ export class Splash extends React.Component {
       pleaseVote: false,
       youtuber: randYoutuber(),
       server: null,
-      showRoomModal: false
+      showRoomModal: false,
+      showShareModal: null
     };
   }
   private handleChange = (e) => {
@@ -189,6 +191,9 @@ export class Splash extends React.Component {
       this.afterUpdates.push(() => this.scrollToChar());
     } else {
       this.inputEl.focus();
+      if (window.innerWidth < 768) {
+        this.setState({showShareModal: char});
+      }
     }
   };
   scrollToChar = () => {
@@ -200,6 +205,14 @@ export class Splash extends React.Component {
     this.afterUpdates.push(this.scrollToChar);
     this.setState({charToVariants: mapping});
   }
+
+  private shareFb() {
+    return this.share("https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fstomped.io");
+  }
+  private shareTwitter() {
+    return this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`);
+  }
+
 
   setStats(stats: Stats) {
     const [{host: server}] = _(stats.load)
@@ -230,6 +243,19 @@ export class Splash extends React.Component {
       window.location.href = url;
     }
   };
+  private shareBtns() {
+    return <div className={'share-btns'}>
+      <button onClick={() => this.shareTwitter()}>
+        <i className={'fa fa-twitter icon'} aria-hidden={'true'}></i>
+        Share on Twitter
+      </button>
+      <br/>
+      <button onClick={() => this.shareFb()}>
+        <i className={'fa fa-facebook-official icon'} aria-hidden={'true'}></i>
+        Share on Facebook
+      </button>
+    </div>;
+  }
   continue() {
     this.afterUpdates.push(this.scrollToChar);
     this.setState({showStats: false});
@@ -318,26 +344,39 @@ export class Splash extends React.Component {
                   if (!variantSpriteSheet) return null;
                   const imgSrc = variantSpriteSheet[0].src;
                   const [w,h,x0] = charVariants.find(cv => cv.name == char.slice(0, -2)).bbox;
-                  return <a
-                    key={char}
-                    ref={el => this.initGalleryItem(char, el)}
-                    className={classnames({
-                      'gallery-item': true,
-                      'gallery-item--disabled': !this.state.unlocked && !isBasicStyle(char),
-                      'gallery-item--selected': this.state.char == char
-                    })}
-                    title={!this.state.unlocked && !isBasicStyle(char) ? 'Share to unlock!' : ''}
-                    onMouseOver={() => this.setState({hovering: !this.state.unlocked && !isBasicStyle(char)})}
-                    onMouseOut={() => this.setState({hovering: false})}
-                    onMouseDown={() => this.chooseChar(char)}
+                  return <Popover
+                    isOpen={this.state.showShareModal == char}
+                    target={null}
+                    onOuterAction={() => this.setState({showShareModal: null})}
+                    tipSize={20}
+                    body={
+                      <div className='share-modal'>
+                        <p>Share to unlock characters! Get your friends to play!</p>
+                        {this.shareBtns()}
+                      </div>
+                    }
                   >
-                  <span className={'gallery-img-box'}>
-                    {/*No satisfying pure-CSS solution*/}
-                    <img className='gallery-img' src={imgSrc} style={{
-                      height: (window.innerWidth < 768 ? .2 : .35) * h
-                    }}/>
-                  </span>
-                  </a>;
+                    <a
+                      key={char}
+                      ref={el => this.initGalleryItem(char, el)}
+                      className={classnames({
+                        'gallery-item': true,
+                        'gallery-item--disabled': !this.state.unlocked && !isBasicStyle(char),
+                        'gallery-item--selected': this.state.char == char
+                      })}
+                      title={!this.state.unlocked && !isBasicStyle(char) ? 'Share to unlock!' : ''}
+                      onMouseOver={() => this.setState({hovering: !this.state.unlocked && !isBasicStyle(char)})}
+                      onMouseOut={() => this.setState({hovering: false})}
+                      onMouseDown={() => this.chooseChar(char)}
+                    >
+                      <span className={'gallery-img-box'}>
+                        {/*No satisfying pure-CSS solution*/}
+                        <img className='gallery-img' src={imgSrc} style={{
+                          height: (window.innerWidth < 768 ? .2 : .35) * h
+                        }}/>
+                      </span>
+                    </a>
+                  </Popover>;
                 })
               }</div>
               <br/>
@@ -424,16 +463,8 @@ export class Splash extends React.Component {
       </div>
       {/*<div className={'left-ad'}>{...this.ad('left')}</div>*/}
       {/*<div className={'right-ad'}>{...this.ad('right')}</div>*/}
-      <div className={'share-btns'}>
-        <button onClick={() => this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`)}>
-          <i className={'fa fa-twitter icon'} aria-hidden={'true'}></i>
-          Share on Twitter
-        </button>
-        <br/>
-        <button onClick={() => this.share("https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fstomped.io")}>
-          <i className={'fa fa-facebook-official icon'} aria-hidden={'true'}></i>
-          Share on Facebook
-        </button>
+      <div className="share-btns-container">
+        {this.shareBtns()}
       </div>
       <div className={"minor-links"}>
         {inIframe() && <a href={"/"} target={"_blank"}>
@@ -449,6 +480,7 @@ export class Splash extends React.Component {
             isOpen={this.state.showRoomModal}
             target={null}
             onOuterAction={() => this.setState({showRoomModal: false})}
+            tipSize={20}
             body={
               <div className='room-link-modal'>
                 <p>Share this link with friends so you can play on the same server!</p>
