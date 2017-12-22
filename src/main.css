@@ -310,12 +310,40 @@ a:hover {
     width: 150px;
     overflow: hidden;
 }
+@media (max-width: 768px) {
+    .more-io-games, .please-vote, .right-ad-default, .right-ad, .featured-youtubers, .share-btns, .share-indicator {
+        display: none;
+    }
+    h1 {
+        font-size: 48px;
+        text-align: center;
+    }
+    .io {
+        font-size: 36px;
+    }
+    .gallery-item {
+        height: 60px;
+        width: 60px;
+    }
+    .gallery {
+        height: 80px;
+    }
+    .subhead {
+        font-size: 12px;
+    }
+    .name-input {
+        margin: 10px;
+    }
+    .submit-btn {
+        margin: 0;
+    }
+}
 @media (max-width: 890px) {
     .splash--ads .featured-youtubers {
         display: none;
     }
 }
-@media (max-width: 1080px) {
+@media (min-width: 768px) and (max-width: 1080px) {
     .splash--ads .main-section {
         margin-left: 180px;
         margin-right: 340px;

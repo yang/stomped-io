@@ -334,7 +334,7 @@ export class Splash extends React.Component {
                   <span className={'gallery-img-box'}>
                     {/*No satisfying pure-CSS solution*/}
                     <img className='gallery-img' src={imgSrc} style={{
-                      height: .35 * h
+                      height: (window.innerWidth < 768 ? .2 : .35) * h
                     }}/>
                   </span>
                   </a>;

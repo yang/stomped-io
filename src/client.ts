@@ -1103,22 +1103,11 @@ function render() {
 
 export type UpdateExtrasFn = (currentPlayer: Player, updating: boolean, currTime: number) => void;
 
-// https://stackoverflow.com/questions/22639296/force-mobile-browser-zoom-out-with-javascript
-function zoomOutMobile() {
-  var viewport = document.querySelector('meta[name="viewport"]') as any;
-
-  if ( viewport ) {
-    viewport.content = "initial-scale=0.1";
-    viewport.content = "width=1200";
-  }
-}
-
 let meId: number;
 let pinger;
 const autoKill = +searchParams.get('autoKill');
 function startGame(name: string, char: string, server: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
   if (autoKill) setTimeout(backToSplash, autoKill);
-  zoomOutMobile();
   socket = connect(server);
 
   socket.emit('join', {name, char});
