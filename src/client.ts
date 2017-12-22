@@ -307,6 +307,8 @@ let ptr;
 
 const mapDims = new Vec2(200, 200 / gameWorld.width * gameWorld.height);
 
+let doubleTapping = false;
+
 function create() {
 
   game.world.setBounds(-Common.gameWorld.width,0,3 * Common.gameWorld.width, Common.gameWorld.height);
@@ -366,12 +368,18 @@ function create() {
   }
 
   game.input.onDown.add((ptr) => {
-    if (ptr == game.input.mousePointer || game.input.pointer1.isDown && game.input.pointer2.isDown)
+    if (ptr == game.input.mousePointer || game.input.pointer1.isDown && game.input.pointer2.isDown) {
       actionButton();
+      doubleTapping = true;
+    }
   });
   game.input.onUp.add((ptr) => {
-    if (ptr == game.input.mousePointer)
+    if (ptr == game.input.mousePointer) {
       actionRelease();
+      if (!game.input.pointer1.isDown && !game.input.pointer2.isDown) {
+        doubleTapping = false;
+      }
+    }
   });
 
   // Mouse controls.
