@@ -182,13 +182,15 @@ function disableBfCache() {
 disableBfCache();
 
 const ga = (window as any).ga;
+let deferredPrompt;
 // From https://medium.com/dev-channel/tracking-pwa-events-with-google-analytics-3b50030d8922
 window.addEventListener('beforeinstallprompt', e => {
-  e.userChoice.then(choiceResult => {
-    if (ga) {
-      ga('send', 'event', 'A2H', choiceResult.outcome);
-    }
-  });
+  e.preventDefault();
+
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+
+  return false;
 });
 
 export class ControlPanel {
@@ -731,6 +733,15 @@ function removeEnt(id: number, instantly = false) {
 function backToSplash() {
   if (fscreen.fullscreenEnabled) {
     fscreen.exitFullscreen();
+  }
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(choiceResult => {
+      if (ga) {
+        ga('send', 'event', 'A2H', choiceResult.outcome);
+      }
+      deferredPrompt = null;
+    });
   }
   rootComponent.setState({stats: Object.assign({players: gameState.players.length}, rootComponent.state.stats)});
   rootComponent.show();
