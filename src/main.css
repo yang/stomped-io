@@ -235,6 +235,7 @@ h2 {
 
 .minor-links a {
     color: var(--alt-color);
+    display: block;
 }
 
 .share-btns-container {
@@ -316,11 +317,11 @@ a:hover {
         display: none;
     }
     h1 {
-        font-size: 48px;
+        font-size: 30px;
         text-align: center;
     }
     .io {
-        font-size: 36px;
+        font-size: 24px;
     }
     .gallery-item {
         height: 60px;
@@ -337,6 +338,18 @@ a:hover {
     }
     .submit-btn {
         margin: 0;
+    }
+    .minor-links {
+        bottom: 0;
+        width: 100%;
+        left: 0;
+        top: initial;
+        text-align: center;
+        font-size: 10px;
+    }
+    .minor-links > a {
+        display: inline-block;
+        margin: 0 10px;
     }
 }
 @media (max-width: 890px) {

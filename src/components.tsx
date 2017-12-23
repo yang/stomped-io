@@ -276,6 +276,14 @@ export class Splash extends React.Component {
       </div>
     ];
   }
+  private submitBtn() {
+    return <button
+      className={'submit-btn'}
+      type={'submit'}
+      disabled={!this.state.charToVariants || this.state.disabled || this.state.name.trim() == ''}>
+      Play!
+    </button>
+  }
   render() {
     const isSupported = this.props.browserSupported;
     const ps = this.props.playerStats;
@@ -340,6 +348,7 @@ export class Splash extends React.Component {
                 disabled={this.state.disabled}
                 maxLength={maxNameLen}
               />
+              {window.innerWidth < 768 && this.submitBtn()}
               <br/>
               <div className={'gallery'} ref={el => this.galleryEl = el}>{
                 this.state.charToVariants && this.chars.map(char => {
@@ -384,10 +393,7 @@ export class Splash extends React.Component {
                 })
               }</div>
               <br/>
-              <button
-                className={'submit-btn'}
-                type={'submit'}
-                disabled={!this.state.charToVariants || this.state.disabled || this.state.name.trim() == ''}>Play!</button>
+              {window.innerWidth >= 768 && this.submitBtn()}
             </form>}
           </div>
           :
@@ -475,9 +481,7 @@ export class Splash extends React.Component {
           Pop out in new tab
           <i className={'fa fa-external-link icon'} aria-hidden={'true'}></i>
         </a>}
-        {inIframe() && <br/>}
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
-        {this.state.server && <br/>}
         {
           this.state.server &&
           <Popover
