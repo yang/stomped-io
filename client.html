@@ -2,7 +2,12 @@
 <html lang="en"> 
 <head> 
 	<meta charset="UTF-8" />
-    <meta name='viewport' content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <!-- https://stackoverflow.com/questions/11280826/html5-full-screen-web-apps-no-browser-bars -->
+    <meta name='viewport' content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui" />
+    <!-- https://developers.google.com/web/fundamentals/native-hardware/fullscreen/ -->
+    <!-- Unfortunately this doesn't really work since iOS keeps trying to load from cache, breaking the pPb protobuf promise. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>stomped.io CLIENT DEV</title>
     <link rel="stylesheet" href="assets/main.css"/>
     <link href="https://fonts.googleapis.com/css?family=Luckiest+Guy" rel="stylesheet"/>
