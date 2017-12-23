@@ -1,6 +1,7 @@
 2017-12-23
 ==========
 
+- Add Europe and Asia servers!
 - Auto select nearest regional server - approximately minimize latency
 
 2017-12-22
