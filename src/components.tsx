@@ -492,7 +492,6 @@ export class Splash extends React.Component {
           Pop out in new tab
           <i className={'fa fa-external-link icon'} aria-hidden={'true'}></i>
         </a>}
-        <a href={"updates.txt"} target={"_blank"}>Changelog</a>
         {
           this.state.server &&
           <Popover
@@ -531,6 +530,8 @@ export class Splash extends React.Component {
             </a>
           </Popover>
         }
+        <a href={"updates.txt"} target={"_blank"}>Changelog</a>
+        <a href="mailto:stompedio@outlook.com">Contact</a>
       </div>
       <div className={'featured-youtubers'}>
         <a className={'youtube-link'} href={this.state.youtuber.url} target={'_blank'}>
