@@ -134,9 +134,9 @@ export class Splash extends React.Component {
   };
   private handleSubmit = (e) => {
     e.preventDefault();
-    if (fscreen.fullscreenEnabled && isMobileOrTablet) {
-      fscreen.requestFullscreen(document.documentElement);
-    }
+    // if (fscreen.fullscreenEnabled && isMobileOrTablet) {
+    //   fscreen.requestFullscreen(document.documentElement);
+    // }
     this.setState({disabled: true});
     const name = this.state.name;
     const char = charForName(name, this.state.char);
