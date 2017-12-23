@@ -54,6 +54,7 @@
     "socket.io-client": "^2.0.3",
     "tinycolor2": "^1.4.1",
     "ts-node": "^3.3.0",
+    "upup": "^0.3.0",
     "url-search-params": "^0.10.0",
     "v8-profiler": "^5.7.0",
     "webpack-dev-server": "^2.9.4",

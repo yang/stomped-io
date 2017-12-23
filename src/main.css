@@ -22,7 +22,7 @@ a {
     text-decoration: none;
 }
 
-.subhead {
+.subhead, .offline-msg {
     line-height: 1.5em;
     text-align: center;
     font-size: 14px;

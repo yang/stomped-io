@@ -2,6 +2,7 @@ let heavyShim = false;
 require('es6-shim');
 require('es7-shim');
 require('location-origin');
+import {UpUp} from './upup';
 import 'clipboard';
 import 'whatwg-fetch';
 import * as Bowser from 'bowser';
@@ -56,6 +57,15 @@ import * as URLSearchParams from 'url-search-params';
 import * as Cookies from 'js-cookie';
 // This is from ES5-DOM-SHIM
 if (heavyShim) { require('./a'); }
+
+if (UpUp) {
+  UpUp.debug(true);
+  UpUp.start({
+    'cache-version': 'v4',
+    'content-url': 'offline.html', // show this page to offline users
+    'assets': ['assets/main.css']
+  });
+}
 
 export const loadedCode = require('./dyn');
 

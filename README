@@ -115,18 +115,19 @@ From your client:
     yarn watch
     yarn watch-css
 
-    # Deployment - specify the IP
+    # Deployment - add new server IPs to deploy.bash
     # You must commit your work before deploying!
-    bash -x tools/deploy.bash 45.79.94.70
+    bash -x tools/deploy.bash
 
 Back on the host:
 
     # One-time host app setup
     cd bounce/
     mkdir -p web/
-    for i in index.html admin.html client.html advertisement.js assets/ build/ designs/ dist/ updates.txt myicon.ico ; do
+    for i in index.html admin.html client.html advertisement.js assets/ build/ designs/ dist/ updates.txt myicon.ico upup.sw.min.js offline.html ; do
         ln -s ../$i web/
     done
+    ls -l web/ # Check that links are working.
 
     # Each-time
     . ~/.node/gen/bin/activate

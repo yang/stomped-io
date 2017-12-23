@@ -6411,6 +6411,10 @@ upper-case@^1.1.1:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/upper-case/-/upper-case-1.1.3.tgz#f6b4501c2ec4cdd26ba78be7222961de77621598"
 
+upup@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/upup/-/upup-0.3.0.tgz#a8d587396ee31eb02abb075223ec5b945fbdb609"
+
 urix@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/urix/-/urix-0.1.0.tgz#da937f7a62e21fec1fd18d49b35c2935067a6c72"
