@@ -489,10 +489,12 @@ function create() {
   notifText.setShadow(4,4,'#000',4);
 }
 
+// Was using game.camera.width/height here but that doesn't always immediately update after changing game.width/height (when window is resized for instance)
 let follow = function (sprite: any) {
   game.camera.follow(sprite, Phaser.Camera.FOLLOW_PLATFORMER);
-  const ymargin = Math.min(game.camera.height / 2, Math.max(game.camera.height / 3, cp.camHeight / 3));
-  game.camera.deadzone = new Phaser.Rectangle(game.camera.width / 2, ymargin, 0, game.camera.height - 2 * ymargin);
+  const ymargin = Math.min(game.height / 2, Math.max(game.height / 3, cp.camHeight / 3));
+  console.log('follow', game.width, game.height);
+  game.camera.deadzone = new Phaser.Rectangle(game.width / 2, ymargin, 0, game.height - 2 * ymargin);
 };
 
 function errorReload() {
@@ -799,6 +801,11 @@ function update(extraSteps, mkDebugText) {
   if (gameState.players.length == 0)
     initEnts();
 
+  if (game.width != window.innerWidth || game.height != window.innerHeight) {
+    game.scale.setGameSize(window.innerWidth, window.innerHeight);
+    console.log('resize', window.innerWidth, window.innerHeight, game.width, game.height);
+  }
+
   // onResize doesn't fire reliably, so manually check.
   if (!lastGameDims || game.width != lastGameDims.width || game.height != lastGameDims.height) {
     lastParentBounds = {};
@@ -842,6 +849,7 @@ FPS: ${game.time.fps} (msMin=${game.time.msMin}, msMax=${game.time.msMax})
 Delta: ${delta}
 Mouse: ${ptr && vecStr(ptr)}
 Game dims: ${vecStr(new Vec2(game.width, game.height))} 
+Window dims: ${vecStr(new Vec2(window.innerWidth, window.innerHeight))}
 Scale: ${game.world.scale.x}
 Bounds: world ${game.world.bounds.height} camera ${game.camera.bounds.height}
 
@@ -1214,7 +1222,8 @@ export function rescale() {
       Math.max(
         game.width / cp.camWidth,
         game.height / cp.camHeight
-      )
+      );
+    console.log('rescale', lastGameDims, game.width, game.height, scale);
     game.world.scale.set(scale);
   }
 }
@@ -1232,6 +1241,8 @@ const autoKill = +searchParams.get('autoKill');
 function startGame(name: string, char: string, server: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
   if (autoKill) setTimeout(backToSplash, autoKill);
   socket = connect(server);
+
+  lastGameDims = null;
 
   socket.emit('join', {name, char});
 
