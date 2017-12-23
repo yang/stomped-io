@@ -104,6 +104,10 @@
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/fscreen/-/fscreen-1.0.0.tgz#1ce5f85d7d0faea3ce434554f0c6ab3137c8be3c"
 
+"@types/geolib@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@types/geolib/-/geolib-2.0.3.tgz#5772c99c43a7d9220e842dfb85c1a5ef20af7b02"
+
 "@types/jest@^21.1.0":
   version "21.1.2"
   resolved "https://registry.yarnpkg.com/@types/jest/-/jest-21.1.2.tgz#05ebfa64817b626694ced56745a7949281981048"
@@ -2545,6 +2549,16 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
+geoip2@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/geoip2/-/geoip2-1.0.5.tgz#3bee6f33040a410ba6fde7e971b2a63008d71de2"
+  dependencies:
+    nan "2.3.5"
+
+geolib@^2.0.24:
+  version "2.0.24"
+  resolved "https://registry.yarnpkg.com/geolib/-/geolib-2.0.24.tgz#eb3d7fbc65f5ea3354a5af6054563ebe9f33e5f4"
+
 get-caller-file@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/get-caller-file/-/get-caller-file-1.0.2.tgz#f702e63127e7e231c160a80c1554acb70d5047e5"
@@ -4149,6 +4163,10 @@ multicast-dns@^6.0.1:
   dependencies:
     dns-packet "^1.0.1"
     thunky "^0.1.0"
+
+nan@2.3.5:
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.3.5.tgz#822a0dc266290ce4cd3a12282ca3e7e364668a08"
 
 nan@^2.3.0, nan@^2.5.1:
   version "2.7.0"

@@ -28,13 +28,16 @@ import {
   maxNameLen,
   now,
   pb,
-  Player, Record,
+  Player,
+  Record,
   RemEnt,
   runLocally,
-  serSimResults, ServerLoad,
+  serSimResults,
+  ServerLoad,
   settings,
   Star,
-  StartSmash, Stats,
+  StartSmash,
+  Stats,
   StompEv,
   StopSpeedup,
   updateEntPhysFromPl,
@@ -55,6 +58,7 @@ import * as Pg from 'pg';
 import * as Http from 'http';
 import * as Express from 'express';
 import * as os from "os";
+import {ServerMatcher} from "./geo";
 
 let loadedCode = {} as LoadedCode;
 let currentPath = '';
@@ -133,7 +137,7 @@ function* genBotNames() {
     switch (chance.weighted([0,1,2,3,4], [20,10,20,20,1])) {
       case 0:
         // chars
-        const length = chance.weighted([1,2,3,4,5,6], [10,5,5,2,2,2])
+        const length = chance.weighted([1,2,3,4,5,6], [10,5,5,2,2,2]);
         const repeat = chance.bool({likelihood: 40});
         const syms = '@#$%^&*()-_=+\'";:<>/=?+`[]{}\\|';
         const anums = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!~-';
@@ -618,6 +622,10 @@ async function syncServerStats() {
   lastLoad = load.rows.map(({host, time, humans, bots}) =>
     ({host, weight: humans} as ServerLoad)
   );
+  for (let {host} of load.rows) {
+    host = host.replace(/:\d+$/, '');
+    serverMatcher.regServer(host);
+  }
 }
 
 interface NameToBestDict {
@@ -853,11 +861,17 @@ create();
 
 console.log('listening');
 
+const serverMatcher = new ServerMatcher(hostname);
+
 app.get('/stats', (req, res) => {
   res.json({
     players: gameState.players.length,
     bestOf: bestOf,
-    load: lastLoad
+    load: lastLoad,
+    bestServer: serverMatcher.bestServer(
+      req.get('x-forwarded-for') || req.connection.remoteAddress,
+      lastLoad
+    )
   } as Stats);
 });
 

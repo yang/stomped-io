@@ -1451,6 +1451,11 @@ export interface Stats {
   players: number;
   bestOf: BestOf;
   load: ServerLoad[];
+  bestServer: string;
+}
+
+export function extractRegion(host: string) {
+  return host.replace(/-[^-]+\.stomped\.io$/, '');
 }
 
 export interface AdminStats {

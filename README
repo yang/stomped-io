@@ -8,6 +8,8 @@ https://phaser.io/examples/v2/tile-sprites/tile-sprite-from-animated-sprite
 Building
 ========
 
+Run 'tools/setup.bash` to get the latest GeoLite2 database.
+
 Run `yarn watch` first, at least once, before using `yarn dev`, so that it creates dist/main.proto.  (CopyWebpackPlugin
 doesn't work well with the relative `to` path in webpack-dev-server mode.)
 
@@ -83,7 +85,7 @@ Instructions tested on Ubuntu 16.04.
 On the host:
 
     # One-time setup
-    sudo apt install nginx virtualenvwrapper unzip apache2-utils postgresql
+    sudo apt install nginx virtualenvwrapper unzip apache2-utils postgresql build-essential
     sudo hostname stomped.io
     echo stomped.io | sudo tee /etc/hostname
 
@@ -126,6 +128,7 @@ Back on the host:
 
     # One-time host app setup
     cd bounce/
+    bash tools/setup.bash # Get the GeoLite2 database.
     mkdir -p web/
     for i in index.html admin.html client.html advertisement.js assets/ build/ designs/ dist/ updates.txt myicon.ico upup.sw.min.js offline.html manifest.json ; do
         ln -s ../$i web/

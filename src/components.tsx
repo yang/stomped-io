@@ -2,7 +2,10 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as classnames from 'classnames';
 import {Chance} from 'chance';
-import {charForName, clean, clearArray, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles, Stats} from "./common";
+import {
+  charForName, clean, clearArray, extractRegion, isBasicStyle, isHiddenStyle, maxNameLen, playerStyles,
+  Stats
+} from "./common";
 import {charVariants} from './spriter';
 import * as Cookies from 'js-cookie';
 import * as _ from 'lodash';
@@ -46,6 +49,7 @@ interface SplashState {
   server: string;
   showRoomModal: boolean;
   showShareModal: string;
+  showSettingsModal: boolean;
 }
 
 interface SplashProps {
@@ -126,7 +130,8 @@ export class Splash extends React.Component {
       youtuber: randYoutuber(),
       server: null,
       showRoomModal: false,
-      showShareModal: null
+      showShareModal: null,
+      showSettingsModal: false
     };
   }
   private handleChange = (e) => {
@@ -217,9 +222,15 @@ export class Splash extends React.Component {
     return this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`);
   }
 
-
   setStats(stats: Stats) {
+    let padDefaultServerWithRegion = function (host: string) {
+      return host == 'stomped.io' ? 'us-west-00.stomped.io' : host;
+    };
     const [{host: server}] = _(stats.load)
+      .filter(({host}) => stats.bestServer ?
+        extractRegion(padDefaultServerWithRegion(host)) == extractRegion(padDefaultServerWithRegion(stats.bestServer)) :
+        true
+      )
       .sortBy(({host, weight}) => [Math.max(weight - 60, 0), host.length, host])
       .value();
     let host;
