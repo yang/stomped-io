@@ -180,6 +180,16 @@ function disableBfCache() {
 
 disableBfCache();
 
+const ga = (window as any).ga;
+// From https://medium.com/dev-channel/tracking-pwa-events-with-google-analytics-3b50030d8922
+window.addEventListener('beforeinstallprompt', e => {
+  e.userChoice.then(choiceResult => {
+    if (ga) {
+      ga('send', 'event', 'A2H', choiceResult.outcome);
+    }
+  });
+});
+
 export class ControlPanel {
   currentPlayer = 0;
   viewAll = false;

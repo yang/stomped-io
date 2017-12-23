@@ -37,6 +37,9 @@ TImeline), but Lance seems like the most promising if things get hairy quickly.
 Misc
 ----
 
+- Testing out "display":"standalone" of PWA manifest doesn't work tunneling local servers; use ngrok.
+  See https://stackoverflow.com/questions/47266973/pwa-manifest-attribute-display-standalone-not-working-on-android and
+  https://developers.google.com/web/tools/chrome-devtools/remote-debugging/local-server
 - `moduleResolution: node` is from
   https://github.com/Microsoft/TypeScript/issues/8189
 
@@ -124,7 +127,7 @@ Back on the host:
     # One-time host app setup
     cd bounce/
     mkdir -p web/
-    for i in index.html admin.html client.html advertisement.js assets/ build/ designs/ dist/ updates.txt myicon.ico upup.sw.min.js offline.html ; do
+    for i in index.html admin.html client.html advertisement.js assets/ build/ designs/ dist/ updates.txt myicon.ico upup.sw.min.js offline.html manifest.json ; do
         ln -s ../$i web/
     done
     ls -l web/ # Check that links are working.
