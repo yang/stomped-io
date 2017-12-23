@@ -4,6 +4,7 @@
 - Revamp UI for mobile!
 - Add new mobile virtual stick controls!
 - Make into PWA with ability to Add To Home Screen
+- Make game robust to screen rotations/resizes
 - Fix burst-out stars from infinitely drifting
 
 2017-12-21

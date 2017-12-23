@@ -753,6 +753,7 @@ let moveName = function (player) {
 
 let firstUpdate = true;
 let starScale: Vec2;
+let lastGameDims;
 
 function update(extraSteps, mkDebugText) {
 
@@ -780,6 +781,17 @@ function update(extraSteps, mkDebugText) {
     starScale = new Vec2(Star.width / starImg.width, Star.height / starImg.height);
   }
 
+  if (gameState.players.length == 0)
+    initEnts();
+
+  // onResize doesn't fire reliably, so manually check.
+  if (!lastGameDims || game.width != lastGameDims.width || game.height != lastGameDims.height) {
+    lastParentBounds = {};
+    lastGameDims = {width: game.width, height: game.height};
+    rescale();
+    follow(entToSprite.get(me));
+  }
+
   // Phaser stupidly grows game.world.bounds to at least cover game.width/.height
   // (which I understand as the canvas size) even if world is scaled.
   // This in turn propagates - repeatedly - to game.camera.bounds, so I have to keep reminding
@@ -790,9 +802,6 @@ function update(extraSteps, mkDebugText) {
   game.camera.bounds.width = (cp.boundCameraWithinWalls || cp.viewAll ? 1 : 3) * Common.gameWorld.width;
   game.camera.bounds.x = cp.boundCameraWithinWalls || cp.viewAll ? 0 : -Common.gameWorld.width;
   game.camera.bounds.height = cp.boundCameraAboveGround ? Common.gameWorld.height : game.world.height;
-
-  if (gameState.players.length == 0)
-    initEnts();
 
   if (rootComponent.state.shown) {
     rootComponent.hide();
