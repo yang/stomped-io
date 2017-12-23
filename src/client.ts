@@ -5,6 +5,7 @@ require('location-origin');
 import {UpUp} from './upup';
 import 'clipboard';
 import 'whatwg-fetch';
+import fscreen from 'fscreen';
 import * as Bowser from 'bowser';
 import {inIframe, PlayerStats, renderSplash, Splash} from "./components";
 import * as CBuffer from 'CBuffer';
@@ -728,6 +729,9 @@ function removeEnt(id: number, instantly = false) {
 }
 
 function backToSplash() {
+  if (fscreen.fullscreenEnabled) {
+    fscreen.exitFullscreen();
+  }
   rootComponent.setState({stats: Object.assign({players: gameState.players.length}, rootComponent.state.stats)});
   rootComponent.show();
 
