@@ -24,7 +24,7 @@ ssh $dest "
     yarn install
 "
 
-for host in us-west-00 eu-central-00 ; do
+for host in us-west-ysn eu-central-8da ap-northeast-pv4 ; do
     host=$host.$dest
     rsync -ril bounce.zip $host:
     ssh $host "
