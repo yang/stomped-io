@@ -130,7 +130,7 @@ Back on the host:
     cd bounce/
     bash tools/setup.bash # Get the GeoLite2 database.
     mkdir -p web/
-    for i in index.html admin.html client.html advertisement.js assets/ build/ designs/ dist/ updates.txt myicon.ico upup.sw.min.js offline.html manifest.json ; do
+    for i in index.html admin.html client.html advertisement.js assets/ build/ designs/ dist/ updates.txt myicon.ico upup.sw.min.js offline.html manifest.json privacy.txt ; do
         ln -s ../$i web/
     done
     ls -l web/ # Check that links are working.

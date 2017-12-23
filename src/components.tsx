@@ -531,6 +531,7 @@ export class Splash extends React.Component {
           </Popover>
         }
         <a href={"updates.txt"} target={"_blank"}>Changelog</a>
+        <a href="privacy.txt" target="_blank">Privacy</a>
         <a href="mailto:stompedio@outlook.com">Contact</a>
       </div>
       <div className={'featured-youtubers'}>
