@@ -136,9 +136,9 @@ Back on the host:
     ls -l web/ # Check that links are working.
 
     # Each-time
-    . ~/.node/gen/bin/activate
+    . ~/.node/bounce/bin/activate
     yarn install
-    yarn server
+    while true; do yarn server; done
 
 nginx
 -----
@@ -164,6 +164,9 @@ Alt servers
 
 Clone the primary server.
 
+If you're cloning a running server, you may need to use Linode's web based 'lish' console to log in, run fsck (requiring
+ you to manually approve fixes), and reboot.  There shouldn't be any data loss risk.
+
 Run once, replacing NODE with e.g. us-west-00:
 
     sudo hostname NODE.stomped.io
@@ -181,4 +184,5 @@ Run on each boot:
 
     sudo service postgresql stop
     ssh -fNL5432:localhost:5432 stomped.io
-    yarn server
+    . ~/.node/bounce/bin/activate
+    while true; do yarn server; done
