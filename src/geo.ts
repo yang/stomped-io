@@ -28,6 +28,18 @@ export class ServerMatcher {
       const closestServer = _(lastLoad.map(({host}) => host))
           .minBy(host => geolib.getDistance(geo.location, this.serverGeos.get(host).location)) ||
         this.defaultHost;
+      if (_(closestServer).startsWith('us-west-')) {
+        let sgeo;
+        console.log(
+          'bestServer',
+          JSON.stringify(geo.location),
+          JSON.stringify(lastLoad.map(({host}) => ({
+            host,
+            loc: sgeo = this.serverGeos.get(host).location,
+            dist: geolib.getDistance(geo.location, sgeo)
+          }))),
+        );
+      }
       return closestServer;
     } else {
       return this.defaultHost;
