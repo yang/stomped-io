@@ -13,6 +13,7 @@ import * as Clipboard from 'clipboard';
 import * as Popover from 'react-popover';
 import * as URLSearchParams from 'url-search-params';
 import fscreen from 'fscreen';
+import * as $clamp from 'clamp-js';
 
 const searchParams = new URLSearchParams(window.location.search);
 
@@ -121,6 +122,7 @@ export class Splash extends React.Component {
   statsLoaded = new Promise<Stats>(resolve => this.statsResolver = resolve);
   server: string;
   roomLinkText;
+  clamped = new Set();
   constructor(props) {
     super(props);
     (window as any).dbg.doShow = () => this.setState({deaths: this.state.deaths + 1});
@@ -147,6 +149,10 @@ export class Splash extends React.Component {
       region: null,
       showHelp: false
     };
+  }
+  private clamp(el) {
+    this.clamped.add(el);
+    $clamp(el, {clamp: 2});
   }
   private handleChange = (e) => {
     this.setState({name: e.target.value});
@@ -629,7 +635,16 @@ export class Splash extends React.Component {
             <ul className={'best-of-list'}>
               {this.state.stats.bestOf[this.state.dur]
                 .filter(rec => rec.name.search(/nigger|(paku|luffy)(..?|.?dot.?)io|\.io$/i) == -1)
-                .map(rec => <li key={rec.name}>{rec.size} - {clean(rec.name)}</li>)}
+                .map(rec =>
+                  <li
+                    key={rec.name}
+                    ref={el => el && !this.clamped.has(el) && this.clamp(el)}
+                  >
+                    <span className='indented'>
+                      <strong>{rec.size}</strong> - {clean(rec.name)}
+                    </span>
+                  </li>
+                )}
             </ul>
           </div>
         }
