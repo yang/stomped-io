@@ -3,6 +3,7 @@
 
 - Add Europe and Asia servers!
 - Auto select nearest regional server - approximately minimize latency
+- Add region selector for user to override auto selection
 
 2017-12-22
 ==========

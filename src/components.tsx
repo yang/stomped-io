@@ -24,6 +24,16 @@ function checkMobileOrTablet() {
 
 const isMobileOrTablet = checkMobileOrTablet();
 
+let padDefaultServerWithRegion = function (host: string) {
+  return host == 'stomped.io' ? 'us-west-00.stomped.io' : host;
+};
+
+const regionNames = {
+  'us-west': 'US',
+  'eu-central': 'Europe',
+  'ap-northeast': 'Asia'
+};
+
 function humanTime(ms: number) {
   const sec = Math.floor(ms / 1000);
   const min = Math.floor(sec / 60);
@@ -50,6 +60,7 @@ interface SplashState {
   showRoomModal: boolean;
   showShareModal: string;
   showSettingsModal: boolean;
+  region: string;
 }
 
 interface SplashProps {
@@ -131,7 +142,8 @@ export class Splash extends React.Component {
       server: null,
       showRoomModal: false,
       showShareModal: null,
-      showSettingsModal: false
+      showSettingsModal: false,
+      region: null
     };
   }
   private handleChange = (e) => {
@@ -223,9 +235,6 @@ export class Splash extends React.Component {
   }
 
   setStats(stats: Stats) {
-    let padDefaultServerWithRegion = function (host: string) {
-      return host == 'stomped.io' ? 'us-west-00.stomped.io' : host;
-    };
     const [{host: server}] = _(stats.load)
       .filter(({host}) => stats.bestServer ?
         extractRegion(padDefaultServerWithRegion(host)) == extractRegion(padDefaultServerWithRegion(stats.bestServer)) :
@@ -295,6 +304,25 @@ export class Splash extends React.Component {
       Play!
     </button>
   }
+  private selectRegion = (ev) => {
+    this.setState({region: ev.target.value});
+  };
+  private regionSelect() {
+    return <div className="styled-select black rounded">
+      <select
+        onChange={this.selectRegion}
+        value={(
+          this.state.region ||
+          this.state.stats && this.state.stats.bestServer && extractRegion(padDefaultServerWithRegion(this.state.stats.bestServer)) ||
+          'us-west'
+        )}>
+        {['us-west', 'eu-central', 'ap-northeast'].map(x => <option value={x}>{regionNames[x]} Servers</option>)}
+      </select>
+      <div className='dropdown-arrow'>
+        <i className='fa fa-angle-down'></i>
+      </div>
+    </div>;
+  }
   render() {
     const isSupported = this.props.browserSupported;
     const ps = this.props.playerStats;
@@ -359,6 +387,7 @@ export class Splash extends React.Component {
                 disabled={this.state.disabled}
                 maxLength={maxNameLen}
               />
+              {this.regionSelect()}
               {window.innerWidth < 768 && this.submitBtn()}
               <br/>
               <div className={'gallery'} ref={el => this.galleryEl = el}>{
