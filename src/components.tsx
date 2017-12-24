@@ -236,34 +236,18 @@ export class Splash extends React.Component {
     return this.share(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Come play this new game! https://stomped.io #stompedio')}`);
   }
 
-  setStats(stats: Stats) {
+  setStats(stats: Stats, selectedRegion: string = this.state.region) {
+    const region: string = selectedRegion ||
+      stats.bestServer && extractRegion(padDefaultServerWithRegion(stats.bestServer)) ||
+      null;
     const filtered = _(stats.load)
-      .filter(({host}) => stats.bestServer ?
-        extractRegion(padDefaultServerWithRegion(host)) == extractRegion(padDefaultServerWithRegion(stats.bestServer)) :
-        true
-      )
+      .filter(({host}) => !region || extractRegion(padDefaultServerWithRegion(host)) == region)
       .value();
-    const sorted = _(filtered)
+    const sorted = _(filtered.length ? filtered : stats.load)
       .sortBy(({host, weight}) => [Math.max(weight - 60, 0), host.length, host])
       .value();
     const [{host: server}] = sorted;
-    if (_(server).startsWith('us-west-')) {
-      fetch('/debug', {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        method: 'POST',
-        body: JSON.stringify({
-          type: 'bestServer setStats',
-          bestServer: stats.bestServer,
-          load: stats.load,
-          filtered,
-          sorted,
-          server
-        })
-      });
-    }
-    let host;
+    let host: string;
     if (searchParams.get('server')) {
       host = searchParams.get('server');
     } else if (_(server).startsWith('localhost')) {
@@ -276,6 +260,25 @@ export class Splash extends React.Component {
       host = server;
     }
     this.server = host;
+    if (_(host).startsWith('us-west-')) {
+      fetch('/debug', {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'bestServer setStats',
+          bestServer: stats.bestServer,
+          load: stats.load,
+          filtered,
+          sorted,
+          server,
+          region,
+          host,
+          param: searchParams.get('server')
+        })
+      });
+    }
     this.setState({stats: stats, server: host});
     this.statsResolver(stats);
   }
@@ -327,6 +330,9 @@ export class Splash extends React.Component {
   }
   private selectRegion = (ev) => {
     this.setState({region: ev.target.value});
+    if (this.state.stats) {
+      this.setStats(this.state.stats, ev.target.value);
+    }
   };
   private regionSelect() {
     return <div className="styled-select black rounded">
