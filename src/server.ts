@@ -59,6 +59,7 @@ import * as Http from 'http';
 import * as Express from 'express';
 import * as os from "os";
 import {ServerMatcher} from "./geo";
+import * as BodyParser from 'body-parser';
 
 let loadedCode = {} as LoadedCode;
 let currentPath = '';
@@ -866,16 +867,26 @@ console.log('listening');
 
 const serverMatcher = new ServerMatcher(hostname);
 
+app.use(BodyParser.json());
+
+let reqIp = function (req) {
+  return req.get('x-forwarded-for') || req.connection.remoteAddress;
+};
 app.get('/stats', (req, res) => {
   res.json({
     players: gameState.players.length,
     bestOf: bestOf,
     load: lastLoad,
     bestServer: serverMatcher.bestServer(
-      req.get('x-forwarded-for') || req.connection.remoteAddress,
+      reqIp(req),
       lastLoad
     )
   } as Stats);
+});
+
+app.post('/debug', (req, res) => {
+  getLogger('client-debug').log(reqIp(req), req.body, JSON.stringify(req.body));
+  res.json({success: true});
 });
 
 setTimeout(() => server.listen(port), 2000);

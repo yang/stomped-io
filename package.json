@@ -5,6 +5,7 @@
   "author": "Yang Zhang <yaaang@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/body-parser": "^1.16.8",
     "@types/bowser": "^1.0.31",
     "@types/chance": "^0.7.35",
     "@types/classnames": "^2.2.3",
@@ -26,6 +27,7 @@
     "CBuffer": "^2.0.0",
     "bad-words": "^1.6.1",
     "badwords-list": "^1.0.0",
+    "body-parser": "^1.18.2",
     "bowser": "^1.8.1",
     "case": "^1.5.3",
     "chance": "^1.0.11",

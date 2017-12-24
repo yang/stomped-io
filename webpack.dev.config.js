@@ -28,7 +28,8 @@ module.exports = merge(baseConfig, {
     publicPath: '/build/',
     disableHostCheck: true,
     proxy: {
-      '/stats': 'http://localhost:3000'
+      '/stats': 'http://localhost:3000',
+      '/debug': 'http://localhost:3000'
     }
   }
 });

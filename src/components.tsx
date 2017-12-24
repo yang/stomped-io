@@ -237,13 +237,32 @@ export class Splash extends React.Component {
   }
 
   setStats(stats: Stats) {
-    const [{host: server}] = _(stats.load)
+    const filtered = _(stats.load)
       .filter(({host}) => stats.bestServer ?
         extractRegion(padDefaultServerWithRegion(host)) == extractRegion(padDefaultServerWithRegion(stats.bestServer)) :
         true
       )
+      .value();
+    const sorted = _(filtered)
       .sortBy(({host, weight}) => [Math.max(weight - 60, 0), host.length, host])
       .value();
+    const [{host: server}] = sorted;
+    if (_(server).startsWith('us-west-')) {
+      fetch('/debug', {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'bestServer setStats',
+          bestServer: stats.bestServer,
+          load: stats.load,
+          filtered,
+          sorted,
+          server
+        })
+      });
+    }
     let host;
     if (searchParams.get('server')) {
       host = searchParams.get('server');
