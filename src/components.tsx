@@ -61,6 +61,7 @@ interface SplashState {
   showShareModal: string;
   showSettingsModal: boolean;
   region: string;
+  showHelp: boolean;
 }
 
 interface SplashProps {
@@ -143,7 +144,8 @@ export class Splash extends React.Component {
       showRoomModal: false,
       showShareModal: null,
       showSettingsModal: false,
-      region: null
+      region: null,
+      showHelp: false
     };
   }
   private handleChange = (e) => {
@@ -364,13 +366,29 @@ export class Splash extends React.Component {
               <br/>
               <strong>Click or press down/space</strong> for a smash attack!
             </p>}
-            {isSupported && isMobileOrTablet && <p key='ppp' className={'subhead'}>
-              <strong>Drag left half of screen</strong> to steer.
-              <br/>
-              Collect stars to grow.  Stomp other players to take their stars.
-              <br/>
-              <strong>Tap right half of screen</strong> for a smash attack!
-            </p>}
+            {
+              isSupported && isMobileOrTablet &&
+              <Popover
+                isOpen={this.state.showHelp}
+                target={null}
+                onOuterAction={() => this.setState({showHelp: false})}
+                tipSize={20}
+                body={
+                  <p>
+                    <strong>Drag left half of screen</strong> to steer.
+                    <br/>
+                    Collect stars to grow.  Stomp other players to take their stars.
+                    <br/>
+                    <strong>Tap right half of screen</strong> for a smash attack!
+                  </p>
+                }
+              >
+                <p key='ppp' style={{cursor: 'pointer'}} className={'subhead'}
+                   onClick={() => this.setState({showHelp: !this.state.showHelp})}>
+                  <strong>How to play?</strong>
+                </p>
+              </Popover>
+            }
             {isSupported && <form key={'form'} className='splash-form' onSubmit={this.handleSubmit}>
               <input
                 className={'name-input'}
