@@ -83,6 +83,7 @@ h2 {
     color: white;
     margin: 20px;
     vertical-align: middle;
+    width: 170px;
 }
 .name-input:hover {
     background: mediumpurple;
@@ -320,11 +321,11 @@ a:hover {
     display: inline-block;
     height: 34px;
     overflow: hidden;
-    width: 160px;
+    width: 140px;
     margin: 20px;
     margin-left: 0;
     vertical-align: middle;
-    /*padding: 8px 16px;*/
+    padding: 0 8px;
     text-align: center;
     position: relative;
 }
@@ -334,7 +335,7 @@ a:hover {
     border: none;
     font-size: 14px;
     padding: 5px; /* If you add too much padding here, the options won't show in IE */
-    width: 140px;
+    width: 180px;
     color: white;
     opacity: 0.8;
     vertical-align: middle;
@@ -376,7 +377,7 @@ a:hover {
         height: 80px;
     }
     .subhead {
-        font-size: 12px;
+        font-size: 14px;
     }
     .name-input {
         margin: 10px;
