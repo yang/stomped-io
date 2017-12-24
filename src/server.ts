@@ -236,7 +236,8 @@ function initSnap() {
 }
 
 let firstUpdate = true;
-let initBots = process.env.INITBOTS ? +process.env.INITBOTS : 40;
+let initBots = process.env.TARGETBOTS ? +process.env.TARGETBOTS : 40;
+settings.targetFill = initBots;
 
 function update() {
   if (firstUpdate) {
@@ -589,15 +590,17 @@ async function create() {
 }
 
 function adjustBots() {
-  if (gameState.players.length > 50) {
-    const overhead = gameState.players.length - 50;
+  const upper = settings.targetFill + 10;
+  const lower = settings.targetFill;
+  if (gameState.players.length > upper) {
+    const overhead = gameState.players.length - upper;
     // Try to remove that many bots, if avail
     const toRemove = Math.min(botMgr.bots.length, overhead);
     for (let i = 0; i < Math.min(toRemove, 2); i++) {
       botMgr.removeBot();
     }
-  } else if (gameState.players.length < 40) {
-    const toAdd = 40 - gameState.players.length;
+  } else if (gameState.players.length < lower) {
+    const toAdd = lower - gameState.players.length;
     for (let i = 0; i < Math.min(toAdd, 2); i++) {
       botMgr.makeBot(true);
     }

@@ -138,7 +138,7 @@ Back on the host:
     # Each-time
     . ~/.node/bounce/bin/activate
     yarn install
-    while true; do yarn server; done
+    while true; do TARGETBOTS=40 yarn server; done
 
 nginx
 -----
@@ -185,4 +185,4 @@ Run on each boot:
     sudo service postgresql stop
     ssh -fNL5432:localhost:5432 stomped.io
     . ~/.node/bounce/bin/activate
-    while true; do yarn server; done
+    while true; do TARGETBOTS=30 yarn server; done

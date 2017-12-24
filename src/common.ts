@@ -176,6 +176,7 @@ export class ServerSettings {
   burstLimit = 100;
   moveSpeedLimit = 5;
   clientInputTimeout = 3 * 60000;
+  targetFill = 40;
   ser() {
     return _({}).assign(this);
   }
