@@ -394,11 +394,11 @@ export class Splash extends React.Component {
                 tipSize={20}
                 body={
                   <p>
-                    <strong>Drag left half of screen</strong> to steer.
+                    Drag left half of screen to steer.
                     <br/>
                     Collect stars to grow.  Stomp other players to take their stars.
                     <br/>
-                    <strong>Tap right half of screen</strong> for a smash attack!
+                    Tap right half of screen for a smash attack!
                   </p>
                 }
               >
