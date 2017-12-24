@@ -3,9 +3,9 @@
   "name": "Stomped.io",
   "icons": [
     {
-      "src": "myicon.ico",
+      "src": "assets/app-icon.png",
       "type": "image/png",
-      "sizes": "310x310"
+      "sizes": "192x192"
     }
   ],
   "start_url": "/?utm_source=homescreen",
