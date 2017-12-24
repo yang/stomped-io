@@ -1,4 +1,4 @@
-import {ServerLoad} from "./common";
+import {getLogger, ServerLoad} from "./common";
 import * as _ from "lodash";
 import * as geolib from "geolib";
 import * as geoip2 from 'geoip2';
@@ -28,8 +28,16 @@ export class ServerMatcher {
       const closestServer = _(lastLoad.map(({host}) => host))
           .minBy(host => geolib.getDistance(geo.location, this.serverGeos.get(host).location)) ||
         this.defaultHost;
+      let sgeo;
+      getLogger('bestServer').log(
+        JSON.stringify(geo.location),
+        JSON.stringify(lastLoad.map(({host}) => ({
+          host,
+          loc: sgeo = this.serverGeos.get(host).location,
+          dist: geolib.getDistance(geo.location, sgeo)
+        })))
+      );
       if (_(closestServer).startsWith('us-west-')) {
-        let sgeo;
         console.log(
           'bestServer',
           JSON.stringify(geo.location),
