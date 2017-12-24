@@ -411,12 +411,9 @@ export class Splash extends React.Component {
             {isSupported && <form key={'form'} className='splash-form' onSubmit={this.handleSubmit}>
               <input
                 className={'name-input'}
-                ref={(el) => {if (el) {
-                  // For some reason (in Edge) putting this timeout in componentDidUpadte doesn't necessarily work.  Also,
-                  // executing immediately rather than timeout doesn't work either.
-                  setTimeout(() => el.focus(), 10);
+                ref={(el) => {
                   this.inputEl = el;
-                }}}
+                }}
                 value={this.state.name}
                 onChange={this.handleChange}
                 placeholder={'Enter a nickname'}
