@@ -1240,17 +1240,37 @@ function midPt(xs) {
   return xs[Math.floor(xs.length / 2)];
 }
 
+function diffs(xs) {
+  const ys = [];
+  for (let i = 1; i < xs.length; i++) {
+    ys.push(xs[i] - xs[i - 1]);
+  }
+  return ys;
+}
+
 class CliStats {
   rtts = new CBuffer(50);
+  bcastReceiveTimes = new CBuffer(1000);
   constructor() {}
   addRtt(rtt: number) {
     this.rtts.push(Math.round(rtt));
   }
+  addBcast(receiveTime: number) {
+    this.bcastReceiveTimes.push(Math.round(receiveTime));
+  }
   dump() {
+    const sortedReceiveTimes = diffs(this.bcastReceiveTimes.toArray()).sort().map(Math.round);
     const res = {
-      rtts: this.rtts.toArray()
+      rtts: this.rtts.toArray(),
+      bcastDiffs: {
+        worst: sortedReceiveTimes.slice(-5),
+        best: sortedReceiveTimes.slice(0,5),
+        mean: Math.round(_.mean(sortedReceiveTimes)),
+        median: midPt(sortedReceiveTimes)
+      }
     };
     this.rtts.empty();
+    this.bcastReceiveTimes.empty();
     return res;
   }
 }
@@ -1329,6 +1349,7 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
       const thisDelta = bcast.time - currTime;
       delta = delta * .9 + thisDelta * (delta == null ? 1 : .1);
       getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta, 'length', bcastData.length);
+      cliStats.addBcast(currTime);
       if (timeline.find(b => b.tick == bcast.tick)) return;
       timeline.push(bcast);
       if (bcast.buf) {
