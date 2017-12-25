@@ -755,10 +755,21 @@ let bestOf = {
   month: []
 };
 
+class CliStatsLog {
+  file = fs.createWriteStream('cli-stats.log');
+  log(clientId, data) {
+    this.file.write(`${now()}: ${clientId}: ${JSON.stringify(data)}\n`);
+  }
+}
+const cliStatsLog = new CliStatsLog();
+
 io.on('connection', (socket: SocketIO.Socket) => {
   const log = getLogger('net');
   const client = new Client(socket);
-  log.log('client', client.id, 'connected');
+  const ip = socket.handshake.headers['x-forwarded-for'] ||
+    socket.request.connection.remoteAddress;
+  log.log('client', client.id, 'connected, IP', ip);
+  cliStatsLog.log(client.id, {ip})
 
   if (admins.has(socket)) {
     log.log('client', client.id, 'is an admin');
@@ -810,6 +821,10 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
   socket.on('ding', (data) => {
     socket.emit('dong', data)
+  });
+
+  socket.on('stats', (data) => {
+    cliStatsLog.log(client.id, data);
   });
 
   socket.on('join', (playerData) => {

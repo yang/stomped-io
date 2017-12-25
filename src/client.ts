@@ -212,9 +212,10 @@ export class ControlPanel {
   camWidth = 1200;
   camHeight = 800;
   spectate = false;
-  doPings = false;
+  doPings = true;
   doUpdatePl = false;
   smashFrames = 8;
+  doStats = true;
   resetCookies() { Cookies.remove('v1'); }
   backToSplash() { backToSplash(); }
   testNotif() { notify('Testing!'); }
@@ -1235,8 +1236,28 @@ function render() {
 
 export type UpdateExtrasFn = (currentPlayer: Player, updating: boolean, currTime: number) => void;
 
+function midPt(xs) {
+  return xs[Math.floor(xs.length / 2)];
+}
+
+class CliStats {
+  rtts = new CBuffer(50);
+  constructor() {}
+  addRtt(rtt: number) {
+    this.rtts.push(Math.round(rtt));
+  }
+  dump() {
+    const res = {
+      rtts: this.rtts.toArray()
+    };
+    this.rtts.empty();
+    return res;
+  }
+}
+const cliStats = new CliStats();
+
 let meId: number;
-let pinger;
+let pinger, statsTimer;
 const autoKill = +searchParams.get('autoKill');
 function startGame(name: string, char: string, server: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
   if (autoKill) setTimeout(backToSplash, autoKill);
@@ -1251,7 +1272,17 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
       socket.emit('ding', {pingTime: now()})
     }, 1000);
   }
-  socket.on('dong', ({pingTime}) => getLogger('ping').log('ping', now() - pingTime));
+  socket.on('dong', ({pingTime}) => {
+    const rtt = now() - pingTime;
+    getLogger('ping').log('ping', rtt);
+    cliStats.addRtt(rtt);
+  });
+
+  if (cp.doStats && !statsTimer) {
+    statsTimer = setInterval(() => {
+      socket.emit('stats', cliStats.dump());
+    }, 5000);
+  }
 
   socket.on('joined', (initSnap, myId) => {
     meId = myId;
