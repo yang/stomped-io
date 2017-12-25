@@ -755,9 +755,25 @@ let bestOf = {
   month: []
 };
 
+function today() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return today;
+}
+
+function fmtDate(d: Date) {
+  return d.toISOString().split('T')[0];
+}
+
 class CliStatsLog {
-  file = fs.createWriteStream('cli-stats.log');
+  lastDay = today();
+  file = fs.createWriteStream(`cli-stats-${fmtDate(this.lastDay)}.log`);
   log(clientId, data) {
+    const d = today();
+    if (d.getTime() != this.lastDay.getTime()) {
+      this.lastDay = d;
+      this.file = fs.createWriteStream(`cli-stats-${fmtDate(this.lastDay)}.log`);
+    }
     this.file.write(`${now()}: ${clientId}: ${JSON.stringify(data)}\n`);
   }
 }
