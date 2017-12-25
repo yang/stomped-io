@@ -539,6 +539,17 @@ export class Splash extends React.Component {
         </div>
       </div>
       <div className={"more-io-games"}>
+        <div className='iogames-xpromo'>
+          <iframe id="IOG_CP" scrolling="no" width="200"
+                  height="145" src="https://viral.iogames.space/cp/stomped-io"
+                  style={{
+                    border: 0,
+                    borderRadius: '10px;-webkit-box-shadow:0 3px 6px rgba(0,0,0,.25),0 3px 6px rgba(0,0,0,.4)',
+                    MozBoxShadow: '0 3px 6px rgba(0,0,0,.25),0 3px 6px rgba(0,0,0,.4)',
+                    boxShadow: '0 3px 6px rgba(0,0,0,.25),0 3px 6px rgba(0,0,0,.4)'
+                  }}>
+          </iframe>
+        </div>
         <a href={"http://iogames.space/"} target={"_blank"}>More io Games</a><br/>
         (<a href={"http://io-games.io/"} target={"_blank"}>And Even More</a>!)
       </div>
