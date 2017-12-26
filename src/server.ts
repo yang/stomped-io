@@ -661,7 +661,10 @@ async function mergeNewStatsForToday() {
     .map(player => [player.name, Math.round(10 * player.peakSize)])
     .fromPairs()
     .value();
+  const otherServersAgg: Record[] = hostname == 'stomped.io' ?
+    await reloadStatsFor('day') : [];
   bestOf.day = dictToRecords(mergeDicts(recordsToDict(bestOf.day), currNameToBest));
+  bestOf.day = dictToRecords(mergeDicts(recordsToDict(bestOf.day), recordsToDict(otherServersAgg)))
   bestOf.week = dictToRecords(mergeDicts(recordsToDict(bestOf.week), recordsToDict(bestOf.day)));
   bestOf.month = dictToRecords(mergeDicts(recordsToDict(bestOf.month), recordsToDict(bestOf.week)));
   for (let key in currNameToBest) {
