@@ -416,7 +416,7 @@ function create() {
   for (let keyName of ['left', 'right']) {
     const key = cursors[keyName];
     key.onDown.add(() => {
-      const dir = inputsToDir();
+      const dir = key == cursors.left ? Dir.Left : Dir.Right;
       if (cp.useKeyboard && dir != getDir(me)) {
         setInputsByDir(me, dir);
         events.push(new InputEvent(dir));
@@ -575,11 +575,6 @@ function initEnts() {
   mapGroup.add(mapBlip);
 
   guiMgr.refresh();
-}
-
-function inputsToDir() {
-  const dir = cursors.left.isDown ? Dir.Left : Dir.Right;
-  return dir;
 }
 
 const timeBuffer = 100;
