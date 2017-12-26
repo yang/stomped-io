@@ -1554,6 +1554,7 @@ export class MultiSocket {
   sockets: Sock[] = [];
   nextDedupeId = 0;
   receivedDedupeCounts = new Map<number, number>();
+  eventToMaxSendId = new Map<string, number>();
   constructor(sockets, public stripe = true) {
     for (let socket of sockets) {
       this.addSocket(socket);
@@ -1566,11 +1567,14 @@ export class MultiSocket {
         socket.on(event, cb);
       }
     }
-    socket.on('multi', (dedupeId, count, event, ...args) => {
+    socket.on('multi', (dedupeId, count, seq, event, ...args) => {
       const newCount = (this.receivedDedupeCounts.get(dedupeId) || 0) + 1;
       // Only pass through the first.
       if (newCount == 1) {
-        this.listeners.get(event).map(f => f(...args));
+        if (!(seq && this.eventToMaxSendId.get(event) >= dedupeId)) {
+          this.listeners.get(event).map(f => f(...args));
+        }
+        this.eventToMaxSendId.set(event, dedupeId);
       }
       if (newCount == count) {
         this.receivedDedupeCounts.delete(dedupeId);
@@ -1601,10 +1605,10 @@ export class MultiSocket {
       this.nextIndex = (this.nextIndex + 1) % this.sockets.length;
     return res;
   }
-  multiEmit(count: number, event: string, ...args) {
+  multiEmit(count: number, seq: boolean, event: string, ...args) {
     const dedupeId = this.nextDedupeId++;
     for (let i = 0; i < count; i++) {
-      this.emit('multi', dedupeId, count, event, ...args);
+      this.emit('multi', dedupeId, count, seq, event, ...args);
     }
   }
   close() { return this.disconnect(); }

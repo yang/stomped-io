@@ -476,19 +476,19 @@ function create() {
       if (delta > 5) {
         if (getDir(me) != Dir.Right) {
           setInputsByDir(me, Dir.Right);
-          socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
+          socket.multiEmit(2, true, 'input', {time: now(), events: [new InputEvent(me.dir)]});
         }
       } else if (delta < -5) {
         if (getDir(me) != Dir.Left) {
           setInputsByDir(me, Dir.Left);
-          socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
+          socket.multiEmit(2, true, 'input', {time: now(), events: [new InputEvent(me.dir)]});
         }
       }
     } else if (ptr.isMouse) {
       const dir = worldPtr.x <= me.x ? Dir.Left : Dir.Right;
       if (dir != getDir(me)) {
         setInputsByDir(me, dir);
-        socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
+        socket.multiEmit(2, true, 'input', {time: now(), events: [new InputEvent(me.dir)]});
       }
     }
   }, {});
@@ -872,7 +872,7 @@ ${mkDebugText(ptr, currentPlayer)}
 
   if (!runLocally) {
     if (events.length > 0) {
-      socket.multiEmit(2, 'input', {
+      socket.multiEmit(2, true, 'input', {
         time: currTime,
         events: events.map((e) => e.ser())
       });
@@ -1292,7 +1292,7 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
 
   if (cp.doPings) {
     const pinger = setInterval(() => {
-      socket.multiEmit(2, 'ding', {pingTime: now()})
+      socket.multiEmit(2, false, 'ding', {pingTime: now()})
     }, 1000);
     socket.on('disconnect', () => clearInterval(pinger));
   }
