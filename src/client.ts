@@ -12,6 +12,7 @@ import * as CBuffer from 'CBuffer';
 import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
+import * as Uuid from 'uuid';
 import {
   addBody,
   AddEnt,
@@ -33,7 +34,7 @@ import {
   InputEvent,
   Lava,
   Ledge,
-  LoadedCode,
+  LoadedCode, MultiSocket,
   now,
   pb,
   Player,
@@ -284,7 +285,7 @@ var stars;
 var score = 0;
 export var scoreText, notifText, notifClearer: number;
 
-export var socket;
+export var socket: MultiSocket;
 export var me: Player;
 
 export const players = gameState.players;
@@ -468,16 +469,16 @@ function create() {
       const delta = dirStick.x - dirStickBase.x;
       if (delta > 5) {
         setInputsByDir(me, Dir.Right);
-        socket.emit('input', {time: now(), events: [new InputEvent(me.dir)]});
+        socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
       } else if (delta < -5) {
         setInputsByDir(me, Dir.Left);
-        socket.emit('input', {time: now(), events: [new InputEvent(me.dir)]});
+        socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
       }
     } else if (ptr.isMouse) {
       const dir = worldPtr.x <= me.x ? Dir.Left : Dir.Right;
       if (dir != getDir(me)) {
         setInputsByDir(me, dir);
-        socket.emit('input', {time: now(), events: [new InputEvent(me.dir)]});
+        socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
       }
     }
   }, {});
@@ -869,7 +870,7 @@ ${mkDebugText(ptr, currentPlayer)}
 
   if (!runLocally) {
     if (events.length > 0) {
-      socket.emit('input', {
+      socket.multiEmit(2, 'input', {
         time: currTime,
         events: events.map((e) => e.ser())
       });
@@ -1261,6 +1262,7 @@ class CliStats {
   dump() {
     const sortedReceiveTimes = diffs(this.bcastReceiveTimes.toArray()).sort().map(Math.round);
     const res = {
+      time: now(),
       rtts: this.rtts.toArray(),
       bcastDiffs: {
         worst: sortedReceiveTimes.slice(-5),
@@ -1288,7 +1290,7 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
 
   if (cp.doPings) {
     const pinger = setInterval(() => {
-      socket.emit('ding', {pingTime: now()})
+      socket.multiEmit(2, 'ding', {pingTime: now()})
     }, 1000);
     socket.on('disconnect', () => clearInterval(pinger));
   }
@@ -1389,7 +1391,10 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
 let rootComponent;
 export let connect = function (server: string) {
   const addr = server.indexOf('http') == 0 ? server : `https://${server}`;
-  const socket = Sio(addr, {query: {authKey}});
+  const clientId = Uuid.v4();
+  const socket = new MultiSocket(
+    _(4).times(() => Sio(addr, {query: {authKey, clientId}}))
+  );
   socket.on('svrSettings', (svrData) => {
     svrSettings.deser(svrData);
     guiMgr.refresh();

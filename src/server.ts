@@ -25,7 +25,7 @@ import {
   ledgeWidth,
   LoadedCode,
   makeStar,
-  maxNameLen,
+  maxNameLen, MultiSocket,
   now,
   pb,
   Player,
@@ -192,7 +192,7 @@ const port = +process.argv[3] || 3000;
 
 class Client {
   id = ids.next().value;
-  constructor(public socket) {}
+  constructor(public uuid: string, public socket: MultiSocket) {}
 }
 
 baseHandler.file = fs.createWriteStream('log');
@@ -406,7 +406,7 @@ function bcast() {
   const data = settings.doProtobuf ? diff : JSON.stringify(diff);
 
   // broadcast
-  io.emit('bcast', data);
+  io.to('bcasts').emit('bcast', data);
   getLogger('bcast').log('tick', tick, 'snap time', currTime, 'send done time', now(), 'length', data instanceof String ? data.length : data.buf.length);
   clearArray(events);
   bcastNum += 1;
@@ -783,15 +783,30 @@ class CliStatsLog {
 }
 const cliStatsLog = new CliStatsLog();
 
-io.on('connection', (socket: SocketIO.Socket) => {
-  const log = getLogger('net');
-  const client = new Client(socket);
-  const ip = socket.handshake.headers['x-forwarded-for'] ||
-    socket.request.connection.remoteAddress;
-  log.log('client', client.id, 'connected, IP', ip);
-  cliStatsLog.log(client.id, {ip})
+const clientMap = new Map<string, Client>();
 
-  if (admins.has(socket)) {
+io.on('connection', (rawSocket: SocketIO.Socket) => {
+  const log = getLogger('net');
+
+  const clientUuid = rawSocket.handshake.query.clientId;
+  if (clientMap.has(clientUuid)) {
+    const client = clientMap.get(clientUuid);
+    client.socket.addSocket(rawSocket);
+    return;
+  }
+
+  // Only the first-joined socket for a given client will be used to emit/bcast to.
+  const socket = new MultiSocket([rawSocket], false);
+  const client = new Client(clientUuid, socket);
+  clientMap.set(client.uuid, client);
+  const ip = rawSocket.handshake.headers['x-forwarded-for'] ||
+    rawSocket.request.connection.remoteAddress;
+  log.log('client', client.id, 'connected, IP', ip);
+  cliStatsLog.log(client.id, {ip});
+
+  rawSocket.join('bcasts');
+
+  if (admins.has(rawSocket)) {
     log.log('client', client.id, 'is an admin');
 
     socket.emit('svrSettings', settings.ser());
@@ -836,6 +851,7 @@ io.on('connection', (socket: SocketIO.Socket) => {
 
   socket.on('disconnect', () => {
     log.log('client', client.id, 'disconnected');
+    clientMap.delete(client.uuid);
     if (player) destroy(player);
   });
 

@@ -1545,3 +1545,70 @@ export class EntMgr {
 
 }
 
+type Callback = (...args) => void;
+type Sock = SocketIO.Socket; //  | SocketIOClient.Socket;
+
+export class MultiSocket {
+  nextIndex = 0;
+  listeners = new Map<string, Callback[]>();
+  sockets: Sock[] = [];
+  nextDedupeId = 0;
+  receivedDedupeCounts = new Map<number, number>();
+  constructor(sockets, public stripe = true) {
+    for (let socket of sockets) {
+      this.addSocket(socket);
+    }
+  }
+  addSocket(socket: Sock) {
+    this.sockets.push(socket);
+    for (let [event, cbs] of Array.from(this.listeners.entries())) {
+      for (let cb of cbs) {
+        socket.on(event, cb);
+      }
+    }
+    socket.on('multi', (dedupeId, count, event, ...args) => {
+      const newCount = (this.receivedDedupeCounts.get(dedupeId) || 0) + 1;
+      // Only pass through the first.
+      if (newCount == 1) {
+        this.listeners.get(event).map(f => f(...args));
+      }
+      if (newCount == count) {
+        this.receivedDedupeCounts.delete(dedupeId);
+      } else {
+        this.receivedDedupeCounts.set(dedupeId, newCount);
+      }
+    });
+    socket.on('disconnect', () => {
+      _.remove(this.sockets, s => s == socket);
+      if (this.sockets.length == 0) {
+        this.listeners.get('disconnect').map(f => f());
+      }
+    });
+  }
+  on(event: string, cb: Callback) {
+    const cbs = this.listeners.get(event) || [];
+    this.listeners.set(event, cbs.concat([cb]));
+    if (event != 'disconnect') {
+      return this.sockets.map(s => s.on(event, cb));
+    }
+  }
+  emit(event: string, ...args) {
+    if (this.nextIndex >= this.sockets.length) {
+      this.nextIndex = 0;
+    }
+    const res = this.sockets[this.nextIndex].emit(event, ...args);
+    if (this.stripe)
+      this.nextIndex = (this.nextIndex + 1) % this.sockets.length;
+    return res;
+  }
+  multiEmit(count: number, event: string, ...args) {
+    const dedupeId = this.nextDedupeId++;
+    for (let i = 0; i < count; i++) {
+      this.emit('multi', dedupeId, count, event, ...args);
+    }
+  }
+  close() { return this.disconnect(); }
+  disconnect() {
+    return this.sockets.map(s => s.disconnect());
+  }
+}
