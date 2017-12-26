@@ -555,7 +555,7 @@ function reloadPlayerStyles() {
 async function create() {
   await cli.connect();
   await serverStatsCli.connect();
-  await rollupStats();
+  await reloadAllStats();
   await syncServerStats();
 
   const lava = new Lava(0, Common.gameWorld.height - 64);
@@ -580,8 +580,8 @@ async function create() {
     setInterval(() => updateStars(gameState, false), updateStarsPeriod * 1000);
     setInterval(reloadPlayerStyles, 1000);
     setInterval(reloadCode, 10000);
-    setInterval(mergeStats, 1 * 60 * 1000);
-    setInterval(saveStats, 10 * 60 * 1000);
+    setInterval(mergeNewStatsForToday, 1 * 60 * 1000);
+    setInterval(mergeAndSaveStats, 10 * 60 * 1000);
     setInterval(syncServerStats, 10 * 1000);
     setInterval(adjustBots, 3 * 1000);
   }
@@ -655,7 +655,8 @@ function mergeDicts(a: NameToBestDict, b: NameToBestDict): NameToBestDict {
   return _.assignWith(a, b, (a = 0, b = 0) => Math.max(a,b));
 }
 
-function mergeStats() {
+// Updates all (day/week/month) stats with new stats for day-so-far.
+async function mergeNewStatsForToday() {
   const currNameToBest: NameToBestDict = _(gameState.players)
     .map(player => [player.name, Math.round(10 * player.peakSize)])
     .fromPairs()
@@ -676,15 +677,15 @@ function trace<T>(x: T): T {
 let lastRunDay = new Date();
 lastRunDay .setHours(0,0,0,0);
 
-async function saveStats() {
+async function mergeAndSaveStats() {
   const today = new Date();
   today.setHours(0,0,0,0);
   // Merge and save current day's cumulative stats, or wipe bestOf.day if new day.
   if (lastRunDay.getTime() == today.getTime()) {
-    mergeStats();
+    await mergeNewStatsForToday();
   } else {
     lastRunDay = today;
-    rollupStats();
+    await reloadAllStats();
     bestOf.day = [];
   }
   const data = JSON.stringify(recordsToDict(bestOf.day));
@@ -697,7 +698,7 @@ async function saveStats() {
   await cli.query('commit');
 }
 
-async function rollupStatsFor(dur: string) {
+async function reloadStatsFor(dur: string) {
   const res = await cli.query(
     `select * from daily_stats where date > now() - '1 ${dur}'::interval`
   );
@@ -709,10 +710,10 @@ async function rollupStatsFor(dur: string) {
   return dictToRecords(cum);
 }
 
-async function rollupStats() {
-  bestOf.day = await rollupStatsFor('day');
-  bestOf.week = await rollupStatsFor('week');
-  bestOf.month = await rollupStatsFor('month');
+async function reloadAllStats() {
+  bestOf.day = await reloadStatsFor('day');
+  bestOf.week = await reloadStatsFor('week');
+  bestOf.month = await reloadStatsFor('month');
   await cli.query('rollback');
 }
 
