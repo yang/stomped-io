@@ -1277,7 +1277,6 @@ class CliStats {
 const cliStats = new CliStats();
 
 let meId: number;
-let pinger, statsTimer;
 const autoKill = +searchParams.get('autoKill');
 function startGame(name: string, char: string, server: string, onJoin: (socket) => void, updateExtras: UpdateExtrasFn, mkDebugText, sprites) {
   if (autoKill) setTimeout(backToSplash, autoKill);
@@ -1287,10 +1286,11 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
 
   socket.emit('join', {name, char});
 
-  if (cp.doPings && !pinger) {
-    pinger = setInterval(() => {
+  if (cp.doPings) {
+    const pinger = setInterval(() => {
       socket.emit('ding', {pingTime: now()})
     }, 1000);
+    socket.on('disconnect', () => clearInterval(pinger));
   }
   socket.on('dong', ({pingTime}) => {
     const rtt = now() - pingTime;
@@ -1298,10 +1298,12 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
     cliStats.addRtt(rtt);
   });
 
-  if (cp.doStats && !statsTimer) {
-    statsTimer = setInterval(() => {
+  if (cp.doStats) {
+    const statsTimer = setInterval(() => {
       socket.emit('stats', cliStats.dump());
     }, 5000);
+    socket.on('disconnect', () => clearInterval(statsTimer));
+
   }
 
   socket.on('joined', (initSnap, myId) => {
