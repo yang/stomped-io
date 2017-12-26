@@ -415,7 +415,13 @@ function create() {
   cursors = game.input.keyboard.createCursorKeys();
   for (let keyName of ['left', 'right']) {
     const key = cursors[keyName];
-    key.onDown.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
+    key.onDown.add(() => {
+      const dir = inputsToDir();
+      if (cp.useKeyboard && dir != getDir(me)) {
+        setInputsByDir(me, dir);
+        events.push(new InputEvent(dir));
+      }
+    });
     // key.onUp.add(() => cp.useKeyboard && events.push(new InputEvent(inputsToDir())));
   }
 
@@ -468,11 +474,15 @@ function create() {
       ({x: dirStick.x, y: dirStick.y} = worldToScreenOffsetWorldScale(worldPtr).clamp(Vec2.fromObj(dirStickBase), 50));
       const delta = dirStick.x - dirStickBase.x;
       if (delta > 5) {
-        setInputsByDir(me, Dir.Right);
-        socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
+        if (getDir(me) != Dir.Right) {
+          setInputsByDir(me, Dir.Right);
+          socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
+        }
       } else if (delta < -5) {
-        setInputsByDir(me, Dir.Left);
-        socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
+        if (getDir(me) != Dir.Left) {
+          setInputsByDir(me, Dir.Left);
+          socket.multiEmit(2, 'input', {time: now(), events: [new InputEvent(me.dir)]});
+        }
       }
     } else if (ptr.isMouse) {
       const dir = worldPtr.x <= me.x ? Dir.Left : Dir.Right;
@@ -569,9 +579,6 @@ function initEnts() {
 
 function inputsToDir() {
   const dir = cursors.left.isDown ? Dir.Left : Dir.Right;
-  if (cp.instantTurn && me) {
-    me.dir = dir;
-  }
   return dir;
 }
 
