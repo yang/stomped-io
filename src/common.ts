@@ -1599,6 +1599,9 @@ export class MultiSocket {
   emit(event: string, ...args) {
     if (this.nextIndex >= this.sockets.length) {
       this.nextIndex = 0;
+      if (this.sockets.length == 0) {
+        return;
+      }
     }
     const res = this.sockets[this.nextIndex].emit(event, ...args);
     if (this.stripe)
