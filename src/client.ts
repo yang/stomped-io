@@ -13,6 +13,7 @@ import * as Pl from 'planck-js';
 import * as Sio from 'socket.io-client';
 import * as Common from './common';
 import * as Uuid from 'uuid';
+const Visibility = require('visibilityjs');
 import {
   addBody,
   AddEnt,
@@ -192,6 +193,10 @@ window.addEventListener('beforeinstallprompt', e => {
   deferredPrompt = e;
 
   return false;
+});
+
+Visibility.change(e => {
+  getLogger('visibility').log(Visibility.hidden());
 });
 
 export class ControlPanel {
