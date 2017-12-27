@@ -417,7 +417,7 @@ function create() {
     const key = cursors[keyName];
     key.onDown.add(() => {
       const dir = key == cursors.left ? Dir.Left : Dir.Right;
-      if (cp.useKeyboard && dir != getDir(me)) {
+      if (cp.useKeyboard && me && dir != getDir(me)) {
         setInputsByDir(me, dir);
         events.push(new InputEvent(dir));
       }
