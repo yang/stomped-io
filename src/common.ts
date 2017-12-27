@@ -1603,6 +1603,9 @@ export class MultiSocket {
         return;
       }
     }
+    if (!this.sockets[this.nextIndex]) {
+      console.log('nextIndex', this.nextIndex, 'sockets', this.sockets);
+    }
     const res = this.sockets[this.nextIndex].emit(event, ...args);
     if (this.stripe)
       this.nextIndex = (this.nextIndex + 1) % this.sockets.length;
