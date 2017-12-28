@@ -743,7 +743,7 @@ function removeEnt(id: number, instantly = false) {
 }
 
 function backToSplash() {
-  if (game.paused) return;
+  if (!game || game.paused) return;
 
   if (fscreen.fullscreenEnabled) {
     fscreen.exitFullscreen();
