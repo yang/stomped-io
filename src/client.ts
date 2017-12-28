@@ -539,8 +539,9 @@ function initEnts() {
   gameState.time = initSnap.tick * svrSettings.dt;
 
   if (initSnap.isDiff) {
-    errorReload();
-    throw new Error(`initSnap isDiff; timeline length is ${timeline.length}; first non-diff is at ${timeline.indexOf(timeline.find(bcast => !bcast.isDiff))}`);
+    // They switched away tabs, and only now switched back. Chrome force-disables rAF when tab is hidden.
+    backToSplash();
+    return true;
   }
 
   const {ents} = initSnap;
@@ -742,6 +743,8 @@ function removeEnt(id: number, instantly = false) {
 }
 
 function backToSplash() {
+  if (game.paused) return;
+
   if (fscreen.fullscreenEnabled) {
     fscreen.exitFullscreen();
   }
@@ -808,7 +811,8 @@ function update(extraSteps, mkDebugText) {
   }
 
   if (gameState.players.length == 0)
-    initEnts();
+    if (initEnts())
+      return;
 
   if (game.width != window.innerWidth || game.height != window.innerHeight) {
     game.scale.setGameSize(window.innerWidth, window.innerHeight);
@@ -1361,6 +1365,9 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
       delta = delta * .9 + thisDelta * (delta == null ? 1 : .1);
       getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta, 'length', bcastData.length);
       cliStats.addBcast(currTime);
+      if (timeline.length >= 1024) {
+        backToSplash();
+      }
       if (timeline.find(b => b.tick == bcast.tick)) return;
       timeline.push(bcast);
       if (bcast.buf) {
@@ -1392,7 +1399,10 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
     onJoin(socket);
   });
 
-  socket.on('disconnect', () => console.log('disconnect'));
+  socket.on('disconnect', () => {
+    console.log('disconnect');
+    backToSplash();
+  });
 }
 
 let rootComponent;
