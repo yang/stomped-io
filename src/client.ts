@@ -1366,6 +1366,7 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
       getLogger('bcast').log('time', currTime, 'thisDelta', thisDelta, 'delta', delta, 'length', bcastData.length);
       cliStats.addBcast(currTime);
       if (timeline.length >= 1024) {
+        getLogger('timeline').warn('timeline overrun');
         backToSplash();
       }
       if (timeline.find(b => b.tick == bcast.tick)) return;
