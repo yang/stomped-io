@@ -915,6 +915,9 @@ ${mkDebugText(ptr, currentPlayer)}
     }
 
     // Catch up on additions/removals
+    while (timeline.first().bcastNum < clientState.lastBcastNum) {
+      timeline.shift();
+    }
     const toProcess = timeline.filter(bcast =>
       clientState.lastBcastNum < bcast.bcastNum && bcast.bcastNum <= prevBcast.bcastNum
     );
