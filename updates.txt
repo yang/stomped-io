@@ -4,6 +4,11 @@
 - Fix nasty bug where players always getting kicked from the game after about a minute of play!  Thanks to players who
   reported this :)
 
+2017-12-26
+==========
+
+- Add advanced connection striping to overcome any network hiccups
+
 2017-12-23
 ==========
 
