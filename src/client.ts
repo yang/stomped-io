@@ -540,7 +540,7 @@ function initEnts() {
 
   if (initSnap.isDiff) {
     // They switched away tabs, and only now switched back. Chrome force-disables rAF when tab is hidden.
-    setTimeout(() => { throw new Error('initSnap isDiff backToSplash'); }, 0);
+    // setTimeout(() => { throw new Error('initSnap isDiff backToSplash'); }, 0);
     backToSplash();
     return true;
   }
@@ -1371,7 +1371,7 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
       cliStats.addBcast(currTime);
       if (timeline.length >= 1024) {
         getLogger('timeline').warn('timeline overrun');
-        setTimeout(() => { throw new Error('timeline overrun backToSplash'); }, 0);
+        // setTimeout(() => { throw new Error('timeline overrun backToSplash'); }, 0);
         backToSplash();
       }
       if (timeline.find(b => b.tick == bcast.tick)) return;
