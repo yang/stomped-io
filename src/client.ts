@@ -325,7 +325,7 @@ export let gfx;
 
 let minimap, mapBlip;
 
-(<any>window).dbg = {platforms, cursors, baseHandler, gameWorld: world, players, ledges, entToSprite, Common};
+(<any>window).dbg = {platforms, cursors, baseHandler, gameWorld: world, players, ledges, entToSprite, Common, timeline};
 
 function notify(content: string) {
   notifText.text = content;
