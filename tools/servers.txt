@@ -1,1 +1,1 @@
-us-west-ysn eu-central-8da ap-northeast-pv4
+us-east-oz9 eu-central-ah6 ap-northeast-pv4
