@@ -54,7 +54,7 @@ export class ServerMatcher {
     }
   }
 
-  regServer(host: string): Promise<any> {
+  regServer(host: string, forceIp: string = null): Promise<any> {
     return new Promise(resolve => {
       if (!this.serverGeos.has(host)) {
         // geolite2 is failing for Frankfurt!
@@ -63,8 +63,8 @@ export class ServerMatcher {
           resolve()
         } else {
           dns.lookup(host, (err, ip) => {
-            if (ip) {
-              this.serverGeos.set(host, geoip2.lookupSimpleSync(ip));
+            if (forceIp || ip) {
+              this.serverGeos.set(host, geoip2.lookupSimpleSync(forceIp || ip));
             }
             resolve();
           });
