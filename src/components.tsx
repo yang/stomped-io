@@ -30,7 +30,8 @@ let padDefaultServerWithRegion = function (host: string) {
 };
 
 const regionNames = {
-  'us-west': 'US',
+  'us-west': 'US West',
+  'us-east': 'US East',
   'eu-central': 'Europe',
   'ap-northeast': 'Asia'
 };
@@ -349,7 +350,7 @@ export class Splash extends React.Component {
           this.state.stats && this.state.stats.bestServer && extractRegion(padDefaultServerWithRegion(this.state.stats.bestServer)) ||
           'us-west'
         )}>
-        {['us-west', 'eu-central', 'ap-northeast'].map(x => <option value={x}>{regionNames[x]} Servers</option>)}
+        {['us-west', 'eu-central', 'ap-northeast', 'us-east'].map(x => <option value={x}>{regionNames[x]} Servers</option>)}
       </select>
       <div className='dropdown-arrow'>
         <i className='fa fa-angle-down'></i>
