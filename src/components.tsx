@@ -105,6 +105,7 @@ const youtubers: Youtuber[] = [
   {name: 'Truebizcuit', url: 'https://www.youtube.com/watch?v=oTOY6TgWWuo'},
   {name: 'AG TaNGrA', url: 'https://www.youtube.com/watch?v=hSHyTeHPma8'},
   {name: 'game mas', url: 'https://www.youtube.com/watch?v=BP3_k-po6Kc'},
+  {name: 'FGTeeV', url: 'https://www.youtube.com/watch?v=MaDNpHVsoDA'},
 ];
 function randYoutuber() {
   return new Chance().pickone(youtubers);
