@@ -97,7 +97,8 @@ const adPlaceholder = addslashes(`
 <p>— The Developer</p>
 </div>
 `).replace(/\n/g, '\\n');
-document.writeln(`
+if (!location.href.includes('client.html')) {
+  document.writeln(`
 <script src="//api.adinplay.com/display/pub/STM/stomped.io/display.min.js"></script>
 <div class="right-ad">
     <div id='stomped-io_300x250'>
@@ -115,6 +116,15 @@ if (!document.getElementById('ads'))
   document.writeln('${adPlaceholder}');
 </script>
 `);
+} else {
+  document.writeln(`
+<script type="text/javascript" src='advertisement.js'></script>
+<script>
+if (!document.getElementById('ads'))
+  document.writeln('${adPlaceholder}');
+</script>
+`);
+}
 
 (<any>window).PIXI = require('phaser-ce/build/custom/pixi');
 (<any>window).p2 = require('phaser-ce/build/custom/p2');
