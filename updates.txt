@@ -1,3 +1,9 @@
+2018-01-21
+==========
+
+- Improve and update regional server auto selection
+- Fix bugs surfaced by the tidal wave of new players thanks to FGTeeV!
+
 2018-01-02
 ==========
 
