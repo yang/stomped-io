@@ -97,6 +97,9 @@ const adPlaceholder = addslashes(`
 <p>— The Developer</p>
 </div>
 `).replace(/\n/g, '\\n');
+
+document.writeln(`<div id="game-container"></div>`);
+
 if (!location.href.includes('client.html')) {
   document.writeln(`
 <script src="//api.adinplay.com/display/pub/STM/stomped.io/display.min.js"></script>
@@ -1343,6 +1346,7 @@ function startGame(name: string, char: string, server: string, onJoin: (socket) 
       game = new Phaser.Game({
         scaleMode: ultraSlim ? undefined : Phaser.ScaleManager.RESIZE,
         renderer: selectEnum(renderer, Phaser, [Phaser.CANVAS, Phaser.AUTO, Phaser.WEBGL]),
+        parent: 'game-container',
         state: {
           onResize: function (scaleMgr, parentBounds) {
             lastParentBounds = parentBounds;

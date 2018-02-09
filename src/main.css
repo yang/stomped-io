@@ -581,6 +581,10 @@ a:hover {
     margin: 10px auto;
 }
 
+#game-container {
+    height: 100%;
+}
+
 
 
 .popper,
