@@ -55,6 +55,7 @@
     "phaser-ce": "^2.8.8",
     "planck-js": "^0.1.34",
     "protobufjs": "^6.8.0",
+    "raven-js": "^3.22.3",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "react-popover": "^0.5.4",
