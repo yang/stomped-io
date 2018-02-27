@@ -58,7 +58,7 @@ import * as Pg from 'pg';
 import * as Http from 'http';
 import * as Express from 'express';
 import * as os from "os";
-import {ServerMatcher} from "./geo";
+import {reloadGeoIp, ServerMatcher} from "./geo";
 import * as BodyParser from 'body-parser';
 
 let loadedCode = {} as LoadedCode;
@@ -584,6 +584,8 @@ async function create() {
     setInterval(mergeAndSaveStats, 10 * 60 * 1000);
     setInterval(syncServerStats, 10 * 1000);
     setInterval(adjustBots, 3 * 1000);
+    // Daily
+    setInterval(reloadGeoIp, 24 * 60 * 60 * 1000);
   }
 
   Common.create(gameState);

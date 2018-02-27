@@ -4,7 +4,11 @@ import * as geolib from "geolib";
 import * as geoip2 from 'geoip2';
 import * as dns from "dns";
 
-geoip2.init('./GeoLite2-City.mmdb');
+export function reloadGeoIp() {
+  geoip2.init('./GeoLite2-City.mmdb');
+}
+
+reloadGeoIp();
 
 export interface Geo {
   latitude: number;
