@@ -187,7 +187,7 @@ export class Splash extends React.Component {
       ad.style.display = '';
       if ((window as any).aipDisplayTag)
         (window as any).aipDisplayTag.refresh('stomped-io_300x250');
-      if ((window as any).factorem)
+      if ((window as any).factorem && (window as any).factorem.refreshAds)
         (window as any).factorem.refreshAds([2], true);
     }
     const ad2 = document.querySelector('.right-ad-default') as HTMLElement;
