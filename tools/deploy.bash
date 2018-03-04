@@ -8,6 +8,7 @@ rsync -ril bounce.zip $dest:
 rsync -ril assets/main.css $dest:bounce/assets/
 # Sync index.html last
 rsync -ril build dist index.html $dest:bounce/
+# curl https://sentry.io/api/0/projects/yang-zhang/stompedio//releases/:release/files
 ssh $dest "
     mkdir -p bounce;
     cd bounce;
