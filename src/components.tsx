@@ -188,7 +188,17 @@ export class Splash extends React.Component {
       if ((window as any).aipDisplayTag)
         (window as any).aipDisplayTag.refresh('stomped-io_300x250');
       if ((window as any).factorem && (window as any).factorem.refreshAds)
-        (window as any).factorem.refreshAds([2], true);
+        try {
+          (window as any).factorem.refreshAds([2], true);
+        } catch (e) {
+          // Tolerate runtime errors like:
+          //
+          // errorgoogletag.pubads is not a function
+          //
+          // and
+          //
+          // googletag.pubads(...).clear is not a function
+        }
     }
     const ad2 = document.querySelector('.right-ad-default') as HTMLElement;
     if (ad2) ad2.style.display = '';
