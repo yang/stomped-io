@@ -1583,6 +1583,7 @@ export class MultiSocket {
       }
     });
     socket.on('disconnect', () => {
+      console.log('sub-disconnect');
       _.remove(this.sockets, s => s == socket);
       if (this.sockets.length == 0) {
         this.listeners.get('disconnect').map(f => f());
@@ -1604,11 +1605,13 @@ export class MultiSocket {
       }
     }
     if (!this.sockets[this.nextIndex]) {
-      console.log('nextIndex', this.nextIndex, 'sockets', this.sockets);
+      console.log('nextIndex', this.nextIndex, 'sockets', this.sockets.length);
     }
     const res = this.sockets[this.nextIndex].emit(event, ...args);
     if (this.stripe)
-      this.nextIndex = (this.nextIndex + 1) % this.sockets.length;
+      this.nextIndex = this.sockets.length > 0 ?
+        (this.nextIndex + 1) % this.sockets.length :
+        0;
     return res;
   }
   multiEmit(count: number, seq: boolean, event: string, ...args) {
