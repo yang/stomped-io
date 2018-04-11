@@ -5,15 +5,17 @@ Can start out with this simple linear lava, but consider adding something wave-y
 
 https://phaser.io/examples/v2/tile-sprites/tile-sprite-from-animated-sprite
 
-Building
-========
+Development
+===========
 
 Run 'tools/setup.bash` to get the latest GeoLite2 database.
 
 Run `yarn watch` first, at least once, before using `yarn dev`, so that it creates dist/main.proto.  (CopyWebpackPlugin
 doesn't work well with the relative `to` path in webpack-dev-server mode.)
 
-Run `yarn server` to start the server, which listens for a Chrome debugger.
+Also start `yarn watch-css`.
+
+Run `yarn server-local` to start the server, which listens for a Chrome debugger.
 
 Run `yarn build-prod` for a production build.
 
