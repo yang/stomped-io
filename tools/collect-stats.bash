@@ -6,6 +6,7 @@ for host in $dest `cat tools/servers.txt`; do
     then host=$host.$dest
     fi
     mkdir -p cli-stats/$host/
+    echo now processing $host
     rsync -iz $host:bounce/cli-stats-*.log cli-stats/$host/
     ssh $host "
       python -c \"
