@@ -8,6 +8,11 @@
 
 - Improve server reliability
 
+2018-06-21
+==========
+
+- Fix canvas size deployment bug
+
 2018-06-12
 ==========
 
