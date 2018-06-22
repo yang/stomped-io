@@ -76,12 +76,31 @@ reloadCode();
 const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
 
-
-let pgConnect = function () {
-  return new Pg.Client({host: 'localhost', user: 'bounce', database: 'bounce'});
+let makePg = function () {
+  return new Pg.Client({host: 'localhost1', user: 'bounce', database: 'bounce'});
 };
-const cli = pgConnect();
-const serverStatsCli = pgConnect();
+let gCli: Pg.Client | undefined;
+let gServerStatsCli: Pg.Client | undefined;
+
+async function getOrReconnectCli(cli: undefined | Pg.Client) {
+  if (!cli) {
+    cli = makePg();
+    cli.on('error', error => {
+      console.error('got pg client error:', error);
+      cli = undefined;
+    });
+    await cli.connect();
+  }
+  return cli;
+}
+
+async function getCli() {
+  return gCli = await getOrReconnectCli(gCli);
+}
+
+async function getServerStatsCli() {
+  return gServerStatsCli = await getOrReconnectCli(gServerStatsCli);
+}
 
 const chance = new Chance(Date.now());
 
@@ -552,12 +571,17 @@ function reloadPlayerStyles() {
   Common.setPlayerStyles(lines);
 }
 
-async function create() {
-  await cli.connect();
-  await serverStatsCli.connect();
-  await reloadAllStats();
-  await syncServerStats();
+function wrapAsync(f: () => Promise<any>) {
+  return async () => {
+    try {
+      await f();
+    } catch (e) {
+      console.error('uncaught error in async fn', e);
+    }
+  };
+}
 
+function create() {
   const lava = new Lava(0, Common.gameWorld.height - 64);
   addBody(lava, 'kinematic');
   gameState.lava = lava;
@@ -580,16 +604,29 @@ async function create() {
     setInterval(() => updateStars(gameState, false), updateStarsPeriod * 1000);
     setInterval(reloadPlayerStyles, 1000);
     setInterval(reloadCode, 10000);
-    setInterval(mergeNewStatsForToday, 1 * 60 * 1000);
-    setInterval(mergeAndSaveStats, 10 * 60 * 1000);
-    setInterval(syncServerStats, 10 * 1000);
     setInterval(adjustBots, 3 * 1000);
     // Daily
     setInterval(reloadGeoIp, 24 * 60 * 60 * 1000);
   }
 
   Common.create(gameState);
+}
 
+async function startStats() {
+  try {
+    // TODO should any of this logic be re-run on reconnect?  e.g. if we were disconnected for a while...
+    await reloadAllStats();
+    await syncServerStats();
+  } catch (error) {
+    console.error('got error in startStats (retrying in 10s)', error);
+    setTimeout(startStats, 10000);
+  }
+
+  if (doRun) {
+    setInterval(wrapAsync(mergeNewStatsForToday), 1 * 60 * 1000);
+    setInterval(wrapAsync(mergeAndSaveStats), 10 * 60 * 1000);
+    setInterval(wrapAsync(syncServerStats), 10 * 1000);
+  }
 }
 
 function adjustBots() {
@@ -616,6 +653,7 @@ async function syncServerStats() {
   const botPlayers = new Set(botMgr.bots.map(b => b.player));
   const bots = gameState.players.filter(p => botPlayers.has(p)).length;
   const humans = gameState.players.length - bots;
+  const serverStatsCli = await getServerStatsCli();
   await serverStatsCli.query(`
     insert into load (host, time, humans, bots)
     values ($1, $2, $3, $3)
@@ -694,6 +732,7 @@ async function mergeAndSaveStats() {
     bestOf.day = [];
   }
   const data = JSON.stringify(recordsToDict(bestOf.day));
+  const cli = await getCli();
   await cli.query(`
     insert into daily_stats (host, date, data)
     values ($1, $2, $3)
@@ -704,6 +743,7 @@ async function mergeAndSaveStats() {
 }
 
 async function reloadStatsFor(dur: string) {
+  const cli = await getCli();
   const res = await cli.query(
     `select * from daily_stats where date > now() - '1 ${dur}'::interval`
   );
@@ -719,6 +759,7 @@ async function reloadAllStats() {
   bestOf.day = await reloadStatsFor('day');
   bestOf.week = await reloadStatsFor('week');
   bestOf.month = await reloadStatsFor('month');
+  const cli = await getCli();
   await cli.query('rollback');
 }
 
@@ -915,6 +956,7 @@ io.on('connection', (rawSocket: SocketIO.Socket) => {
 (<any>global).dbg = {Common, gameState, botMgr, baseHandler};
 
 create();
+startStats();
 
 console.log('listening');
 

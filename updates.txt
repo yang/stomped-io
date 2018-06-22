@@ -8,6 +8,11 @@
 
 - Improve server reliability
 
+2018-06-22
+==========
+
+- Improve reliability of mirrors (their connection to primary)
+
 2018-06-21
 ==========
 
