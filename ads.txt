@@ -1,3 +1,4 @@
+#CurseAds.txt
 indexexchange.com, 182371, DIRECT, 50b1c356f2c5c8fc
 appnexus.com, 3697, DIRECT
 pubmatic.com, 30296, DIRECT, 5d62403b186f2ace
@@ -10,8 +11,6 @@ aolcloud.net, 9455, DIRECT
 openx.com, 537135107, DIRECT, a698e2ec38604c6
 openx.com, 108125, DIRECT, a698e2ec38604c6
 openx.com, 537143074, DIRECT, a698e2ec38604c6
-sovrn.com, 51533, DIRECT, fafdf38b16bf6b2b
-lijit.com, 51533, DIRECT, fafdf38b16bf6b2b
 sekindo.com, 18537, DIRECT
 smartclip.net, 7649, RESELLER
 spotxchange.com, 84294, RESELLER, 7842df1d2fe2db34
@@ -34,6 +33,7 @@ vi.ai, 474289066697842, RESELLER
 fyber.com, f14d40df2568b6df4eed292a5ad93716, RESELLER
 fyber.com, 3238c1661ce2914845a986d98baf7d59, RESELLER
 google.com, pub-7458326009451431, DIRECT, f08c47fec0942fa0
+google.com, pub-3017048822832963, DIRECT, f08c47fec0942fa0
 amazon-adsystem.com, 3165, DIRECT
 distroscale.com, MjI1OTk, DIRECT
 advertising.com, 10152, DIRECT
@@ -84,4 +84,23 @@ EMXDGT.com, 62, DIRECT, 1e1d41537f7cad7f
 Appnexus.com, 1356, RESELLER, f5ab79cb980f11d1
 Google.com, pub-5995202563537249, RESELLER, f08c47fec0942fa0
 rubiconproject.com, 9454, DIRECT, 0bfd66d529a55807 
-# Mar 19 87
+pubmatic.com, 156833, DIRECT, 5d62403b186f2ace
+google.com, pub-3017048822832963, DIRECT, f08c47fec0942fa0
+sovrn.com, 51533, DIRECT, fafdf38b16bf6b2b
+lijit.com, 51533, DIRECT, fafdf38b16bf6b2b
+appnexus.com, 1360, RESELLER, f5ab79cb980f11d1
+gumgum.com, 11645, RESELLER, ffdef49475d318a9
+openx.com, 538959099, RESELLER, 6a698e2ec38604c6
+openx.com, 539924617, RESELLER, 6a698e2ec38604c6
+pubmatic.com, 137711, RESELLER, 5d62403b186f2ace
+pubmatic.com, 156212, RESELLER, 5d62403b186f2ace
+pubmatic.com, 156700, RESELLER, 5d62403b186f2ace
+rubiconproject.com, 17960, RESELLER, 0bfd66d529a55807
+pubmatic.com, 156833, DIRECT, 5d62403b186f2ace
+coxmt.com, 2000067907202, RESELLER
+pubmatic.com, 156078, RESELLER, 5d62403b186f2ace
+openx.com, 537143344, RESELLER, 6a698e2ec38604c6
+indexexchange.com, 175407, RESELLER, 50b1c356f2c5c8fc
+emxdgt.com, 507, DIRECT, 1e1d41537f7cad7f
+rubiconproject.com, 19442, RESELLER, 0bfd66d529a55807
+# Jan 22 105
