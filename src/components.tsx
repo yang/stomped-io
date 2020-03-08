@@ -109,6 +109,7 @@ const youtubers: Youtuber[] = [
   {name: 'Kawaii Kunicorn', url: 'https://www.youtube.com/watch?v=4wDx7rKXtBk'},
   {name: 'Eren', url: 'https://www.youtube.com/watch?v=6yw_5brUZcg'},
   {name: 'apuluchito', url: 'https://www.youtube.com/watch?v=BP3_k-po6Kc'},
+  {name: 'Its All Good Games', url: 'https://www.youtube.com/watch?v=9301iK7pTOM'},
 ];
 function randYoutuber() {
   return new Chance().pickone(youtubers);
