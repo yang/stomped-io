@@ -77,7 +77,7 @@ const Protobuf = require('protobufjs');
 Common.bootstrapPb(Protobuf.loadSync('src/main.proto'));
 
 let makePg = function () {
-  return new Pg.Client({host: 'localhost1', user: 'bounce', database: 'bounce'});
+  return new Pg.Client({host: 'localhost', user: 'bounce', database: 'bounce'});
 };
 let gCli: Pg.Client | undefined;
 let gServerStatsCli: Pg.Client | undefined;
