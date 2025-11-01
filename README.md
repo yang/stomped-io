@@ -1,16 +1,16 @@
-Design Notes
-============
+<!-- @format -->
+
+# Design Notes
 
 Can start out with this simple linear lava, but consider adding something wave-y like this:
 
 https://phaser.io/examples/v2/tile-sprites/tile-sprite-from-animated-sprite
 
-Development
-===========
+# Development
 
 Run 'tools/setup.bash` to get the latest GeoLite2 database.
 
-Run `yarn watch` first, at least once, before using `yarn dev`, so that it creates dist/main.proto.  (CopyWebpackPlugin
+Run `yarn watch` first, at least once, before using `yarn dev`, so that it creates dist/main.proto. (CopyWebpackPlugin
 doesn't work well with the relative `to` path in webpack-dev-server mode.)
 
 Also start `yarn watch-css`.
@@ -19,27 +19,24 @@ Run `yarn server-local` to start the server, which listens for a Chrome debugger
 
 Run `yarn build-prod` for a production build.
 
-Dev Notes
-=========
+# Dev Notes
 
 - May want to consider using simpler [AABB-only physics engine](https://gist.github.com/BonsaiDen/6144232).
 - Bot names from https://www.findnicknames.com/cool-gamer-tags/
 
-Multiplayer Engines
--------------------
+## Multiplayer Engines
 
 - IGE: only supports interpolation; odd conventions
 - Colyseus: focused on administrivia
 - Timeline: simple micro library for interpolation
 - Lance:
   - requires heavy framework buy-in, I foresee fighting against it
-  - extrapolation is over *everything*, not selective player-affected things
+  - extrapolation is over _everything_, not selective player-affected things
 
 Ultimately, just going with home-rolled (maybe with some assistance from
 TImeline), but Lance seems like the most promising if things get hairy quickly.
 
-Misc
-----
+## Misc
 
 - Testing out "display":"standalone" of PWA manifest doesn't work tunneling local servers; use ngrok.
   See https://stackoverflow.com/questions/47266973/pwa-manifest-attribute-display-standalone-not-working-on-android and
@@ -47,8 +44,7 @@ Misc
 - `moduleResolution: node` is from
   https://github.com/Microsoft/TypeScript/issues/8189
 
-Checklists
-==========
+# Checklists
 
 Adding a new character:
 
@@ -57,8 +53,7 @@ Adding a new character:
 - add XXX-0 to src/chars.txt and XXX to Common.playerStyleIndividuals
 - add XXX config to Spriter.chars - mind any protrusions, adjust width/height accordingly (or else, clipping!)
 
-Performance
-===========
+# Performance
 
 The first few `runSims` run times when using `deepCloneWorld`:
 
@@ -77,8 +72,11 @@ The first few `runSims` run times when using `manuallyCloneWorld`:
 - 850.2850000000108
 - 376.13500000000204
 
-Deployment
-==========
+# Deployment
+
+I've been using Linode. The network performance and cost has been good there. (This took its own line of research for me to hone in on.)
+
+Nanode instances are good.
 
 Open ports 80, 3000.
 
@@ -142,8 +140,7 @@ Back on the host:
     yarn install
     while true; do TARGETBOTS=40 yarn server; done
 
-nginx
------
+## nginx
 
 /etc/nginx/sites-available/default should contain:
 
@@ -203,13 +200,12 @@ Edit in /etc/nginx/nginx.conf:
             # multi_accept on;
     }
 
-Alt servers
------------
+## Alt servers
 
 Clone the primary server.
 
 If you're cloning a running server, you may need to use Linode's web based 'lish' console to log in, run fsck (requiring
- you to manually approve fixes), and reboot.  There shouldn't be any data loss risk.
+you to manually approve fixes), and reboot. There shouldn't be any data loss risk.
 
 Run once, replacing NODE with e.g. us-west-00:
 
